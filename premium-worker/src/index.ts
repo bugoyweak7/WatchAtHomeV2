@@ -17,7 +17,7 @@ interface VerifiedUser {
   email?: string;
 }
 
-const FIREBASE_SCOPE = "https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/identitytoolkit";
+const FIREBASE_SCOPE = "https://www.googleapis.com/auth/datastore";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const FIREBASE_JWKS = createRemoteJWKSet(
   new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")
@@ -59,7 +59,7 @@ async function verifyUser(request: Request, env: Env): Promise<VerifiedUser> {
     issuer: `https://securetoken.google.com/${env.FIREBASE_PROJECT_ID}`,
     audience: env.FIREBASE_PROJECT_ID,
   });
-  if (typeof payload.sub !== "string" || !payload.sub || !payload.auth_time) {
+  if (typeof payload.sub !== "string" || !payload.sub || typeof payload.auth_time !== "number" || payload.auth_time > Math.floor(Date.now() / 1000) + 60) {
     throw new HttpError(401, "Invalid Firebase user token.");
   }
   return { uid: payload.sub, email: typeof payload.email === "string" ? payload.email : undefined };
