@@ -1,0 +1,19 @@
+{
+  "name": "watchathome-premium-worker",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "jose": "^6.1.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20261113.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.45.0"
+  }
+}
