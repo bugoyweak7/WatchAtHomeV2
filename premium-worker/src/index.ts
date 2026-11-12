@@ -184,9 +184,9 @@ class HttpError extends Error {
 
 async function createCodes(request: Request, env: Env, user: VerifiedUser): Promise<Response> {
   await requireAdmin(env, user);
-  const input = await request.json() as { count?: number; durationDays?: number };
+  const input = await request.json() as { count?: number; durationDays?: number; durationMinutes?: number; durationLabel?: string };
   const count = Math.min(50, Math.max(1, Math.floor(Number(input.count ?? 1))));
-  const durationDays = Math.min(3650, Math.max(1, Math.floor(Number(input.durationDays ?? 30))));
+  const durationMinutes = Math.min(525600, Math.max(0, Math.floor(Number(input.durationMinutes ?? 0))));\n  const durationDays = durationMinutes > 0 ? 0 : Math.min(3650, Math.max(1, Math.floor(Number(input.durationDays ?? 30))));\n  if (durationMinutes === 0 && !Number.isFinite(durationDays)) throw new HttpError(400, "Invalid premium duration.");\n  const durationLabel = String(input.durationLabel ?? (durationMinutes > 0 ? `${durationMinutes} Minutes` : durationDays === 30 ? "Monthly" : `${durationDays} Days`)).slice(0, 40);
   const codes: string[] = [];
   const writes: unknown[] = [];
   const now = Date.now();
@@ -208,7 +208,7 @@ async function createCodes(request: Request, env: Env, user: VerifiedUser): Prom
             activatedAt: null,
             expiresAt: null,
           }),
-          activationDeadline: { timestampValue: new Date(now + 24 * 60 * 60 * 1000).toISOString() },
+          activationDeadline: { timestampValue: new Date(now + 24 * 60 * 60 * 1000 + 15 * 60 * 1000).toISOString() },
         },
       },
       currentDocument: { exists: false },
@@ -220,7 +220,7 @@ async function createCodes(request: Request, env: Env, user: VerifiedUser): Prom
     body: JSON.stringify({ writes }),
   });
   if (!commit.ok) throw new Error(`Could not save premium codes (${commit.status}).`);
-  return response({ codes, durationDays, activationWindowHours: 24 });
+  return response({ codes, durationDays, durationMinutes, durationLabel, activationWindowMinutes: 1455 });
 }
 
 async function redeemCode(request: Request, env: Env, user: VerifiedUser): Promise<Response> {
@@ -243,7 +243,7 @@ async function redeemCode(request: Request, env: Env, user: VerifiedUser): Promi
   const codeFields = fieldsOf(codeDoc);
   const now = Date.now();
 
-  if (stringField(codeFields, "status") !== "active") throw new HttpError(409, "This premium code has already been used or disabled.");
+  if (stringField(codeFields, "status") !== "AVAILABLE") throw new HttpError(409, "This premium code has already been used or disabled.");
   const activationDeadline = timestampField(codeFields, "activationDeadline");
   if (activationDeadline && now > activationDeadline) {
     throw new HttpError(410, "This premium code has expired.");
@@ -262,7 +262,7 @@ async function redeemCode(request: Request, env: Env, user: VerifiedUser): Promi
         name: `${firestoreRoot(env)}/premium_codes/${codeHash}`,
         fields: {
           ...codeFields,
-          status: { stringValue: "redeemed" },
+          status: { stringValue: "REDEEMED" },
           activatedBy: { stringValue: user.uid },
           activatedAt: { timestampValue: new Date(now).toISOString() },
           expiresAt: { timestampValue: new Date(expiresAt).toISOString() },
