@@ -18,6 +18,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.sentry.android.gradle)
+    alias(libs.plugins.googleServices)
 }
 
 val localProps = Properties().apply {
