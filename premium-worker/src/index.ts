@@ -198,16 +198,18 @@ async function createCodes(request: Request, env: Env, user: VerifiedUser): Prom
     writes.push({
       update: {
         name: `${firestoreRoot(env)}/premium_codes/${codeHash}`,
-        fields: encodeFields({
-          status: "active",
-          durationDays,
-          createdBy: user.uid,
-          createdAt: new Date(now).toISOString(),
-          activationDeadline: new Date(now + 24 * 60 * 60 * 1000).toISOString(),
-          activatedBy: null,
-          activatedAt: null,
-          expiresAt: null,
-        }),
+        fields: {
+          ...encodeFields({
+            status: "active",
+            durationDays,
+            createdBy: user.uid,
+            createdAt: new Date(now).toISOString(),
+            activatedBy: null,
+            activatedAt: null,
+            expiresAt: null,
+          }),
+          activationDeadline: { timestampValue: new Date(now + 24 * 60 * 60 * 1000).toISOString() },
+        },
       },
       currentDocument: { exists: false },
     });
