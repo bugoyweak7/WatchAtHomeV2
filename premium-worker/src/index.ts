@@ -258,8 +258,10 @@ async function redeemCode(request: Request, env: Env, user: VerifiedUser): Promi
   const userFields = fieldsOf(userDoc);
   const currentExpiry = timestampField(userFields, "premiumExpiresAt");
   const startAt = Math.max(now, currentExpiry);
-  const durationDays = Math.max(1, numberField(codeFields, "durationDays"));
-  const expiresAt = startAt + durationDays * 24 * 60 * 60 * 1000;
+  const durationDays = numberField(codeFields, "durationDays");
+  const durationMinutes = numberField(codeFields, "durationMinutes");
+  const durationMillis = durationMinutes > 0 ? durationMinutes * 60 * 1000 : Math.max(1, durationDays) * 24 * 60 * 60 * 1000;
+  const expiresAt = startAt + durationMillis;
 
   const writes = [
     {
