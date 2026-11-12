@@ -186,7 +186,9 @@ async function createCodes(request: Request, env: Env, user: VerifiedUser): Prom
   await requireAdmin(env, user);
   const input = await request.json() as { count?: number; durationDays?: number; durationMinutes?: number; durationLabel?: string };
   const count = Math.min(50, Math.max(1, Math.floor(Number(input.count ?? 1))));
-  const durationMinutes = Math.min(525600, Math.max(0, Math.floor(Number(input.durationMinutes ?? 0))));\n  const durationDays = durationMinutes > 0 ? 0 : Math.min(3650, Math.max(1, Math.floor(Number(input.durationDays ?? 30))));\n  if (durationMinutes === 0 && !Number.isFinite(durationDays)) throw new HttpError(400, "Invalid premium duration.");\n  const durationLabel = String(input.durationLabel ?? (durationMinutes > 0 ? `${durationMinutes} Minutes` : durationDays === 30 ? "Monthly" : `${durationDays} Days`)).slice(0, 40);
+  const durationMinutes = Math.min(525600, Math.max(0, Math.floor(Number(input.durationMinutes ?? 0))));
+  const durationDays = durationMinutes > 0 ? 0 : Math.min(3650, Math.max(1, Math.floor(Number(input.durationDays ?? 30))));
+  const durationLabel = String(input.durationLabel ?? (durationMinutes > 0 ? `${durationMinutes} Minutes` : durationDays === 30 ? "Monthly" : `${durationDays} Days`)).slice(0, 40);
   const codes: string[] = [];
   const writes: unknown[] = [];
   const now = Date.now();
@@ -200,8 +202,11 @@ async function createCodes(request: Request, env: Env, user: VerifiedUser): Prom
         name: `${firestoreRoot(env)}/premium_codes/${codeHash}`,
         fields: {
           ...encodeFields({
-            status: "active",
+            code,
+            durationLabel,
             durationDays,
+            durationMinutes,
+            status: "AVAILABLE",
             createdBy: user.uid,
             createdAt: new Date(now).toISOString(),
             activatedBy: null,
