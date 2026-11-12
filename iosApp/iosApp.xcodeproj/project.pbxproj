@@ -249,6 +249,9 @@
 			name = iosApp;
 			packageProductDependencies = (
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* MPVKit */,
+				A8B7C6D5E4F3019283746502 /* FirebaseCore */,
+				A8B7C6D5E4F3019283746503 /* FirebaseAuth */,
+				A8B7C6D5E4F3019283746504 /* FirebaseFirestore */,
 			);
 			productName = iosApp;
 			productReference = 07921B4E8F8546BEE682C2FE /* Nuvio.app */;
@@ -283,6 +286,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				F1E2D3C4B5A6F7E8D9C0B1A2 /* XCLocalSwiftPackageReference "../MPVKit" */,
+				A8B7C6D5E4F3019283746501 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AD93033A33973C81BB77B73A /* Products */;
@@ -741,7 +745,33 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		A8B7C6D5E4F3019283746501 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.1.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		A8B7C6D5E4F3019283746502 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A8B7C6D5E4F3019283746501 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		A8B7C6D5E4F3019283746503 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A8B7C6D5E4F3019283746501 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		A8B7C6D5E4F3019283746504 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A8B7C6D5E4F3019283746501 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* MPVKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F1E2D3C4B5A6F7E8D9C0B1A2 /* XCLocalSwiftPackageReference "../MPVKit" */;
