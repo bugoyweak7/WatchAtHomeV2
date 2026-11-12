@@ -13,10 +13,10 @@ All endpoints except health require a Firebase Authentication ID token in the Au
 
 ## Firestore documents
 
-- `premium_codes/{sha256(normalizedCode)}` stores code state. Raw codes are returned once at creation and are not stored.
+- `premium_codes/{sha256(normalizedCode)}` stores code state and the code string for the admin-only code-history screen. Firestore rules must deny all non-admin reads/writes to this collection.
 - `users/{uid}` stores `premium`, `premiumExpiresAt`, and `premiumUpdatedAt`.
 
-Codes have a 24-hour activation window and a duration selected by the admin. Redeemed codes are single-use. A new code extends an existing active entitlement rather than shortening it.
+Codes have a 24-hour-and-15-minute activation window and a duration selected by the admin. Both day-based codes and minute-based test codes are supported. Redeemed codes are single-use. A new code extends an existing active entitlement rather than shortening it.
 
 ## Configure and deploy
 
