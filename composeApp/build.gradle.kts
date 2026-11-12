@@ -527,6 +527,8 @@ kotlin {
             implementation(libs.supabase.functions)
             implementation(libs.supabase.storage)
             implementation(libs.supabase.realtime)
+            implementation(libs.gitlive.firebase.auth)
+            implementation(libs.gitlive.firebase.firestore)
             implementation(libs.reorderable)
         }
         commonTest.dependencies {
