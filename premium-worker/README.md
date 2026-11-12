@@ -26,10 +26,21 @@ Codes have a 24-hour-and-15-minute activation window and a duration selected by 
 4. Run `npx wrangler secret put FIREBASE_SERVICE_ACCOUNT_JSON` and paste the complete service-account JSON.
 5. Run `npm run check`, then `npm run deploy`.
 
-The service account's IAM permissions bypass Firestore Security Rules. The Worker therefore performs its own Firebase ID-token and admin-document checks. Never expose the service-account key to either mobile app.
+The service account's IAM permissions bypass Firestore Security Rules. The Worker therefore performs its own Firebase ID-token and admin-document checks. Never expose the service-account key to either mobile app. Keep its IAM role limited to the required Firestore data access.
 
 ## Client integration
 
 Mobile clients must fetch a fresh Firebase ID token and call the endpoints over HTTPS. The User app must display premium only from the server response or the mirrored user entitlement fields protected by Firestore rules. Do not allow client-side writes to `premium`, `premiumExpiresAt`, or `premium_codes`.
 
 This Worker is not deployed by committing it to GitHub. Configure the secret and deploy it from Cloudflare after reviewing the required IAM permissions.
+
+
+## Admin app configuration
+
+After the Worker is deployed, set its HTTPS base URL when building the Admin app:
+
+```powershell
+./gradlew assembleDebug -Pwatchathome.premiumApiBaseUrl=https://YOUR-WORKER.workers.dev
+```
+
+The Admin app now calls `POST /v1/admin/premium-codes` for code creation and reads the admin-only `premium_codes` collection for history. Do not put service-account credentials in the app.
