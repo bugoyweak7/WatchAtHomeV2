@@ -1,0 +1,11 @@
+name = "watchathome-premium-api"
+main = "src/index.ts"
+compatibility_date = "2026-11-13"
+workers_dev = true
+
+[vars]
+FIREBASE_PROJECT_ID = "watchathome-admin"
+
+# Set FIREBASE_SERVICE_ACCOUNT_JSON with:
+# npx wrangler secret put FIREBASE_SERVICE_ACCOUNT_JSON
+# Never commit a service-account key or place it in [vars].
