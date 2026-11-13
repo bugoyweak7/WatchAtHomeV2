@@ -344,3 +344,12 @@ The following profile-scoped routes are implemented and locally/mock verified; t
 - Auth header is a fresh Firebase ID token. Mutations include `p_origin_client_id`; request bodies are split at 192 KiB to remain below the Worker 256 KiB bound.
 - Worker route behavior is unchanged. Mobile client tests are in Android CI run 43413914695 (pending at entry time).
 - Client is not wired into LibraryRepository; Supabase remains active.
+
+
+## Watch-progress snapshot paging and mobile client — 2026-11-13
+
+- Snapshot route `GET /v1/profiles/:profileIndex/watch-progress?limit=&offset=&sinceLastWatched=` now supports a validated offset in addition to the existing optional timestamp filter.
+- D1 snapshot ordering is deterministic by `last_watched_at ASC, progress_key ASC`, so clients can retrieve complete bounded pages without skipping rows that share a timestamp.
+- Added a staged multiplatform Ktor client for snapshot, cursor, delta, upsert and delete routes; it authenticates with Firebase ID tokens and preserves `progress_key` identity.
+- Worker CI run 43414785430 passed. Mobile adapter tests run 43414877340 pending.
+- The client is not wired into `WatchProgressRepository`; Supabase remains active.
