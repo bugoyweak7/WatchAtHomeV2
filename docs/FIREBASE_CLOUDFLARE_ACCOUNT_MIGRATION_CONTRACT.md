@@ -247,3 +247,16 @@ The migration must replace shared SDK infrastructure as well as feature APIs:
 - Storage: migrate member-only avatars/backgrounds to R2 with authenticated short-lived access; retain entitlement checks and cache/version behavior.
 
 The source scan of 296 relevant common/full-common Kotlin files found the above client dependencies. It does not establish upstream server-side policies or prove all repository code has zero Supabase references.
+
+
+## 12. Migration evidence decision — no upstream Supabase schema access (2026-11-13)
+
+This section clarifies and supersedes any earlier wording that made an upstream Supabase schema export or dashboard access a prerequisite.
+
+- The user does not own the upstream Supabase project and has no Supabase account for this integration. Do not ask for credentials or block progress on obtaining dashboard access.
+- The implementation specification will be built from verified client source: serialized request/response models, RPC names/parameters, table reads/writes, local merge behavior, realtime event contracts, Storage object metadata, and product requirements.
+- Any behavior that cannot be proven from client source (legacy RLS, SQL constraints/triggers, PIN hash algorithm, credential encryption, Storage ACLs, membership source-of-truth, and deletion cascade) must be marked as an explicit unknown and replaced with a secure newly defined behavior, not guessed as legacy parity.
+- A source-derived D1 schema draft and local Worker tests may now be prepared without upstream schema export. Keep them local/documentation-only until reviewed. Do not claim exact legacy schema parity.
+- Remote data transfer remains conditional on the user's existing app session and actual service reachability. Do not attempt privileged export or bypass legacy authorization.
+- The first D1 migration must include explicit ownership constraints, profile scoping, indexes, delta/event cursors, tombstones, encrypted secret storage, retention/cleanup policy, and idempotent deletion semantics. Its shape must be tested locally before mobile adapter changes.
+- No production Cloudflare resource, Firebase setting, production data, or deployment is authorized by this evidence decision.
