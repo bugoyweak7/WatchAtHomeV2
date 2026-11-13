@@ -328,3 +328,11 @@ No mobile client was switched, no D1 database was provisioned, no production res
 - GitHub Actions run `43376689122` passed: TypeScript compilation, 9 schema tests, and 6 mocked account/device tests.
 - The test scope does not include full HTTP route dispatch, Firebase JWT/JWKS verification, Firebase Identity Toolkit/Firestore integration, or a real D1 database.
 - Production enablement remains blocked until D1 is provisioned and the schema is reviewed/applied through an explicitly approved step.
+
+
+## 17. Worker HTTP/auth test checkpoint (2026-11-13)
+
+- The actual Worker `fetch` handler is now exercised by automated tests using generated RS256 Firebase-shaped test tokens and a mocked JWKS endpoint.
+- Tests confirm missing tokens and anonymous sign-in providers are rejected; D1-dependent account/device routes fail closed with 503 when no D1 binding exists; device registration/listing remain scoped to the verified UID.
+- CI run `43377044568` passed TypeScript compilation and 20 tests across schema, mocked D1 data access, and Worker HTTP/auth behavior.
+- The test suite does not call the real Firebase project, Firestore, or Cloudflare D1. Production enablement still requires schema review and approved D1 provisioning.
