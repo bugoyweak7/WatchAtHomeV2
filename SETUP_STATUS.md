@@ -410,3 +410,17 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 
 
 - Follow-up type-safety refinement: PIN routes and encrypted-credential routes now use separate environment-secret type guards, so each route only asserts the key-ring configuration it actually requires. Final CI verification for this small refinement is running separately.
+
+
+## 2026-11-13 — Profile CRUD and profile-settings Worker APIs added
+
+- Re-read the actual ProfileRepository.kt, ProfileModels.kt, and ProfileSettingsSync.kt from the approved User App branch before implementing the replacement contracts.
+- Added premium-worker/src/profile-api.ts with owner-scoped profile listing/upsert/deletion, profile-lock listing, and profile-settings pull/push storage operations.
+- Added Worker routes: GET /v1/profiles; PUT /v1/profiles; DELETE /v1/profiles/{profileIndex}; GET /v1/profiles/locks; GET and PUT /v1/profiles/{profileIndex}/settings?platform=mobile.
+- Profile payload validation follows the verified six-profile limit and fields in ProfilePushPayload; generated profile IDs remain stable on subsequent upserts. The authenticated Firebase UID scopes all queries; no caller-supplied UID is used.
+- Profile deletion uses the draft schema's composite foreign keys to cascade only that owner's profile-dependent data.
+- Profile and settings read responses are JSON arrays with snake_case fields expected by existing Kotlin serializers. Settings JSON is stored and returned without normalizing away unknown/future fields.
+- Added profile storage tests for owner isolation, stable IDs, bounds, duplicate indexes, cascading deletion, unknown settings-field preservation, platform validation, and PIN-lock visibility. Added HTTP-level profile/settings route coverage and expanded Worker CORS method allowances to include PUT and DELETE.
+- Initial response-shape test runs failed because test assertions still expected wrapper objects after the API was changed to serializer-compatible arrays. The assertions were corrected; the subsequent profile helper CI run passed.
+- The final HTTP-expanded CI run is pending at this append. Do not count the new HTTP test as passing until its run completes.
+- No mobile adapter was changed, no D1 resource/binding or migration was applied, no secrets were configured, and no production deployment/data was changed.
