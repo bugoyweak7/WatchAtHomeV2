@@ -112,6 +112,7 @@ export async function pushLibraryItems(
   db: AccountD1Database, uid: string, profileIndex: number, request: Request, originClientId: string | null = null, now = Date.now(),
 ) {
   const body = await readBoundedJson(request, MAX_LIBRARY_BODY_BYTES);
+  const origin = body.p_origin_client_id == null ? originClientId : boundedText(body.p_origin_client_id, "origin client ID", 96);
   const items = parseItems(body.items ?? body.p_items);
   for (const item of items) {
     const key = itemKey(item);
@@ -128,7 +129,7 @@ export async function pushLibraryItems(
       INSERT INTO sync_events
         (user_id, profile_index, resource, record_key, operation, payload_json, origin_client_id, created_at)
       VALUES (?1, ?2, 'library', ?3, 'upsert', ?4, ?5, ?6)
-    `).bind(uid, profileIndex, key, encoded, originClientId, now).run();
+    `).bind(uid, profileIndex, key, encoded, origin, now).run();
   }
   return { saved: items.length };
 }
@@ -137,6 +138,7 @@ export async function deleteLibraryItems(
   db: AccountD1Database, uid: string, profileIndex: number, request: Request, originClientId: string | null = null, now = Date.now(),
 ) {
   const body = await readBoundedJson(request, MAX_LIBRARY_BODY_BYTES);
+  const origin = body.p_origin_client_id == null ? originClientId : boundedText(body.p_origin_client_id, "origin client ID", 96);
   const input = body.keys ?? body.p_keys;
   if (!Array.isArray(input) || input.length > MAX_LIBRARY_ROWS) {
     throw new AccountApiError(400, `keys must be an array with no more than ${MAX_LIBRARY_ROWS} entries.`);
@@ -156,7 +158,7 @@ export async function deleteLibraryItems(
       INSERT INTO sync_events
         (user_id, profile_index, resource, record_key, operation, payload_json, origin_client_id, created_at)
       VALUES (?1, ?2, 'library', ?3, 'delete', ?4, ?5, ?6)
-    `).bind(uid, profileIndex, normalized, JSON.stringify(key), originClientId, now).run();
+    `).bind(uid, profileIndex, normalized, JSON.stringify(key), origin, now).run();
   }
   return { deleted };
 }
