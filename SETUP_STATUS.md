@@ -202,3 +202,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Confirmed plugin repository operations are no-op/unavailable in the inspected Android Play Store and iOS App Store actuals; full implementation exists in `fullCommonMain`. Keep platform gating intact.
 - Appended full source paths and details to `docs/LEGACY_BACKEND_SOURCE_COMPATIBILITY_AUDIT.md`.
 - No application code, Worker runtime, SQL migration, Firebase/Cloudflare setting, production data, or deployment was changed.
+
+
+## 2026-11-13 — Migration contract reconciled with remaining source audit
+
+- Appended a source-audit addendum to `docs/FIREBASE_CLOUDFLARE_ACCOUNT_MIGRATION_CONTRACT.md`.
+- Added plugin repository sync, home-catalogue settings sync, media-server sync, device registration, and full Watch Party realtime transport requirements.
+- Explicitly classified synchronized media-server tokens as secrets and required encryption at rest, key separation, ownership checks, and no secret logging.
+- Clarified that shared Firestore add-on catalogue, per-profile installed add-ons, and per-profile plugin repositories are three separate data concepts.
+- Preserved platform gating for plugin operations on Android Play Store and iOS App Store builds.
+- No runtime code, SQL migration, Firebase/Cloudflare resource, production data, or deployment was changed.
+- Next gate: finish a path-based inventory of all remaining Supabase imports and feature adapters, then validate the complete D1 logical schema and API route matrix against that inventory before implementing mobile migration.
