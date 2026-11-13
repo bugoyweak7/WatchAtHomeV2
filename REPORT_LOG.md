@@ -245,3 +245,5 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - With the default build configuration, both repositories continue using their existing Supabase adapters.
 - The Cloudflare selection path requires an authenticated Firebase user and a provisioned/deployed D1-backed Worker. Those prerequisites are not yet verified; do not enable the flag in production yet.
 - Previous Android workflow 43415270909 was cancelled before app compilation; its focused Firebase Auth test step passed. Fresh CI verification is pending.
+
+- Fresh Android CI run 43416885505 was triggered by the final adapter/config source commit and is currently queued; do not mark the mobile wiring build-verified until this run completes successfully.
