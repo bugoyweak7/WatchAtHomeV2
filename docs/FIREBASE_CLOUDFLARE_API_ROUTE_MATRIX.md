@@ -177,3 +177,12 @@ The following handlers are now present in `premium-worker/src/index.ts`:
 - Device registration is inventory metadata only. No device-revocation endpoint was added because the current authentication middleware does not bind Firebase sessions to installation IDs or invalidate existing refresh tokens. Do not treat this registry as a remote sign-out/security revocation feature.
 - Account bootstrap is retry-safe: the account row uses create-only conflict handling, and trial initialization uses the existing immutable create-only Firestore write.
 - Existing premium routes and mobile Supabase adapters remain unchanged.
+
+
+## 13. Account/device data-access test coverage
+
+- Account/device persistence and request validation are isolated in `premium-worker/src/account-device.ts`.
+- `premium-worker/test/account-device.test.mjs` exercises the data-access layer using a D1-compatible mock backed by in-memory SQLite.
+- Verified cases: missing D1 binding, missing/inactive account, idempotent device registration/update, owner-scoped device listing, revoked installation ID reuse rejection, malformed/oversized/invalid device requests, and ignoring body-supplied UID.
+- CI run `43376689122`: TypeScript check passed; 9 schema tests passed; 6 account/device mock tests passed.
+- These are unit/contract tests for the data-access module, not full Worker HTTP/JWT or live D1 integration tests. No live database is configured.
