@@ -249,3 +249,21 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - Fresh Android CI run 43416885505 was triggered by the final adapter/config source commit and is currently queued; do not mark the mobile wiring build-verified until this run completes successfully.
 
 - CI follow-up: run 43416885505 has moved from queued to in progress. The focused Firebase/Auth + Cloudflare adapter host-test step is currently running; Android Play Store debug compilation is pending. No pass is claimed yet.
+
+
+## 2026-11-13 — Authentication dependency audit (read-only)
+
+### Findings
+- Active email sign-up/sign-in, session initialization, anonymous access, sign-out and account deletion are owned by Supabase-backed `AuthRepository`; `AuthScreen` calls this repository and `AppGate` observes its state.
+- `ProfileRepository` depends on Supabase RPCs for profile synchronization, profile deletion, PIN operations and profile-lock synchronization.
+- Device linking depends on Supabase RPCs `start_device_login_session` and `poll_tv_login_session`, plus Edge Function `tv-logins-exchange` and Supabase session import. Device registration calls `register_current_device`.
+- Membership access and membership overview use Supabase RPCs. Account deletion invokes `delete-account`.
+- Firebase gateway/session manager exist but remain staged and are not wired into the active app flow.
+
+### Decision / safety
+- Do not connect Firebase as the only active provider until these identity-dependent APIs have a deliberate migration or trusted Firebase-to-backend identity bridge. A UI-only login switch would create authenticated-state/API mismatches and risk locking users out of profiles, device linking, membership, and account management.
+- No source or production changes were made in this audit. Supabase remains active; Cloudflare sync flag remains false by default.
+- Android CI run 43416885505 was still in progress at the latest check (unit tests running; Play Store debug compilation pending).
+
+### Next work
+- Map all Supabase-backed operations and their SQL/Edge Function authorization assumptions, then define one migration strategy that preserves existing account identity and user-owned data before implementation.
