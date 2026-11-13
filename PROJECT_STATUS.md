@@ -226,3 +226,14 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Worker CI runs 43411619931 and 43411656192 passed TypeScript and the full Worker suite. Final run 43411656192: 73 tests across 10 suites, 0 failures.
 - This is Worker source and local SQLite/mock verification only. SupabaseProgressSyncAdapter remains active; no mobile adapter switch, live D1 provisioning, deployment, or production data change occurred.
 - Remaining: compare behavior against the legacy Supabase RPC contract using production-safe fixtures, implement mobile Worker adapter and merge parity tests, address timestamp pagination tie cases, add sync-event retention, and complete live D1 validation before cutover.
+
+
+## 2026-11-13 — Staged Cloudflare mobile LibrarySyncAdapter added
+
+- Added `CloudflareLibrarySyncAdapter` as a separate implementation of the existing `LibrarySyncAdapter` interface. It covers snapshot pagination, delta cursor, delta reads, batched upserts, and delete tombstones using the already-tested Worker route contract.
+- Firebase ID tokens are retrieved through the staged `FirebaseAuthRepository` and sent as Bearer authorization. Requests use the existing multiplatform Ktor HTTP client and bounded response-body reader.
+- Added optional `CLOUDFLARE_WORKER_BASE_URL` runtime configuration from local.properties or environment. It defaults to blank; no endpoint was guessed or committed.
+- Mutation batches are split by encoded body size below the Worker 256 KiB limit; the mobile adapter caps each request at 192 KiB.
+- Added MockEngine tests for bearer token/route, snapshot field mapping, HTTP error handling, and missing-token behavior. Android CI run 43413914695 was started; final result pending at this entry.
+- Safety: `LibraryRepository.syncAdapter` remains `SupabaseLibrarySyncAdapter`. No active auth switch, live D1, Worker deployment, production data, or Supabase removal occurred.
+- Remaining before mobile cutover: verify CI, complete parity and delta-merge tests, configure the real Worker URL only after endpoint confirmation, and test against a provisioned D1-backed Worker.
