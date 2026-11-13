@@ -185,3 +185,8 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Server-side validation now rejects sensitive key names recursively in profile-settings and collection JSON before D1 persistence. This complements the existing client-side `withoutProfileCredentials` filtering and prevents a modified client from bypassing that policy.
 - Non-sensitive unknown fields remain preserved for forward compatibility.
 - Added Worker tests for nested secret rejection and safe unknown-field round-trip. Latest CI run `43401302072` pending.
+
+
+## 2026-11-13 — Generic JSON guard CI verification
+- Worker CI run `43401302072` passed TypeScript compilation and 63 tests with zero failures.
+- The settings/collection sensitive-key checks are now verified in local/mock tests. Live D1 and production service integration remain unverified; mobile adapters remain on Supabase.
