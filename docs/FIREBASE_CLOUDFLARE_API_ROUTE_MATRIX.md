@@ -186,3 +186,11 @@ The following handlers are now present in `premium-worker/src/index.ts`:
 - Verified cases: missing D1 binding, missing/inactive account, idempotent device registration/update, owner-scoped device listing, revoked installation ID reuse rejection, malformed/oversized/invalid device requests, and ignoring body-supplied UID.
 - CI run `43376689122`: TypeScript check passed; 9 schema tests passed; 6 account/device mock tests passed.
 - These are unit/contract tests for the data-access module, not full Worker HTTP/JWT or live D1 integration tests. No live database is configured.
+
+
+## 14. Worker HTTP and Firebase-token test coverage
+
+- Added `premium-worker/test/http-auth.test.mjs`, exercising the actual Worker fetch entry point with generated RS256 test tokens and a mocked Secure Token JWKS response.
+- Verified: public health route; missing token rejected; anonymous provider rejected; account/device routes return 503 while D1 is absent; authenticated device registration and owner-scoped listing use the UID from the verified token, not a request-body UID.
+- Latest CI run `43377044568`: TypeScript passed; 9 schema tests passed; 6 SQLite-backed D1 data-access tests passed; 5 HTTP/auth tests passed (20 total, 0 failures).
+- These tests use test keys and SQLite mocks. They do not replace live Firebase, Firestore, or Cloudflare D1 integration tests.
