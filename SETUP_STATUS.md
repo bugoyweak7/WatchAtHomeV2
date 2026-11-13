@@ -479,3 +479,11 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - GitHub Actions run `43387942928` was observed in progress. No successful build or test result is claimed until the run completes.
 - The six common tests have been added but have not yet been run by CI.
 - No production Firebase/Cloudflare setting, Firestore rule, D1 database/binding, secret, deployment, Supabase data or user data was changed.
+
+
+### Firebase Auth build failure and correction
+- First workflow run `43387942928` failed before Kotlin compilation because the existing Gradle script used an unresolved `platform(...)` helper inside the Android source-set dependency block at `composeApp/build.gradle.kts:455`.
+- Corrected only that BOM declaration to `implementation(project.dependencies.platform(libs.firebase.bom))`; the Firebase BOM remains applied to the Android source-set configuration.
+- This is a build-script compatibility correction discovered while validating the new work, not an auth-source compiler finding.
+- Second workflow run `43388218215` was queued from commit `4db2c6c59448e039c4cf36cad718f79a01bdafd9`; final result remains pending.
+- iOS setup was also source-verified: `GoogleService-Info.plist` is present, `iOSApp.swift` calls `FirebaseApp.configure()`, and the Xcode project links `FirebaseCore`, `FirebaseAuth`, and `FirebaseFirestore`.
