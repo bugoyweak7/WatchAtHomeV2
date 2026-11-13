@@ -199,3 +199,27 @@ The following handlers are now present in `premium-worker/src/index.ts`:
 ## 15. Security review gate before D1 provisioning
 
 Detailed findings are recorded in `docs/D1_SECURITY_REVIEW.md`. Do not apply the current schema draft or enable D1 routes until provider/media-server encryption, PIN KDF/lockout, device-link nonce/replay/redirect controls, UID/profile ownership checks, deletion orchestration, sync/idempotency retention, rate limits, and generic JSON secret exclusion are addressed. Confirm `FIREBASE_WEB_API_KEY` runtime configuration before account bootstrap is enabled.
+
+
+## Worker routes implemented in source — 2026-11-13
+
+The existing Worker now exposes the following D1-backed profile routes on the approved setup branch. They remain unavailable at runtime until D1 and the required Worker secrets are provisioned:
+
+| Route | Method | Behavior |
+|---|---|---|
+| `/v1/profiles/{profileIndex}/pin?action=set` | POST | Set/replace PIN; requires a password-provider Firebase token authenticated within the last 5 minutes |
+| `/v1/profiles/{profileIndex}/pin?action=verify` | POST | Verify PIN; persisted 5-failure/15-minute lockout plus account/profile and IP rate limits |
+| `/v1/profiles/{profileIndex}/pin?action=clear` | POST | Clear PIN; requires recent Firebase reauthentication |
+| `/v1/profiles/{profileIndex}/provider-credentials` | PUT | Save provider credential JSON encrypted with AES-256-GCM |
+| `/v1/profiles/{profileIndex}/provider-credentials?provider={provider}` | GET | Decrypt and return only the authenticated owner's selected provider credential |
+| `/v1/profiles/{profileIndex}/media-servers` | PUT | Save media-server metadata separately from an AES-256-GCM-encrypted access token |
+| `/v1/profiles/{profileIndex}/media-servers` | GET | Return at most 100 owner-scoped media-server records and their decrypted tokens |
+
+Shared controls:
+- UID comes only from the verified Firebase ID token. Profile ownership is checked against D1 before access.
+- Profile indices are bounded; request bodies are bounded; credential values are never written to application logs.
+- PIN set/clear require recent reauthentication. PIN verification uses the persisted lockout plus D1-backed account/profile and IP rate-limit windows.
+- D1 rate-limit state is stored in the new `api_rate_limits` draft table. A retention/cleanup task is still required before production operation.
+- PIN and data-encryption key rings are separate Worker secrets. Missing configuration fails closed with 503.
+- The D1 SQL remains a draft and is not an active Wrangler migration. No D1 database/binding or key secrets have been created, and no mobile adapter has been switched.
+- API response shapes are a first implementation contract and still need reconciliation with the exact legacy sync serializer before mobile integration.
