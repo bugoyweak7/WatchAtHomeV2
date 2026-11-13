@@ -212,3 +212,11 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - The global flag remains false by default. The Firebase Auth implementation is still staged rather than wired into the active app login, so this adapter is not ready for activation.
 - Android CI has been triggered by these source/test commits. Do not mark compilation/tests as passed until the matching run completes successfully.
 - No D1 binding, Cloudflare deployment, secrets, Firebase Console settings, production data, or account migration was changed.
+
+
+### Watched-items identity and delete-key compatibility follow-up — 2026-11-13
+
+- Tightened watched-item storage identity to include `content_type`, preserving the same content ID when it represents different media types.
+- The legacy delete request intentionally carries only `content_id`, `season`, and `episode`; the Worker now resolves all matching active content-type variants and appends a separate tombstone for each exact stored item.
+- Added a SQLite regression test covering same-ID movie/series rows and the legacy delete-key behavior.
+- Worker CI rerun is pending. This change remains source-only and does not affect live data or deployments.
