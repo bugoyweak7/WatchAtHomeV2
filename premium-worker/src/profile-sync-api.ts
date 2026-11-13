@@ -52,42 +52,38 @@ async function replaceSelections(
   now = Date.now(),
 ): Promise<{ saved: number }> {
   const table = resource === "addons" ? "profile_addons" : "profile_plugins";
-  const urlColumn = "manifest_url";
-  if (rows.length === 0) {
-    await db.prepare(`DELETE FROM ${table} WHERE user_id = ?1 AND profile_index = ?2`)
-      .bind(uid, profileIndex).run();
-    return { saved: 0 };
-  }
+  const serializedRows = JSON.stringify(rows.map(row => ({
+    url: row.url, name: row.name, enabled: row.enabled ? 1 : 0, sort_order: row.sortOrder,
+  })));
 
-  const values: unknown[] = [];
-  const tuples = rows.map(row => {
-    const offset = values.length;
-    if (resource === "addons") {
-      values.push(uid, profileIndex, row.url, row.name, row.enabled ? 1 : 0, row.sortOrder, now);
-      return `(?${offset + 1}, ?${offset + 2}, ?${offset + 3}, ?${offset + 4}, ?${offset + 5}, ?${offset + 6}, ?${offset + 7})`;
-    }
-    values.push(uid, profileIndex, row.url, row.name, row.enabled ? 1 : 0, row.sortOrder, now);
-    return `(?${offset + 1}, ?${offset + 2}, ?${offset + 3}, ?${offset + 4}, ?${offset + 5}, ?${offset + 6}, ?${offset + 7})`;
-  });
-
-  const columns = resource === "addons"
-    ? "(user_id, profile_index, manifest_url, name, enabled, sort_order, updated_at)"
-    : "(user_id, profile_index, manifest_url, name, enabled, sort_order, updated_at)";
+  // One JSON-backed insert/upsert and one stale-row deletion avoid oversized
+  // dynamic SQL placeholder lists and preserve whole-snapshot replacement semantics.
   await db.prepare(`
-    INSERT INTO ${table} ${columns} VALUES ${tuples.join(", ")}
+    INSERT INTO ${table}
+      (user_id, profile_index, manifest_url, name, enabled, sort_order, updated_at)
+    SELECT ?1, ?2,
+      json_extract(value, '$.url'),
+      json_extract(value, '$.name'),
+      json_extract(value, '$.enabled'),
+      json_extract(value, '$.sort_order'),
+      ?4
+    FROM json_each(?3)
+    WHERE true
     ON CONFLICT(user_id, profile_index, manifest_url) DO UPDATE SET
       name = excluded.name,
       enabled = excluded.enabled,
       sort_order = excluded.sort_order,
       updated_at = excluded.updated_at
-  `).bind(...values).run();
+  `).bind(uid, profileIndex, serializedRows, now).run();
 
-  const keep = rows.map(row => row.url);
-  const placeholders = keep.map((_, i) => `?${i + 3}`).join(", ");
   await db.prepare(`
     DELETE FROM ${table}
-    WHERE user_id = ?1 AND profile_index = ?2 AND ${urlColumn} NOT IN (${placeholders})
-  `).bind(uid, profileIndex, ...keep).run();
+    WHERE user_id = ?1 AND profile_index = ?2
+      AND NOT EXISTS (
+        SELECT 1 FROM json_each(?3) AS incoming
+        WHERE json_extract(incoming.value, '$.url') = ${table}.manifest_url
+      )
+  `).bind(uid, profileIndex, serializedRows).run();
   return { saved: rows.length };
 }
 
