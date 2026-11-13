@@ -6,6 +6,7 @@ import {
   getAddons, getCollections, getHomeCatalogSettings, getPlugins, putAddons, putCollections, putHomeCatalogSettings, putPlugins,
 } from "../src/profile-sync-api.ts";
 import { deleteLibraryItems, getLibraryDelta, getLibraryDeltaCursor, getLibrarySnapshot, parseLibraryPageParams, pushLibraryItems } from "../src/library-sync-api.ts";
+import { deleteProgress, getProgressCursor, getProgressDelta, getProgressSnapshot, pushProgress } from "../src/watch-progress-sync-api.ts";
 
 const schema = readFileSync(new URL("../schema/0001_account_data.draft.sql", import.meta.url), "utf8");
 
@@ -248,5 +249,45 @@ test("library writes reject duplicate keys, malformed fields and oversized batch
   assert.deepEqual(parseLibraryPageParams(new URL("https://worker.test/?limit=20&offset=40"), "snapshot"), { limit: 20, offset: 40 });
   assert.deepEqual(parseLibraryPageParams(new URL("https://worker.test/?limit=50&since=9"), "delta"), { limit: 50, since: 9 });
   assert.throws(() => parseLibraryPageParams(new URL("https://worker.test/?limit=501"), "snapshot"), /Invalid library page limit/);
+  db.close();
+});
+
+
+test("watch progress snapshot, delta cursor, upsert and delete preserve stable progress keys", async () => {
+  const db = createDb(); db.seed("progress-owner");
+  const entries = [
+    { content_id: "show-1", content_type: "series", video_id: "episode-video-1", season: 1, episode: 2, position: 120000, duration: 240000, last_watched: 1700000000000, progress_key: "show-1_s1e2" },
+    { content_id: "movie-1", content_type: "movie", video_id: "movie-video", season: null, episode: null, position: 60000, duration: 90000, last_watched: 1700000001000, progress_key: "movie-1" },
+  ];
+  assert.equal(await getProgressCursor(db, "progress-owner", 1), 0);
+  assert.deepEqual(await pushProgress(db, "progress-owner", 1, req({ p_entries: entries, p_origin_client_id: "nuvio-mobile-device1" })), { saved: 2 });
+  assert.equal((await getProgressSnapshot(db, "progress-owner", 1, null, 1)).length, 1);
+  assert.equal((await getProgressSnapshot(db, "progress-owner", 1, 1700000000000, 10)).length, 1);
+  const cursor = await getProgressCursor(db, "progress-owner", 1);
+  assert.equal(cursor, 2);
+  const delta = await getProgressDelta(db, "progress-owner", 1, 0, 10);
+  assert.equal(delta.length, 2);
+  assert.equal(delta[0].operation, "upsert");
+  assert.equal(delta[0].progress_key, "show-1_s1e2");
+  assert.equal(delta[0].position, 120000);
+
+  assert.deepEqual(await deleteProgress(db, "progress-owner", 1, req({ p_keys: ["show-1_s1e2"], p_origin_client_id: "nuvio-mobile-device1" })), { deleted: 1 });
+  assert.equal((await getProgressSnapshot(db, "progress-owner", 1, null, 10)).length, 1);
+  const afterDelete = await getProgressDelta(db, "progress-owner", 1, cursor, 10);
+  assert.equal(afterDelete.length, 1);
+  assert.equal(afterDelete[0].operation, "delete");
+  assert.equal(afterDelete[0].progress_key, "show-1_s1e2");
+  assert.equal(await getProgressCursor(db, "progress-owner", 1), 3);
+  db.close();
+});
+
+test("watch progress rejects malformed identities, duplicate keys, negative values and oversized batches", async () => {
+  const db = createDb(); db.seed("progress-validation");
+  const valid = { content_id: "movie-1", content_type: "movie", video_id: "v1", season: null, episode: null, position: 0, duration: 100, last_watched: 1, progress_key: "movie-1" };
+  await assert.rejects(() => pushProgress(db, "progress-validation", 1, req({ entries: [valid, valid] })), /Duplicate progress key/);
+  await assert.rejects(() => pushProgress(db, "progress-validation", 1, req({ entries: [{ ...valid, position: -1 }] })), /Invalid position/);
+  await assert.rejects(() => pushProgress(db, "progress-validation", 1, req({ entries: [{ ...valid, season: 1 }] })), /Season and episode must both be set/);
+  await assert.rejects(() => pushProgress(db, "progress-validation", 1, req({ entries: Array.from({ length: 501 }, (_, i) => ({ ...valid, content_id: String(i), progress_key: String(i) })) })), /no more than 500/);
+  await assert.rejects(() => deleteProgress(db, "progress-validation", 1, req({ keys: ["same", "same"] })), /Duplicate progress key/);
   db.close();
 });
