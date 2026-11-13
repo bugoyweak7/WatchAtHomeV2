@@ -545,3 +545,8 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Worker source now supports owner-scoped deletion of a registered-device inventory entry.
 - No new Cloudflare setup or secrets required. Device inventory revocation does not invalidate Firebase sessions or force a client logout.
 - Final CI run `43402508386` queued after correcting initial syntax/validation issues.
+
+
+## 2026-11-13 — Device registry revoke route verified
+- Verified by Worker CI `43402508386`: TypeScript passed; 67 tests passed, 0 failed.
+- This is local SQLite/mocked D1 validation only. No Cloudflare D1 production resource or Worker deployment exists; device inventory revocation does not revoke Firebase sessions.
