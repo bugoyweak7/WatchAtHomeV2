@@ -7,6 +7,8 @@ import {
   PIN_LOCKOUT_DURATION_MS,
   PIN_MAX_FAILED_ATTEMPTS,
   verifyProfilePinWithLockout,
+  setProfilePin,
+  clearProfilePin,
 } from "../src/pin-store.ts";
 
 function base64(bytes) {
@@ -124,5 +126,43 @@ test("failed attempt after cooldown re-applies lockout until the correct PIN is 
   const failedAgain = await verifyProfilePinWithLockout(db, env, "uid-pin", 1, "0000", afterExpiry);
   assert.equal(failedAgain.locked, true);
   assert.equal(failedAgain.retryAfterMs, PIN_LOCKOUT_DURATION_MS);
+  db.close();
+});
+
+
+test("setting a PIN creates and replaces the verifier while clearing lockout state", async () => {
+  const db = createD1();
+  db.seed("uid-set-pin");
+  await setProfilePin(db, env, "uid-set-pin", 1, "2468", 1000);
+  assert.equal(db.state("uid-set-pin", 1).failedAttempts, 0);
+  const first = await verifyProfilePinWithLockout(db, env, "uid-set-pin", 1, "2468", 1100);
+  assert.equal(first.verified, true);
+
+  for (let attempt = 1; attempt <= PIN_MAX_FAILED_ATTEMPTS; attempt++) {
+    await verifyProfilePinWithLockout(db, env, "uid-set-pin", 1, "0000", 2000 + attempt);
+  }
+  assert.equal(db.state("uid-set-pin", 1).failedAttempts, PIN_MAX_FAILED_ATTEMPTS);
+
+  await setProfilePin(db, env, "uid-set-pin", 1, "8642", 3000);
+  assert.equal(db.state("uid-set-pin", 1).failedAttempts, 0);
+  assert.equal(db.state("uid-set-pin", 1).lockedUntil, null);
+  assert.equal((await verifyProfilePinWithLockout(db, env, "uid-set-pin", 1, "8642", 3100)).verified, true);
+  assert.equal((await verifyProfilePinWithLockout(db, env, "uid-set-pin", 1, "2468", 3200)).verified, false);
+  db.close();
+});
+
+test("clearing a PIN deletes only the requested owner's profile credential", async () => {
+  const db = createD1();
+  db.seed("uid-clear-a", 1);
+  db.seed("uid-clear-a", 2);
+  db.seed("uid-clear-b", 1);
+  await setProfilePin(db, env, "uid-clear-a", 1, "1111");
+  await setProfilePin(db, env, "uid-clear-a", 2, "2222");
+  await setProfilePin(db, env, "uid-clear-b", 1, "3333");
+
+  assert.equal(await clearProfilePin(db, "uid-clear-a", 1), true);
+  assert.equal(await clearProfilePin(db, "uid-clear-a", 1), false);
+  assert.equal((await verifyProfilePinWithLockout(db, env, "uid-clear-a", 2, "2222")).verified, true);
+  assert.equal((await verifyProfilePinWithLockout(db, env, "uid-clear-b", 1, "3333")).verified, true);
   db.close();
 });
