@@ -262,3 +262,9 @@ All routes require a verified Firebase email/password token, active D1 account a
 All endpoints require Firebase email/password token verification, an active D1 account, and an owned profile. Writes are bounded and rate limited. Add-ons and plugin rows are per-user/per-profile D1 data; the shared admin catalogue remains in Firestore. Plugin manifests and scraper code continue to be fetched from their repository URLs and cached locally as in the existing client.
 
 GitHub Actions run 43382547116 passed TypeScript and all 61 Worker tests (0 failures), including the three HTTP route ownership checks and eight storage contract tests. This is not live D1 or deployment verification. The D1 schema remains draft-only.
+
+
+### Home catalog settings route implementation note — 2026-11-13
+- `GET/PUT /v1/profiles/:profileIndex/home-catalog?platform=home_catalog_shared` is now implemented in Worker source using the existing `home_catalog_settings` table.
+- Ownership, active account, profile ownership, per-route rate limits, bounded JSON, sensitive-key rejection, and versioned upsert are applied by the Worker.
+- This is not deployed and the app still uses Supabase. CI verification for the route and new tests is pending.
