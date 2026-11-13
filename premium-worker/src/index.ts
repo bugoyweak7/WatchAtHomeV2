@@ -10,6 +10,7 @@ import {
   registerDevice,
   requireAccountDb,
   readBoundedJson,
+  type AccountD1Database,
 } from "./account-device";
 
 interface Env {
@@ -459,12 +460,12 @@ function boundedText(value: unknown, max: number): string {
   if (typeof value !== "string" || !value.trim() || value.trim().length > max) throw new HttpError(400, "Invalid profile data.");
   return value.trim();
 }
-async function requireOwnedProfile(db: D1Database, uid: string, index: number): Promise<void> {
+async function requireOwnedProfile(db: AccountD1Database, uid: string, index: number): Promise<void> {
   await ensureActiveAccount(db, uid);
   const row = await db.prepare("SELECT 1 AS owned FROM profiles WHERE user_id = ?1 AND profile_index = ?2").bind(uid, index).first();
   if (!row) throw new HttpError(404, "Profile not found.");
 }
-async function applyRateLimits(request: Request, db: D1Database, user: VerifiedUser, route: string, profileIndex?: number): Promise<void> {
+async function applyRateLimits(request: Request, db: AccountD1Database, user: VerifiedUser, route: string, profileIndex?: number): Promise<void> {
   const ip = request.headers.get("cf-connecting-ip") ?? "unavailable";
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip));
   const ipKey = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
