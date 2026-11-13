@@ -224,3 +224,16 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Replacement requirements now include R2 object migration, Worker entitlement checks, short-lived authorized delivery, asset-version cache invalidation, and preservation of local image caches. Member-only assets must not become public.
 - Updated the compatibility audit and migration contract with these asset dependencies.
 - No app code, Worker runtime, R2 object, SQL migration, Firebase setting, Cloudflare resource, production data, or deployment was changed.
+
+
+## 2026-11-13 — Shared backend infrastructure and profile asset audit
+
+- Completed a path-targeted scan of 296 Kotlin files in the relevant User App common/full-common auth, network, sync, profile, add-on, library, membership, party, server, plugin, and settings areas on the approved branch.
+- In addition to feature RPCs, identified app-wide Supabase infrastructure coupling in SupabaseProvider, SupabaseEndpointConfig, ServerConfiguration, ServerDiscovery, NetworkStatusRepository, and RealtimeSocketFactory.
+- The replacement must cover official/custom backend configuration, health probing, retry/fallback and cooldown behavior, auth headers, and realtime WebSocket heartbeat/reconnect—not only replace database calls.
+- Confirmed profile asset contracts and buckets: standard avatar catalogue; member avatar catalogue and membership-profile-avatars; supporter background catalogue and membership-profile-backgrounds. Member assets require authenticated delivery, membership gating, short-lived share URLs, versioned caches, and portrait fallback.
+- Appended these infrastructure and asset requirements to the compatibility audit and migration contract.
+- This scan is a targeted 296-file area scan, not a claim that every repository source file or upstream server-side definition has been exhaustively audited.
+- No legacy service access, data export, app source change, Worker runtime change, SQL migration, Firebase/Cloudflare setting, production data change, or deployment was performed.
+- Supabase dashboard/schema evidence remains unavailable because the user does not own the upstream project. Continue using verified client contracts and explicitly mark unverified server semantics.
+- Next gate: reconcile the proposed D1 schema and Worker API matrix against the now-expanded client inventory, then produce a local-only schema draft and tests before mobile adapter changes.
