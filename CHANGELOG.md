@@ -160,3 +160,11 @@ Entries are append-only. Do not rewrite or remove earlier records.
 
 
 - Follow-up verification: authenticated Worker offset paging test passed in run 43415195896. Android run 43414877340 was cancelled by a later push; replacement run 43415270909 is queued for the latest mobile adapter tests.
+
+## 2026-11-13 — Guarded Library and watch-progress adapter wiring
+
+- Added CLOUDFLARE_SYNC_ENABLED as a generated runtime flag, defaulting to false.
+- Connected LibraryRepository and WatchProgressRepository to select their Cloudflare adapters only when the explicit flag is enabled and the Worker URL is HTTPS.
+- Supabase remains the active/default path. No automatic fallback after a failed Cloudflare request is introduced, avoiding silent split-brain writes if the flag is intentionally enabled later.
+- This change does not provision D1, deploy a Worker, switch authentication, or migrate production data.
+- Android CI verification is pending after the previous run was cancelled by a subsequent push.
