@@ -4,6 +4,7 @@ import { setProfilePin, clearProfilePin, verifyProfilePinWithLockout } from "./p
 import { consumeRateLimit } from "./rate-limit";
 import { getAddons, getCollections, getHomeCatalogSettings, getPlugins, putAddons, putCollections, putHomeCatalogSettings, putPlugins } from "./profile-sync-api";
 import { deleteLibraryItems, getLibraryDelta, getLibraryDeltaCursor, getLibrarySnapshot, parseLibraryPageParams, pushLibraryItems } from "./library-sync-api";
+import { deleteProgress, getProgressCursor, getProgressDelta, getProgressSnapshot, pushProgress } from "./watch-progress-sync-api";
 import {
   deleteProfile, getProfileSettings, listProfileLocks, listProfiles, putProfileSettings, upsertProfiles,
 } from "./profile-api";
@@ -555,6 +556,33 @@ async function homeCatalogSettingsRoute(
   return response({ error: "Method not allowed." }, 405);
 }
 
+async function watchProgressSyncRoute(request: Request, env: Env, user: VerifiedUser, index: number, action: "snapshot" | "cursor" | "delta" | "push" | "delete"): Promise<Response> {
+  const db = requireAccountDb(env);
+  await requireOwnedProfile(db, user.uid, index);
+  await applyRateLimits(request, db, user, "watch-progress-" + action, index);
+  const url = new URL(request.url);
+  if (action === "snapshot" && request.method === "GET") {
+    const limit = Number(url.searchParams.get("limit") ?? 500);
+    const sinceRaw = url.searchParams.get("sinceLastWatched");
+    const since = sinceRaw == null ? null : Number(sinceRaw);
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 500) throw new AccountApiError(400, "Invalid progress page limit.");
+    if (since != null && (!Number.isSafeInteger(since) || since < 0)) throw new AccountApiError(400, "Invalid progress timestamp cursor.");
+    return response(await getProgressSnapshot(db, user.uid, index, since, limit));
+  }
+  if (action === "cursor" && request.method === "GET") return response(await getProgressCursor(db, user.uid, index));
+  if (action === "delta" && request.method === "GET") {
+    const since = Number(url.searchParams.get("since") ?? 0);
+    const limit = Number(url.searchParams.get("limit") ?? 500);
+    if (!Number.isSafeInteger(since) || since < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 500) {
+      throw new AccountApiError(400, "Invalid progress delta page.");
+    }
+    return response(await getProgressDelta(db, user.uid, index, since, limit));
+  }
+  if (action === "push" && request.method === "PUT") return response(await pushProgress(db, user.uid, index, request));
+  if (action === "delete" && request.method === "POST") return response(await deleteProgress(db, user.uid, index, request));
+  return response({ error: "Method not allowed." }, 405);
+}
+
 async function librarySyncRoute(request: Request, env: Env, user: VerifiedUser, index: number, action: "snapshot" | "cursor" | "delta" | "push" | "delete"): Promise<Response> {
   const db = requireAccountDb(env);
   await requireOwnedProfile(db, user.uid, index);
@@ -675,6 +703,13 @@ export default {
           /^\/v1\/profiles\/([1-9][0-9]*)(?:\/settings)?$/.test(url.pathname)) {
         const profileResponse = await profileApiRoute(request, env, user);
         if (profileResponse.status !== 404) return profileResponse;
+      }
+      const progressMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/watch-progress(?:\/(delta|delete|cursor))?$/.exec(url.pathname);
+      if (progressMatch) {
+        const action = progressMatch[2] === "delta" ? "delta" : progressMatch[2] === "delete" ? "delete" : progressMatch[2] === "cursor" ? "cursor" : request.method === "PUT" ? "push" : "snapshot";
+        if (["GET", "PUT", "POST"].includes(request.method)) {
+          return await watchProgressSyncRoute(request, env, user, Number(progressMatch[1]), action as "snapshot" | "cursor" | "delta" | "push" | "delete");
+        }
       }
       const libraryMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/library(?:\/(delta|delete|cursor))?$/.exec(url.pathname);
       if (libraryMatch) {
