@@ -92,3 +92,16 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Confirmed the current Worker route set covers account bootstrap/devices, profiles/settings/PIN, add-ons/plugins/collections, provider credentials/media servers, and premium/trial operations.
 - Recorded the safe migration order and the requirement to preserve local caches, sync cursors, tombstones, and offline behavior.
 - Documentation-only update. No application source, Firebase rules, Cloudflare resources, secrets, deployments, or Supabase data changed.
+
+
+## 2026-11-13 — Staged Firebase email/password authentication layer
+
+- Added `FirebaseAuthGateway.kt` using the already-declared GitLive Firebase Auth 2.8.0 dependency. It exposes registered-account creation/sign-in, auth-state observation, sign-out, and fresh Firebase ID-token retrieval.
+- Added `FirebaseAuthSessionManager.kt` and the public `FirebaseAuthRepository` entry point. Anonymous Firebase sessions are rejected and signed out.
+- Added six common tests using a fake gateway for session restoration, anonymous rejection, registration/sign-in, input validation, ID-token access, and sign-out.
+- Added `.github/workflows/watchathome-firebase-auth-check.yml` to compile the Android Play Store debug variant when the staged auth files change.
+- This is a parallel/staged auth layer only. It is not wired into `AuthScreen` and does not replace `AuthRepository`. The active app still uses Supabase authentication.
+- Reason: current profile/data sync, device-link and account-deletion paths still require Supabase sessions. A login-only cutover would break those features.
+- The Worker account-bootstrap endpoint currently depends on an unconfigured D1 binding and is not ready for app registration flow. No app-to-Worker bootstrap call was added.
+- CI run `43387942928` started for the Android compile workflow; result pending at the time of this note.
+- No Firebase Console settings, Firestore rules, Cloudflare resources/secrets/deployments, D1 database, production data, or Supabase services were changed.
