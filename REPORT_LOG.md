@@ -342,3 +342,11 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - Added focused unit tests and CI workflow coverage. These tests verify client request construction; they do not prove live Firebase, Worker, or D1 connectivity.
 - The existing app `ProfileRepository` still uses Supabase RPCs. No repository routing or login behavior was changed because `AuthRepository` is still Supabase-backed.
 - CI status for the earlier Android run `43421702839` remained pending when checked. A later workflow run must verify the new profile adapter tests and Android build.
+
+
+## 2026-11-13 — Profile settings adapter staging
+
+- Verified the Worker profile-settings route contract and implemented a separate Kotlin adapter for the mobile settings blob.
+- Added GET decode and PUT payload tests, including preservation of an unknown future settings key and rejection before network access when no Firebase token is available.
+- Added the new adapter and test to the Android Play Store CI workflow.
+- This remains client-contract test coverage only. The active `ProfileSettingsSync` still uses Supabase RPCs and must not switch until Firebase authentication and the Worker/D1 deployment are verified end to end.
