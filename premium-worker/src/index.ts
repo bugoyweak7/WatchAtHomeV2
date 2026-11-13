@@ -318,7 +318,11 @@ async function redeemCode(request: Request, env: Env, user: VerifiedUser): Promi
   return response({ success: true, premium: true, expiresAt: new Date(expiresAt).toISOString() });
 }
 
-async function firebaseAccountCreatedAt(request: Request, env: Env): Promise<number> {
+async function firebaseAccountCreatedAt(
+  request: Request,
+  env: Env,
+  expectedUid: string,
+): Promise<number> {
   if (!env.FIREBASE_WEB_API_KEY) {
     throw new HttpError(503, "Trial registration verification is not configured.");
   }
@@ -339,8 +343,8 @@ async function firebaseAccountCreatedAt(request: Request, env: Env): Promise<num
   };
   const account = payload.users?.[0];
   const createdAt = Number(account?.createdAt);
-  if (!account?.localId || !Number.isFinite(createdAt) || createdAt <= 0) {
-    throw new HttpError(401, "Firebase account creation time is unavailable.");
+  if (account?.localId !== expectedUid || !Number.isFinite(createdAt) || createdAt <= 0) {
+    throw new HttpError(401, "Firebase account registration could not be verified.");
   }
   return createdAt;
 }
@@ -435,23 +439,7 @@ export default {
         return await redeemCode(request, env, user);
       }
       if (request.method === "POST" && url.pathname === "/v1/trial/initialize") {
-        const registeredAt = await firebaseAccountCreatedAt(request, env);
-        const accountToken = request.headers.get("authorization") ?? "";
-        const accountMatch = /^Bearer\\s+(.+)$/i.exec(accountToken);
-        if (!accountMatch) throw new HttpError(401, "Sign in is required.");
-        const lookupResponse = await fetch(
-          `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(env.FIREBASE_WEB_API_KEY)}`,
-          {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ idToken: accountMatch[1] }),
-          },
-        );
-        if (!lookupResponse.ok) throw new HttpError(401, "Could not verify account registration.");
-        const lookupPayload = await lookupResponse.json() as { users?: Array<{ localId?: string }> };
-        if (lookupPayload.users?.[0]?.localId !== user.uid) {
-          throw new HttpError(401, "Account identity verification failed.");
-        }
+        const registeredAt = await firebaseAccountCreatedAt(request, env, user.uid);
         return await initializeTrial(env, user, registeredAt);
       }
       if (request.method === "GET" && url.pathname === "/v1/premium/status") {
