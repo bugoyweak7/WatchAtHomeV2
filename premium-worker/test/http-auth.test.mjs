@@ -395,3 +395,37 @@ test("device DELETE revokes only the authenticated owner's registry entry", asyn
   assert.deepEqual(await wrongOwner.json(), { revoked: false });
   db.close();
 });
+
+
+test("library HTTP routes authenticate and enforce profile ownership across snapshot and delta sync", async () => {
+  const db = createD1();
+  db.seedAccount("library-http-owner");
+  db.seedAccount("library-http-other");
+  db.seedProfile("library-http-owner", 1);
+  const env = { ...envWithoutD1, DB: db };
+  const token = await idToken("library-http-owner");
+  const otherToken = await idToken("library-http-other");
+
+  const put = await worker.fetch(request("/v1/profiles/1/library", "PUT", token, {
+    items: [{ content_id: "tt900", content_type: "movie", name: "HTTP Movie", poster_shape: "POSTER", genres: [], added_at: 1234 }],
+  }), env);
+  assert.equal(put.status, 200);
+  assert.deepEqual(await put.json(), { saved: 1 });
+
+  const cursorResponse = await worker.fetch(request("/v1/profiles/1/library/cursor", "GET", token), env);
+  assert.equal(cursorResponse.status, 200);
+  const cursor = await cursorResponse.json();
+  assert.equal(cursor, 1);
+
+  const snapshot = await worker.fetch(request("/v1/profiles/1/library?limit=10&offset=0", "GET", token), env);
+  assert.equal(snapshot.status, 200);
+  assert.equal((await snapshot.json())[0].content_id, "tt900");
+
+  const delta = await worker.fetch(request("/v1/profiles/1/library/delta?since=0&limit=10", "GET", token), env);
+  assert.equal(delta.status, 200);
+  assert.equal((await delta.json())[0].operation, "upsert");
+
+  const denied = await worker.fetch(request("/v1/profiles/1/library", "GET", otherToken), env);
+  assert.equal(denied.status, 404);
+  db.close();
+});
