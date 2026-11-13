@@ -113,3 +113,12 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Corrected the existing BOM declaration to `implementation(project.dependencies.platform(libs.firebase.bom))`, preserving the same Firebase BOM alignment intent.
 - A second compile run `43388218215` was queued from the fix commit; its result is pending.
 - This first failure does not indicate a Firebase Auth source compilation failure because compilation never began.
+
+
+### Firebase Auth SDK API correction — 2026-11-13
+- Android build run `43388218215` completed with failure during Kotlin compilation (not Gradle configuration).
+- Exact compiler errors in `FirebaseAuthGateway.kt`: `Firebase.apps()` and `Firebase.initialize()` were unresolved, and `getIdToken(...).token` referenced a nonexistent `token` property.
+- Verified the repository's declared GitLive Firebase SDK version `2.8.0` against its tagged public API source. `FirebaseUser.getIdToken(forceRefresh)` already returns `String?`; Android default Firebase initialization is handled by FirebaseInitProvider when the Google Services plugin/configuration is present, while iOS startup calls `FirebaseApp.configure()`.
+- Corrected the gateway to use the already-initialized `Firebase.auth` instance and return `getIdToken(forceRefresh)` directly. Change committed as `6cf909beab6bcf7301614f6cfc9d6784e2116d60`.
+- A new Android compile workflow is expected from this source change; no successful build is claimed until that run completes.
+- Active Supabase auth remains unchanged; no Cloudflare/Firebase production resources or data were changed.
