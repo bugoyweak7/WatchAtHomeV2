@@ -359,3 +359,22 @@ The following profile-scoped routes are implemented and locally/mock verified; t
 
 - Added authenticated HTTP coverage for `GET /v1/profiles/:profileIndex/watch-progress?limit=&offset=`; Worker CI run 43415195896 passed.
 - Mobile adapter PUT/POST route tests added. Latest Android CI run 43415270909 queued after previous run cancellation.
+
+
+## 2026-11-13 — Watched-items Worker sync API staged
+
+- Re-scanned the current approved branch before implementation. Branch head at the start of this work: `726bd9d58de41dd1c184314f1e1852051e6c93d0`.
+- Added `premium-worker/src/watched-items-sync-api.ts` with D1 snapshot paging, stable per-profile event cursor, delta reads, bounded upserts, and delete tombstones.
+- Added authenticated Worker routes for `GET /v1/profiles/:profileIndex/watched-items`, `GET .../cursor`, `GET .../delta`, `PUT .../watched-items`, and `POST .../delete`.
+- Ownership is derived from the verified Firebase UID and checked against the requested profile before every operation. Batch size is capped at 500; request bodies are bounded; episode season/episode values must be paired; duplicate keys are rejected.
+- Delete events retain the prior watched-item payload so delta consumers receive the identity and metadata needed to apply the tombstone.
+- Added local SQLite data-access tests and authenticated HTTP route tests. CI has been triggered by these commits; results must be checked before calling the change verified.
+- This closes the Worker source gap for watched-items sync only. The mobile adapter remains Supabase-backed; no D1 database/binding, Firebase/Cloudflare secret, deployment, production data migration, or sync flag change occurred.
+- The existing `CLOUDFLARE_SYNC_ENABLED` default remains false. Do not enable it until the mobile watched adapter is implemented and end-to-end parity is tested.
+
+
+## 2026-11-13 — Watched-items sync route
+
+| Resource | Worker routes | Source status | Mobile status |
+|---|---|---|---|
+| Watched items | `GET /v1/profiles/:index/watched-items`, `GET .../cursor`, `GET .../delta`, `PUT .../watched-items`, `POST .../delete` | Implemented; local SQLite and authenticated HTTP CI pending | Still uses Supabase; no Cloudflare adapter |
