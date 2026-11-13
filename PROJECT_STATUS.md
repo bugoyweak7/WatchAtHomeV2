@@ -105,3 +105,11 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - The Worker account-bootstrap endpoint currently depends on an unconfigured D1 binding and is not ready for app registration flow. No app-to-Worker bootstrap call was added.
 - CI run `43387942928` started for the Android compile workflow; result pending at the time of this note.
 - No Firebase Console settings, Firestore rules, Cloudflare resources/secrets/deployments, D1 database, production data, or Supabase services were changed.
+
+
+### Build verification follow-up — Firebase BOM Gradle DSL correction
+
+- First Android compile run `43387942928` failed during Gradle script configuration before Kotlin source compilation. The reported error was pre-existing at `composeApp/build.gradle.kts:455`: `platform` was unresolved inside the Kotlin Multiplatform Android source-set dependency handler.
+- Corrected the existing BOM declaration to `implementation(project.dependencies.platform(libs.firebase.bom))`, preserving the same Firebase BOM alignment intent.
+- A second compile run `43388218215` was queued from the fix commit; its result is pending.
+- This first failure does not indicate a Firebase Auth source compilation failure because compilation never began.
