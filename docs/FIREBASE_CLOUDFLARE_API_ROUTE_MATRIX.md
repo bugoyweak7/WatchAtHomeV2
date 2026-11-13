@@ -239,3 +239,10 @@ The following profile routes are implemented in Worker source (not deployed and 
 | /v1/profiles/{profileIndex}/settings?platform=mobile | PUT | Stores the complete settings JSON blob without dropping unknown/future keys |
 
 All routes require a verified Firebase email/password token, active D1 account and, for profile-specific operations, an owned profile. Request sizes are bounded and account/profile/IP rate limits apply. Worker CORS now allows GET, POST, PUT, DELETE and OPTIONS. The draft D1 schema remains unapplied. Mobile Supabase adapters remain untouched.
+
+
+## Profile API verification result — 2026-11-13
+
+- GitHub Actions run 43381569837 passed TypeScript and all 52 Worker tests, including profile/settings HTTP and D1-mock tests.
+- Test URL: https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43381569837
+- No live D1 database/binding, production secrets, mobile adapter, or deployment was used in this verification.
