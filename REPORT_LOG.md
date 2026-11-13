@@ -325,3 +325,11 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - The watched-items API now preserves distinct movie/series identities for a shared content ID. Legacy delete keys (which omit content type) resolve and tombstone each matching media-type row separately.
 - Android CI run `43420777374` is still in progress at this status update. The new mobile adapter and guarded repository selection remain unverified until that run completes.
 - No live D1, Worker deployment, Firebase Console, production data, or active Supabase cutover was performed.
+
+
+## 2026-11-13 — Android CI failure diagnosed and corrected; rerun pending
+
+- The first Android CI run including the watched-items adapter failed during Kotlin compilation because the new adapter declared a private `WatchedDeleteKey` type with the same package-level name as an existing type in `SupabaseWatchedSyncAdapter.kt`.
+- Renamed the new adapter's private model to `CloudflareWatchedDeleteKey`; no public interface or wire JSON field changed.
+- A fresh Android CI run was triggered by the fix. Its result is pending; do not mark the mobile adapter verified until it completes.
+- The Worker watched-items implementation and content-type identity regression tests have passed their Worker CI runs.
