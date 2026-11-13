@@ -77,7 +77,7 @@ function toStoredPayload(profile: ProfilePayload): string {
   });
 }
 
-export async function listProfiles(db: AccountD1Database, uid: string): Promise<{ profiles: Record<string, unknown>[] }> {
+export async function listProfiles(db: AccountD1Database, uid: string): Promise<Record<string, unknown>[]> {
   const rows = await db.prepare(`
     SELECT p.profile_id AS id, p.user_id AS user_id, p.profile_index AS profile_index,
       p.payload_json AS payload_json, p.created_at AS created_at, p.updated_at AS updated_at,
@@ -89,8 +89,7 @@ export async function listProfiles(db: AccountD1Database, uid: string): Promise<
     WHERE p.user_id = ?1
     ORDER BY p.profile_index ASC
   `).bind(uid).all<Record<string, unknown>>();
-  return {
-    profiles: rows.results.map(row => ({
+  return rows.results.map(row => ({
       id: row.id,
       user_id: row.user_id,
       profile_index: Number(row.profile_index),
@@ -99,8 +98,7 @@ export async function listProfiles(db: AccountD1Database, uid: string): Promise<
       pin_locked_until: row.pin_locked_until == null ? null : new Date(Number(row.pin_locked_until)).toISOString(),
       created_at: new Date(Number(row.created_at)).toISOString(),
       updated_at: new Date(Number(row.updated_at)).toISOString(),
-    })),
-  };
+    }));
 }
 
 export async function upsertProfiles(
@@ -144,7 +142,7 @@ export async function deleteProfile(db: AccountD1Database, uid: string, profileI
   return { deleted: result.meta.changes > 0 };
 }
 
-export async function listProfileLocks(db: AccountD1Database, uid: string): Promise<{ locks: Record<string, unknown>[] }> {
+export async function listProfileLocks(db: AccountD1Database, uid: string): Promise<Record<string, unknown>[]> {
   const rows = await db.prepare(`
     SELECT p.profile_index AS profile_id,
       CASE WHEN pin.user_id IS NULL THEN 0 ELSE 1 END AS pin_enabled,
@@ -155,28 +153,28 @@ export async function listProfileLocks(db: AccountD1Database, uid: string): Prom
     WHERE p.user_id = ?1
     ORDER BY p.profile_index ASC
   `).bind(uid).all<Record<string, unknown>>();
-  return { locks: rows.results.map(row => ({
+  return rows.results.map(row => ({
     profile_id: Number(row.profile_id),
     pin_enabled: Number(row.pin_enabled) === 1,
     pin_locked_until: row.pin_locked_until == null ? null : new Date(Number(row.pin_locked_until)).toISOString(),
-  })) };
+  }));
 }
 
 export async function getProfileSettings(
   db: AccountD1Database, uid: string, profileIndex: number, platform: string,
-): Promise<{ settings: Record<string, unknown>[] }> {
+): Promise<Record<string, unknown>[]> {
   const row = await db.prepare(`
     SELECT payload_json, updated_at FROM profile_settings
     WHERE user_id = ?1 AND profile_index = ?2 AND platform = ?3
   `).bind(uid, profileIndex, platform).first<{ payload_json: string; updated_at: number }>();
-  if (!row) return { settings: [] };
+  if (!row) return [];
   const settingsJson = JSON.parse(row.payload_json);
-  return { settings: [{
+  return [{
     profile_id: profileIndex,
     platform,
     settings_json: settingsJson,
     updated_at: new Date(Number(row.updated_at)).toISOString(),
-  }] };
+  }];
 }
 
 export async function putProfileSettings(
