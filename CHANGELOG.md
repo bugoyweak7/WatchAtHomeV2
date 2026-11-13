@@ -80,3 +80,7 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Preserved forward compatibility for non-sensitive unknown JSON fields.
 - Added tests for nested provider API-key rejection, nested access-token rejection, and safe unknown-field round trips.
 - Worker CI triggered; latest run `43401302072` pending verification.
+
+
+## 2026-11-13 — Generic JSON guard verification
+- GitHub Actions [run 43401302072](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401302072) passed TypeScript and 63 Worker tests (0 failures), including new profile-settings and collection secret-field rejection tests.
