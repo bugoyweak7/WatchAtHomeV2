@@ -314,3 +314,36 @@ Source: `features/party/PartyChannel.kt` and `features/party/PartyRepository.kt`
 ### Remaining uncertainty
 
 These are verified client calls and serialized fields only. The upstream SQL schema, RLS policies, trigger behavior, secrets-at-rest controls, device registration lifecycle, and Realtime authorization remain unknown. No upstream account/dashboard access was used or assumed.
+
+
+## 2026-11-13 — Supabase Storage and member-asset compatibility audit
+
+### Profile avatar catalog and protected assets
+
+Source: `features/profiles/AvatarRepository.kt`
+
+Verified client operations:
+- `get_avatar_catalog` returns the standard avatar catalogue.
+- `get_member_profile_avatar_catalog` returns supporter/member avatar metadata including ID, display name, storage path, category, sort order, background color, and asset version.
+- Member avatar binary assets are downloaded from Supabase Storage bucket `membership-profile-avatars` using authenticated downloads and cached locally.
+- For sharing a member-only avatar, the client creates a signed URL with a one-day lifetime. Standard avatar URL handling is separate from this member-only signed-URL path.
+- The app caches catalogue metadata and downloaded assets, and gates member avatars on membership entitlements.
+
+### Profile background catalog and protected assets
+
+Source: `features/membership/ProfileBackgroundRepository.kt`
+
+Verified client operations:
+- `get_member_profile_background_catalog` returns metadata including ID, display name, landscape storage path, optional portrait storage path, and asset version.
+- Landscape and optional portrait images are downloaded from Supabase Storage bucket `membership-profile-backgrounds` using authenticated downloads and cached locally.
+- If a portrait asset cannot be loaded, the client falls back to the landscape image.
+- The repository preloads/caches images and updates local presentation from cached assets.
+
+### Replacement requirements
+
+- Add explicit Worker API routes for the two catalogue reads and protected asset access, or another reviewed delivery mechanism with equivalent authorization.
+- Store only metadata and object references in D1/Firestore; store image objects in R2, not image bytes in D1.
+- Preserve member entitlement gating, asset version/cache invalidation, portrait-to-landscape fallback, and one-day sharing semantics where sharing is supported.
+- Do not make supporter assets public merely to simplify migration. Use authenticated short-lived delivery URLs or a Worker authorization proxy.
+- Preserve existing local caches during transition so an unavailable remote asset does not erase a previously downloaded image.
+- No upstream Supabase bucket policy, object ACL, or signed URL validation configuration was available from client source. Those legacy server-side rules remain unknown.
