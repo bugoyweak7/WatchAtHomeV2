@@ -268,3 +268,7 @@ GitHub Actions run 43382547116 passed TypeScript and all 61 Worker tests (0 fail
 - `GET/PUT /v1/profiles/:profileIndex/home-catalog?platform=home_catalog_shared` is now implemented in Worker source using the existing `home_catalog_settings` table.
 - Ownership, active account, profile ownership, per-route rate limits, bounded JSON, sensitive-key rejection, and versioned upsert are applied by the Worker.
 - This is not deployed and the app still uses Supabase. CI verification for the route and new tests is pending.
+
+
+### Home catalog route test follow-up — 2026-11-13
+- Initial test run found a duplicate-account fixture error in the profile-isolation test, not a TypeScript/route compilation error. Fixture corrected; follow-up CI run `43401962345` queued.
