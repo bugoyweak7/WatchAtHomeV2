@@ -196,3 +196,7 @@ This route snapshot is based on repository source inspection, not live deploymen
 - The proposed `/v1/profiles/:profileIndex/home-catalog?platform=` route now has Worker GET/PUT source backed by `home_catalog_settings`, with per-profile ownership checks and version increments.
 - The endpoint stores the complete JSON payload to preserve the existing `SyncHomeCatalogPayload` contract and unknown fields; it rejects sensitive fields and enforces the same bounded request policy as other profile sync resources.
 - Added SQLite contract tests. Mobile sync still calls the legacy Supabase RPCs; adapter migration is not started. Final Worker CI pending.
+
+
+### Home catalog route test follow-up — 2026-11-13
+- The first route/test CI run exposed a test-fixture-only duplicate account insert in the new profile-isolation case. The test setup was corrected to add a second profile row under the existing account. Follow-up CI `43401962345` queued; endpoint verification remains pending.
