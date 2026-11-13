@@ -156,3 +156,8 @@ CI run 43380260084 passed TypeScript compilation and 45 local/mock tests. These 
 - Regression tests cover nested `debrid_real_debrid_api_key` and `access_token` rejection plus safe future settings preservation.
 - This closes part of finding 5 for the guarded settings/collections routes only. Continue auditing all generic JSON paths and do not consider D1 production-ready until CI, route-level coverage, schema review, retention, and live D1 validation gates pass.
 - Latest Worker CI run `43401302072` pending verification.
+
+
+### Verification update — generic JSON sensitive-field guard
+- CI run `43401302072` passed TypeScript and 63 Worker tests, including new nested-secret rejection tests for profile settings and collections.
+- This is a source-level/mock verification result only; no live D1 database or production Worker is enabled.
