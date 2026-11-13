@@ -445,8 +445,11 @@ async function listDevicesRoute(env: Env, user: VerifiedUser): Promise<Response>
 }
 
 type ProfileScopedEnv = Env & { DATA_ENCRYPTION_KEYS_JSON: string; DATA_ENCRYPTION_ACTIVE_VERSION: string; PIN_PEPPER_KEYS_JSON: string; PIN_PEPPER_ACTIVE_VERSION: string };
-function requireSecretConfiguration(env: Env): asserts env is ProfileScopedEnv {
-  if (!env.DATA_ENCRYPTION_KEYS_JSON || !env.DATA_ENCRYPTION_ACTIVE_VERSION || !env.PIN_PEPPER_KEYS_JSON || !env.PIN_PEPPER_ACTIVE_VERSION) throw new HttpError(503, "Secure profile storage is not configured.");
+function requirePinConfiguration(env: Env): asserts env is ProfileScopedEnv {
+  if (!env.PIN_PEPPER_KEYS_JSON || !env.PIN_PEPPER_ACTIVE_VERSION) throw new HttpError(503, "Profile PIN storage is not configured.");
+}
+function requireEncryptionConfiguration(env: Env): asserts env is ProfileScopedEnv {
+  if (!env.DATA_ENCRYPTION_KEYS_JSON || !env.DATA_ENCRYPTION_ACTIVE_VERSION) throw new HttpError(503, "Encrypted credential storage is not configured.");
 }
 function requireRecentReauthentication(user: VerifiedUser): void {
   const age = Math.floor(Date.now() / 1000) - user.authTime;
@@ -480,7 +483,7 @@ async function pinRoute(request: Request, env: Env, user: VerifiedUser, action: 
   await requireOwnedProfile(db, user.uid, index);
   await applyRateLimits(request, db, user, "pin-" + action, index);
   if (action !== "verify") requireRecentReauthentication(user);
-  requireSecretConfiguration(env);
+  requirePinConfiguration(env);
   if (action === "clear") return response({ success: true, removed: await clearProfilePin(db, user.uid, index) });
   const input = await readBoundedJson(request, 2048);
   if (typeof input.pin !== "string" || input.pin.length < 4 || input.pin.length > 64) throw new HttpError(400, "Invalid PIN request.");
@@ -489,7 +492,7 @@ async function pinRoute(request: Request, env: Env, user: VerifiedUser, action: 
   return response({ verified: result.verified, locked: result.locked, retryAfterSeconds: Math.ceil(result.retryAfterMs / 1000) });
 }
 async function providerCredentialRoute(request: Request, env: Env, user: VerifiedUser, index: number): Promise<Response> {
-  const db = requireAccountDb(env); await requireOwnedProfile(db, user.uid, index); await applyRateLimits(request, db, user, "provider-credentials", index); requireSecretConfiguration(env);
+  const db = requireAccountDb(env); await requireOwnedProfile(db, user.uid, index); await applyRateLimits(request, db, user, "provider-credentials", index); requireEncryptionConfiguration(env);
   if (request.method === "GET") {
     const provider = boundedText(new URL(request.url).searchParams.get("provider"), 160);
     const value = await loadProviderCredential(db, env, user.uid, index, provider);
@@ -502,7 +505,7 @@ async function providerCredentialRoute(request: Request, env: Env, user: Verifie
   return response({ success: true, provider });
 }
 async function mediaServersRoute(request: Request, env: Env, user: VerifiedUser, index: number): Promise<Response> {
-  const db = requireAccountDb(env); await requireOwnedProfile(db, user.uid, index); await applyRateLimits(request, db, user, "media-servers", index); requireSecretConfiguration(env);
+  const db = requireAccountDb(env); await requireOwnedProfile(db, user.uid, index); await applyRateLimits(request, db, user, "media-servers", index); requireEncryptionConfiguration(env);
   if (request.method === "PUT") {
     const input = await readBoundedJson(request, 32768); const metadata = input.metadata ?? {};
     if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) throw new HttpError(400, "Invalid media-server metadata.");
