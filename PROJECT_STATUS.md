@@ -166,3 +166,9 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Follow-up Worker CI run `43401962345` completed successfully. TypeScript compilation passed and all 65 tests across 10 suites passed (0 failures).
 - The home-catalog suite now passes 11 tests, including the new round-trip/profile-platform isolation test and malformed/oversized/sensitive payload rejection.
 - `GET/PUT /v1/profiles/:profileIndex/home-catalog?platform=home_catalog_shared` is source-implemented and locally/mock verified. It is not deployed; the app remains on Supabase for this sync resource.
+
+
+## 2026-11-13 — Staged Firebase Auth CI fully passed
+- Focused workflow run `43400761852` completed successfully. The `FirebaseAuthSessionManagerTest` Gradle task passed, followed by successful Android Play Store debug compilation (`BUILD SUCCESSFUL`).
+- The six staged Firebase Auth session-manager tests are now verified in CI; Android source compiles with the staged integration.
+- This does not verify live Firebase project configuration, actual Firebase registration/login against production, or app UI wiring. Active `AuthRepository` and Supabase login remain unchanged.
