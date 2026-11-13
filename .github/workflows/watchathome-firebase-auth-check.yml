@@ -49,7 +49,7 @@ jobs:
         run: touch local.properties
 
       - name: Run Firebase Auth session manager unit tests
-        run: ./gradlew :composeApp:testAndroidHostTest -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace
+        run: ./gradlew :composeApp:testAndroidHostTest --tests 'com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest' -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace
 
       - name: Compile Android Play Store debug app
         run: ./gradlew :androidApp:assemblePlaystoreDebug -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace
