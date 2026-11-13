@@ -106,3 +106,14 @@ Latest passing CI run `43378244632`: TypeScript passed and 37 tests passed acros
 `src/pin-store.ts` now also exposes `setProfilePin` and `clearProfilePin`. Replacing a PIN generates a fresh salt/verifier and resets lockout counters; clearing is scoped to the UID/profile pair. The caller must enforce recent Firebase reauthentication before either mutation. These remain storage helpers only: no HTTP PIN route or pepper secret is configured.
 
 The PIN store test suite now covers create/replace, old-PIN invalidation, lockout reset, and owner/profile isolation.
+
+
+### Authenticated profile API routes
+
+The Worker source now includes profile PIN routes (`POST /v1/profiles/{index}/pin?action=set|verify|clear`), provider credential save/load (`PUT/GET /v1/profiles/{index}/provider-credentials`), and media-server save/list (`PUT/GET /v1/profiles/{index}/media-servers`). Profile ownership is checked against D1 and is always derived from the verified Firebase UID. PIN set/clear require Firebase `auth_time` no older than five minutes. PIN verification has the persisted five-failure/15-minute lockout and D1-backed account/profile plus hashed-IP rate-limit windows.
+
+Additional Worker secrets required before these routes can operate:
+- `PIN_PEPPER_KEYS_JSON` and `PIN_PEPPER_ACTIVE_VERSION` for profile PIN verifiers.
+- `DATA_ENCRYPTION_KEYS_JSON` and `DATA_ENCRYPTION_ACTIVE_VERSION` for provider credentials and media-server tokens.
+
+The draft schema now includes `api_rate_limits`; it is not yet an active Wrangler migration. Add a retention cleanup process for expired rate-limit rows before production enablement. No D1 resource, binding, key secret, mobile adapter, or deployment is configured by this source change.
