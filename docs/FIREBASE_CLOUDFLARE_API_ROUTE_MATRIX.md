@@ -223,3 +223,19 @@ Shared controls:
 - PIN and data-encryption key rings are separate Worker secrets. Missing configuration fails closed with 503.
 - The D1 SQL remains a draft and is not an active Wrangler migration. No D1 database/binding or key secrets have been created, and no mobile adapter has been switched.
 - API response shapes are a first implementation contract and still need reconciliation with the exact legacy sync serializer before mobile integration.
+
+
+## Profile and settings routes — implementation update (2026-11-13)
+
+The following profile routes are implemented in Worker source (not deployed and unavailable until D1 is separately provisioned):
+
+| Route | Method | Contract |
+|---|---|---|
+| /v1/profiles | GET | Returns a JSON array of the authenticated user's profiles in ascending profile-index order, including profile and PIN-lock metadata |
+| /v1/profiles | PUT | Upserts at most six profile payloads using the verified legacy ProfilePushPayload fields |
+| /v1/profiles/{profileIndex} | DELETE | Deletes only the authenticated user's selected profile; dependent D1 rows cascade through profile ownership foreign keys |
+| /v1/profiles/locks | GET | Returns JSON array of profile PIN-enabled and lock-expiry states |
+| /v1/profiles/{profileIndex}/settings?platform=mobile | GET | Returns a serializer-compatible JSON array containing profile_id, platform, settings_json, and updated_at; empty array when absent |
+| /v1/profiles/{profileIndex}/settings?platform=mobile | PUT | Stores the complete settings JSON blob without dropping unknown/future keys |
+
+All routes require a verified Firebase email/password token, active D1 account and, for profile-specific operations, an owned profile. Request sizes are bounded and account/profile/IP rate limits apply. Worker CORS now allows GET, POST, PUT, DELETE and OPTIONS. The draft D1 schema remains unapplied. Mobile Supabase adapters remain untouched.
