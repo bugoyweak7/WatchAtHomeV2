@@ -319,6 +319,23 @@ test("watched-items snapshot, delta, upsert and tombstone preserve sync contract
   db.close();
 });
 
+test("watched-items identity keeps content types distinct and delete keys remove matching variants", async () => {
+  const db = createDb(); db.seed("watched-collision");
+  const sameId = [
+    { content_id: "shared-id", content_type: "movie", title: "Movie", season: null, episode: null, watched_at: 100 },
+    { content_id: "shared-id", content_type: "series", title: "Series", season: null, episode: null, watched_at: 200 },
+  ];
+  assert.deepEqual(await pushWatchedItems(db, "watched-collision", 1, req({ items: sameId }), 5000), { saved: 2 });
+  assert.equal((await getWatchedSnapshot(db, "watched-collision", 1, 10, 0)).length, 2);
+  assert.deepEqual(await deleteWatchedItems(db, "watched-collision", 1, req({
+    keys: [{ content_id: "shared-id", season: null, episode: null }],
+  }), 6000), { deleted: 2 });
+  const delta = await getWatchedDelta(db, "watched-collision", 1, 2, 10);
+  assert.equal(delta.length, 2);
+  assert.deepEqual(new Set(delta.map(event => event.content_type)), new Set(["movie", "series"]));
+  db.close();
+});
+
 test("watched-items validation rejects partial episode keys, duplicate keys and oversized batches", async () => {
   const db = createDb(); db.seed("watched-validation");
   const valid = { content_id: "item", content_type: "series", title: "Item", season: 1, episode: 2, watched_at: 100 };
