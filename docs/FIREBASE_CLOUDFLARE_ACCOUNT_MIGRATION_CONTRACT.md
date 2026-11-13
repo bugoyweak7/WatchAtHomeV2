@@ -290,3 +290,18 @@ Local SQLite validation passed:
 This is structural validation only. It does not prove Cloudflare D1 deployment behavior, production query performance, API correctness, upstream schema parity, encryption implementation, or migration safety. The Worker API route matrix is documented separately in `docs/FIREBASE_CLOUDFLARE_API_ROUTE_MATRIX.md`.
 
 Important exclusions: premium/admin/trial/entitlement records and the shared add-on catalogue remain Firestore; Watch Party realtime state remains Durable Objects; image binaries remain R2; member asset catalogue metadata placement is still undecided. Do not apply this draft until the API implementation, D1 resource configuration, rollback/backup plan, and separate deployment approval are complete.
+
+
+## 14. Membership source-of-truth reconciliation (2026-11-13)
+
+The client has two distinct membership reads:
+- `get_my_member_access` returns only a tier and cosmetic entitlement list, used to gate member avatars/backgrounds and related cosmetics.
+- `get_my_membership_overview` returns a much broader view: status/tier, verified/supporter timestamps, provider connection, subscription state/provider, current period end, cancellation state, monthly amount/currency, and active/lifetime grant metadata.
+
+The current premium Worker reads and writes Firestore `users/{uid}` fields for premium-code access and immutable trial. Its current status response includes premium/trial flags, tier, a fixed cosmetic entitlement list, and trial/premium expiry timestamps. The inspected Worker does not implement the full subscription-provider, billing-period, supporter-verification, or grant/lifetime-overview model returned by the legacy overview RPC.
+
+Therefore:
+- Do not assume `users/{uid}` premium/trial fields alone can reproduce both membership RPCs.
+- Keep premium-code/trial access distinct from supporter membership and subscription/grant status unless the product owner explicitly defines them as one entitlement model.
+- Before replacing membership reads, define the authoritative membership record and the trusted process that provisions/updates it (e.g. verified provider webhook or explicit admin grant workflow). Client apps must never write these fields.
+- Until the source of supporter/subscription/grant truth is identified, `/v1/membership/overview` is a contract placeholder and must not fabricate billing/provider values.
