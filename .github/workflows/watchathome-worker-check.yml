@@ -38,3 +38,5 @@ jobs:
         run: npm run check
       - name: Local SQLite schema tests
         run: npm run test:schema
+      - name: Mocked D1 account and device API tests
+        run: npm run test:worker
