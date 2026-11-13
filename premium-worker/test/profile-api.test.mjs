@@ -61,7 +61,7 @@ test("profile upsert is bounded, stable-ID, and owner-scoped", async () => {
   db.seed("user-a");
   db.seed("user-b");
   assert.deepEqual(await upsertProfiles(db, "user-a", request({ profiles: [profile(1), profile(3)] }), 1000), { saved: 2 });
-  const first = (await listProfiles(db, "user-a")).profiles;
+  const first = (await listProfiles(db, "user-a"));
   assert.equal(first.length, 2);
   assert.equal(first[0].profile_index, 1);
   assert.equal(first[0].user_id, "user-a");
@@ -69,11 +69,11 @@ test("profile upsert is bounded, stable-ID, and owner-scoped", async () => {
   const id = first[0].id;
 
   await upsertProfiles(db, "user-a", request({ profiles: [profile(1, "Renamed")] }), 2000);
-  const updated = (await listProfiles(db, "user-a")).profiles;
+  const updated = (await listProfiles(db, "user-a"));
   assert.equal(updated.length, 2);
   assert.equal(updated[0].id, id);
   assert.equal(updated[0].name, "Renamed");
-  assert.equal((await listProfiles(db, "user-b")).profiles.length, 0);
+  assert.equal((await listProfiles(db, "user-b")).length, 0);
   db.close();
 });
 
@@ -118,10 +118,10 @@ test("profile settings round-trip preserves unknown nested JSON fields", async (
   });
   assert.deepEqual(await putProfileSettings(db, "user-a", 1, "mobile", put, 5000), { saved: true });
   const result = await getProfileSettings(db, "user-a", 1, "mobile");
-  assert.deepEqual(result.settings[0].settings_json, payload);
-  assert.equal(result.settings[0].profile_id, 1);
-  assert.equal(result.settings[0].updated_at, new Date(5000).toISOString());
-  assert.deepEqual(await getProfileSettings(db, "user-a", 1, "tv"), { settings: [] });
+  assert.deepEqual(result[0].settings_json, payload);
+  assert.equal(result[0].profile_id, 1);
+  assert.equal(result[0].updated_at, new Date(5000).toISOString());
+  assert.deepEqual(await getProfileSettings(db, "user-a", 1, "tv"), []);
   db.close();
 });
 
@@ -132,8 +132,8 @@ test("profile locks reflect only configured PIN records", async () => {
   db.raw.prepare(`INSERT INTO profile_pin_credentials(user_id, profile_index, pin_hash, pin_salt, hash_algorithm, hash_parameters_json, locked_until, updated_at)
     VALUES('user-a', 2, ?, ?, 'hmac-sha256', '{}', 9000, 100)`).run(Buffer.alloc(32), Buffer.alloc(16));
   const locks = await listProfileLocks(db, "user-a");
-  assert.deepEqual(locks.locks.map(x => x.pin_enabled), [false, true]);
-  assert.equal(locks.locks[1].pin_locked_until, new Date(9000).toISOString());
+  assert.deepEqual(locks.map(x => x.pin_enabled), [false, true]);
+  assert.equal(locks[1].pin_locked_until, new Date(9000).toISOString());
   db.close();
 });
 
