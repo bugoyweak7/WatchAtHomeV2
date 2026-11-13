@@ -1,4 +1,5 @@
 import { AccountApiError, readBoundedJson, type AccountD1Database } from "./account-device";
+import { rejectSensitiveJsonKeys } from "./json-security";
 
 const MAX_PROFILES = 6;
 const MAX_PROFILE_BODY_BYTES = 64 * 1024;
@@ -186,6 +187,7 @@ export async function putProfileSettings(
   if (!settings || typeof settings !== "object" || Array.isArray(settings)) {
     throw new AccountApiError(400, "settings_json must be a JSON object.");
   }
+  rejectSensitiveJsonKeys(settings, "Profile settings");
   const encoded = JSON.stringify(settings);
   await db.prepare(`
     INSERT INTO profile_settings (user_id, profile_index, platform, payload_json, schema_version, updated_at)
