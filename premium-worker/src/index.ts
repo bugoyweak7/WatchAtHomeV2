@@ -4,6 +4,7 @@ interface Env {
   FIREBASE_PROJECT_ID: string;
   FIREBASE_WEB_API_KEY: string;
   FIREBASE_SERVICE_ACCOUNT_JSON: string;
+  DB?: D1Database;
 }
 
 interface ServiceAccount {
@@ -33,7 +34,7 @@ function response(body: unknown, status = 200): Response {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
       "access-control-allow-origin": "*",
-      "access-control-allow-methods": "GET,POST,OPTIONS",
+      "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
       "access-control-allow-headers": "authorization,content-type",
     },
   });
@@ -398,6 +399,125 @@ async function initializeTrial(env: Env, user: VerifiedUser, registeredAt: numbe
   });
 }
 
+function requireD1(env: Env): D1Database {
+  if (!env.DB) throw new HttpError(503, "Account storage is not configured yet.");
+  return env.DB;
+}
+
+async function readBoundedJson(request: Request, maxBytes = 8192): Promise<Record<string, unknown>> {
+  const declaredLength = Number(request.headers.get("content-length") ?? 0);
+  if (declaredLength > maxBytes) throw new HttpError(413, "Request body is too large.");
+  const raw = await request.text();
+  if (new TextEncoder().encode(raw).byteLength > maxBytes) {
+    throw new HttpError(413, "Request body is too large.");
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new HttpError(400, "A valid JSON request body is required.");
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new HttpError(400, "A JSON object is required.");
+  }
+  return parsed as Record<string, unknown>;
+}
+
+function boundedString(value: unknown, field: string, maxLength: number): string {
+  if (typeof value !== "string") throw new HttpError(400, `Invalid ${field}.`);
+  const normalized = value.trim();
+  if (!normalized || normalized.length > maxLength) {
+    throw new HttpError(400, `Invalid ${field}.`);
+  }
+  return normalized;
+}
+
+async function ensureActiveAccount(db: D1Database, uid: string): Promise<void> {
+  const account = await db.prepare(
+    "SELECT status FROM accounts WHERE user_id = ?1"
+  ).bind(uid).first<{ status: string }>();
+  if (!account) throw new HttpError(409, "Account bootstrap is required first.");
+  if (account.status !== "active") throw new HttpError(403, "This account is not active.");
+}
+
+async function bootstrapAccount(request: Request, env: Env, user: VerifiedUser): Promise<Response> {
+  const db = requireD1(env);
+  const registeredAt = await firebaseAccountCreatedAt(request, env, user.uid);
+  const now = Date.now();
+  await db.prepare(`
+    INSERT INTO accounts (user_id, status, created_at, updated_at)
+    VALUES (?1, 'active', ?2, ?3)
+    ON CONFLICT(user_id) DO NOTHING
+  `).bind(user.uid, registeredAt, now).run();
+
+  await ensureActiveAccount(db, user.uid);
+  // Trial initialization remains create-only in Firestore and is safe to retry.
+  const trial = await initializeTrial(env, user, registeredAt);
+  return response({ accountReady: true, trial: await trial.json() });
+}
+
+async function registerDevice(request: Request, env: Env, user: VerifiedUser): Promise<Response> {
+  const db = requireD1(env);
+  await ensureActiveAccount(db, user.uid);
+  const input = await readBoundedJson(request);
+  const installationId = boundedString(input.installationId, "installationId", 128);
+  const clientName = boundedString(input.clientName, "clientName", 80);
+  const clientVersion = boundedString(input.clientVersion, "clientVersion", 40);
+  const platform = boundedString(input.platform, "platform", 40);
+  const deviceName = boundedString(input.deviceName, "deviceName", 120);
+  const now = Date.now();
+
+  const result = await db.prepare(`
+    INSERT INTO registered_devices (
+      user_id, installation_id, client_name, client_version, platform,
+      device_name, created_at, last_seen_at
+    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)
+    ON CONFLICT(user_id, installation_id) DO UPDATE SET
+      client_name = excluded.client_name,
+      client_version = excluded.client_version,
+      platform = excluded.platform,
+      device_name = excluded.device_name,
+      last_seen_at = excluded.last_seen_at
+    WHERE registered_devices.revoked_at IS NULL
+  `).bind(user.uid, installationId, clientName, clientVersion, platform, deviceName, now).run();
+
+  if (result.meta.changes === 0) {
+    const existing = await db.prepare(
+      "SELECT revoked_at FROM registered_devices WHERE user_id = ?1 AND installation_id = ?2"
+    ).bind(user.uid, installationId).first<{ revoked_at: number | null }>();
+    if (existing?.revoked_at !== null && existing?.revoked_at !== undefined) {
+      throw new HttpError(409, "This device has been revoked. Register a new installation.");
+    }
+  }
+  return response({ registered: true, installationId });
+}
+
+async function listDevices(env: Env, user: VerifiedUser): Promise<Response> {
+  const db = requireD1(env);
+  await ensureActiveAccount(db, user.uid);
+  const result = await db.prepare(`
+    SELECT installation_id AS installationId, client_name AS clientName,
+      client_version AS clientVersion, platform, device_name AS deviceName,
+      created_at AS createdAt, last_seen_at AS lastSeenAt
+    FROM registered_devices
+    WHERE user_id = ?1 AND revoked_at IS NULL
+    ORDER BY last_seen_at DESC
+    LIMIT 100
+  `).bind(user.uid).all();
+  return response({ devices: result.results });
+}
+
+async function revokeDevice(request: Request, env: Env, user: VerifiedUser, installationId: string): Promise<Response> {
+  const db = requireD1(env);
+  await ensureActiveAccount(db, user.uid);
+  const result = await db.prepare(`
+    UPDATE registered_devices SET revoked_at = ?1
+    WHERE user_id = ?2 AND installation_id = ?3 AND revoked_at IS NULL
+  `).bind(Date.now(), user.uid, installationId).run();
+  if (result.meta.changes === 0) throw new HttpError(404, "Active device not found.");
+  return response({ revoked: true });
+}
+
 async function premiumStatus(env: Env, user: VerifiedUser): Promise<Response> {
   const doc = await readDocument(env, `users/${user.uid}`);
   const fields = fieldsOf(doc);
@@ -435,6 +555,19 @@ export default {
 
     try {
       const user = await verifyUser(request, env);
+      if (request.method === "POST" && url.pathname === "/v1/account/bootstrap") {
+        return await bootstrapAccount(request, env, user);
+      }
+      if (request.method === "POST" && url.pathname === "/v1/devices") {
+        return await registerDevice(request, env, user);
+      }
+      if (request.method === "GET" && url.pathname === "/v1/devices") {
+        return await listDevices(env, user);
+      }
+      const revokeDeviceMatch = /^\\/v1\\/devices\\/([^/]+)$/.exec(url.pathname);
+      if (request.method === "DELETE" && revokeDeviceMatch) {
+        return await revokeDevice(request, env, user, decodeURIComponent(revokeDeviceMatch[1]));
+      }
       if (request.method === "POST" && url.pathname === "/v1/admin/premium-codes") {
         return await createCodes(request, env, user);
       }
