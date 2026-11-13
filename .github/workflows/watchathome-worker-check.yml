@@ -1,0 +1,40 @@
+name: WatchAtHome Worker Checks
+
+on:
+  push:
+    branches:
+      - setup/firebase-cloudflare-zero-cost
+    paths:
+      - "premium-worker/**"
+      - ".github/workflows/watchathome-worker-check.yml"
+  pull_request:
+    branches:
+      - setup/firebase-cloudflare-zero-cost
+    paths:
+      - "premium-worker/**"
+      - ".github/workflows/watchathome-worker-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  worker-check:
+    name: TypeScript and schema tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: premium-worker
+    steps:
+      - name: Checkout approved branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Worker dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript compilation check
+        run: npm run check
+      - name: Local SQLite schema tests
+        run: npm run test:schema
