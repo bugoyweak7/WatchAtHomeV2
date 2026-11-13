@@ -205,3 +205,8 @@ This route snapshot is based on repository source inspection, not live deploymen
 ### Home catalog route verification — 2026-11-13
 - Worker CI `43401962345` passed TypeScript and 65 tests across 10 suites (0 failures), including home-catalog read/write, round-trip, owner/profile/platform isolation, body bounds and sensitive-field rejection.
 - This validates the Worker module against local SQLite/mocked D1 only. The mobile `HomeCatalogSettingsSyncService` still uses Supabase RPCs; no production cutover has occurred.
+
+
+## 2026-11-13 — Firebase Auth stage verification complete
+- CI workflow `43400761852` passed the focused `FirebaseAuthSessionManagerTest` suite and Android Play Store debug compilation.
+- Staged Firebase Auth implementation is unit-tested and compiles. Active app auth still uses Supabase; production Firebase configuration, live auth, and app wiring remain separate pending stages.
