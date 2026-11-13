@@ -231,3 +231,9 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - `WatchProgressRepository.syncAdapter` still points to `SupabaseProgressSyncAdapter`.
 - No live D1 provisioning, production Worker URL, deployment, auth cutover or production data change.
 - Next gates: Android CI pass, mutation request assertions, live D1 verification, and merge/conflict behavior validation.
+
+
+### Follow-up verification note — 2026-11-13
+- Added an authenticated Worker HTTP test for the offset snapshot query; run 43415195896 passed.
+- Added client test coverage for progress PUT and POST route/methods.
+- Android run 43414877340 was cancelled by the subsequent test commit; latest replacement run 43415270909 is queued. Mobile adapter verification remains pending.
