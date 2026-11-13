@@ -731,3 +731,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - This is now a user-observed HTTP 404 from the installed app. The exact responder is not yet identified. Most likely investigation areas are live Worker deployment/version, workers.dev account subdomain/hostname, and whether the deployed script is attached to the expected endpoint. Do not change the Admin route or Worker API contract without evidence.
 - Live `/health` could not be independently fetched from this environment (web and shell network resolution unavailable); therefore no independent live endpoint response is claimed.
 - No Worker deployment, Cloudflare dashboard setting/secret change, Firebase change, Firestore mutation, or premium-code creation was performed. Next: inspect the Cloudflare Worker deployment and its exact workers.dev URL, confirm `/health`, then retest the Admin APK.
+
+
+## 2026-11-13 — Live Worker health route test returned application-level Not found
+
+- User opened `https://watchathome-premium-api.adminenzoreviewer.workers.dev/health` from the Cloudflare Worker Overview URL.
+- Observed response: `{ "success": false, "message": "Not found." }`.
+- This differs from the approved branch source `premium-worker/src/index.ts`, which handles `GET /health` before authentication and returns `{ ok: true, service: "watchathome-premium-api" }`.
+- Cloudflare Overview screenshot confirms the Worker URL exists, shows 29 invocations in the last 24 hours and 0 dashboard errors, and indicates a deployment approximately 11 hours earlier. These metrics do not prove route parity.
+- Evidence now confirms that the live response does not match the health contract in the approved source. Likely causes include an older/different Worker deployment or a route/entrypoint mismatch; exact cause remains unverified.
+- Next diagnostic: inspect the Worker Deployments tab and identify the active deployment version/time and its source commit/build. Do not deploy or alter routes/secrets until this comparison is complete.
+- No Admin/User App source changes, Cloudflare deployment/settings/secrets changes, Firebase changes, Firestore mutations, or premium-code generation occurred.
