@@ -682,3 +682,13 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Renamed the new adapter's private model to `CloudflareWatchedDeleteKey`; no public interface or wire JSON field changed.
 - A fresh Android CI run was triggered by the fix. Its result is pending; do not mark the mobile adapter verified until it completes.
 - The Worker watched-items implementation and content-type identity regression tests have passed their Worker CI runs.
+
+
+## 2026-11-13 — Staged Cloudflare profile metadata adapter
+
+- Added `CloudflareProfileSyncAdapter.kt` with Firebase ID-token authenticated Worker calls for profile listing, batch profile upsert, and profile deletion.
+- The adapter matches the existing Worker contract: `GET /v1/profiles`, `PUT /v1/profiles` with a `profiles` array, and `DELETE /v1/profiles/{profileIndex}`. Requests require an HTTPS Worker base URL and a fresh Firebase ID token; response bodies are bounded.
+- Added unit tests for profile response mapping, bearer-token use, profile upsert wire fields, profile deletion, and missing-token rejection. Added the tests to the Android Play Store CI workflow.
+- This is a staged adapter only. `ProfileRepository` remains Supabase-backed and no active auth or profile-sync cutover was made. The adapter must not be selected until Firebase authentication is the active app session and the Worker/D1 deployment is verified.
+- Android CI run `43421702839` was still in progress at the time of this update; the new profile adapter tests are included in subsequent matching CI runs, not that already-running run.
+- No live D1 database, Worker deployment, Firebase Console setting, secret, or production data was changed.
