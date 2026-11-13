@@ -95,3 +95,7 @@ Entries are append-only. Do not rewrite or remove earlier records.
 ## 2026-11-13 — Home catalog test fixture fix
 - Corrected the profile-isolation test fixture to add a second profile under the existing account instead of inserting a duplicate account row.
 - CI run `43401818613` failed on the fixture setup; corrected commit `e4d38da054d928687ed759c86bcb921464c89ae7` is queued as run `43401962345`.
+
+
+## 2026-11-13 — Home catalog API CI passed
+- [Worker CI run 43401962345](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401962345) passed TypeScript and 65 tests across 10 suites with 0 failures, including all 11 profile add-on/plugin/collection/home-catalog tests.
