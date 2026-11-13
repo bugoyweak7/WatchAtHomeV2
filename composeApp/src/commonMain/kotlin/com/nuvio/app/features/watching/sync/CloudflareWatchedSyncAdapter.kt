@@ -108,7 +108,7 @@ internal class CloudflareWatchedSyncHttpAdapter(
     override suspend fun delete(profileId: Int, items: Collection<WatchedItem>) {
         requireProfile(profileId)
         val keys = items.map { item ->
-            WatchedDeleteKey(
+            CloudflareWatchedDeleteKey(
                 contentId = item.id,
                 season = item.season,
                 episode = item.episode,
@@ -231,12 +231,12 @@ private data class WatchedPushRequest(
 
 @Serializable
 private data class WatchedDeleteRequest(
-    val keys: List<WatchedDeleteKey>,
+    val keys: List<CloudflareWatchedDeleteKey>,
     @SerialName("p_origin_client_id") val pOriginClientId: String,
 )
 
 @Serializable
-private data class WatchedDeleteKey(
+private data class CloudflareWatchedDeleteKey(
     @SerialName("content_id") val contentId: String,
     val season: Int? = null,
     val episode: Int? = null,
