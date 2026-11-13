@@ -326,3 +326,13 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - HTTP tests use a generated test signing key and mocked JWKS; they do not validate against the real Firebase project, Identity Toolkit, Firestore service account, or live Cloudflare D1.
 - No D1 database/binding, Firebase configuration, mobile app adapter, production data, or deployment was changed.
 - Next: complete a security review of the D1 schema and decide the D1 database provisioning/binding step. Do not enable the new routes until the reviewed schema is applied and the D1 binding is configured.
+
+
+## 2026-11-13 — D1 and Worker security review documented
+
+- Added `docs/D1_SECURITY_REVIEW.md` after reviewing the current D1 schema draft, Worker authentication/device routes, Wrangler configuration, and proposed migration route matrix.
+- Blocking before storing secrets: no provider/media-server credential encryption implementation or finalized PIN KDF/lockout design exists yet. Keep these data classes out of D1 until AEAD key management, nonce/AAD rules, key rotation, and PIN verification controls are implemented and tested.
+- High-priority design requirements recorded for device-link code entropy/HMAC/rate limits/nonce binding/expiry/replay prevention, HTTPS redirect allowlisting, UID/profile ownership on every query, secret exclusion from generic JSON blobs, device registration limits, cross-system account deletion, sync/idempotency retention, and request abuse controls.
+- Identified operational configuration prerequisite: `FIREBASE_WEB_API_KEY` is required by account bootstrap registration lookup but is not declared in committed `wrangler.toml`; confirm it is configured as a Worker variable/secret before enabling bootstrap. No secret was requested or changed.
+- D1 schema remains draft-only; no D1 database or binding was created. No Firebase/Cloudflare setting, user data, mobile adapter, or deployment was changed.
+- Decision: do not provision/apply D1 yet. Resolve critical encryption/PIN design, add schema constraints/tests, and obtain explicit approval before creating a Cloudflare D1 resource and binding.
