@@ -85,3 +85,10 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 - Adjusted `.github/workflows/watchathome-firebase-auth-check.yml` to filter execution to `com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest`.
 - Commit: `9a89838d131cf1427e2ea5816db276ce9ce739ef`. Focused run has not yet been verified.
 - No app authentication/UI, Supabase, Firebase production configuration, or Cloudflare resources changed.
+
+
+## 2026-11-13 — Generic JSON secret-field protection
+- Added `premium-worker/src/json-security.ts`; integrated it into profile settings and collections write paths.
+- Added regression tests for nested API-key/access-token rejection and preservation of safe future fields.
+- Worker CI [run 43401302072](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401302072) was in progress at the time of recording.
+- No production resources, secrets, D1 schema, user data, or mobile adapters changed.
