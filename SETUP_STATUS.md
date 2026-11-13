@@ -506,3 +506,10 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Broad host test execution exposed two unrelated failures in existing tests (`AndroidDownloadLifecycleTest`, `WatchProgressIdentityTest`), after 2,052 tests ran.
 - Firebase Auth CI now filters to `com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest` so the staged auth tests can be validated independently.
 - Focused workflow commit: `9a89838d131cf1427e2ea5816db276ce9ce739ef`. Await CI result.
+
+
+## 2026-11-13 — Generic JSON security guard
+- Worker profile-settings and collection writes now reject nested sensitive-key names rather than storing credentials in generic JSON columns.
+- The guard is source-only and requires no new Cloudflare variables or secrets.
+- Worker CI latest run `43401302072` is pending; do not mark verified until it completes.
+- D1 remains unprovisioned and the SQL remains draft-only.
