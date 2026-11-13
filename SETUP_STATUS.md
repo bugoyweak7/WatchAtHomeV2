@@ -434,3 +434,17 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - The earlier response-shape test failures were test-expectation mismatches; the assertions were corrected and the final complete run passed.
 - This is CI with local SQLite/D1 mocks and generated Firebase test signing keys, not live Cloudflare D1, Firebase project, production API, Android/iOS build, or deployment verification.
 - Profile CRUD/settings routes are implemented in source but remain disabled until the D1 schema/database/binding and required secrets are separately reviewed and approved. No mobile adapters, production data, Cloudflare resources, Firebase settings, or deployments were changed.
+
+
+## 2026-11-13 — Add-ons, Plugins and Collections backend APIs completed
+
+- Re-read actual AddonRepository.kt, fullCommonMain PluginRepository.kt, PluginModels.kt, CollectionSyncService.kt, CollectionModels.kt, and PluginSyncTest.kt before implementation.
+- Added premium-worker/src/profile-sync-api.ts and authenticated GET/PUT routes for /v1/profiles/{profileIndex}/addons, /plugins, and /collections.
+- Add-on and plugin APIs preserve the legacy row shape: url, name, enabled, sort_order. Snapshot PUTs upsert incoming rows and remove stale rows; empty arrays clear only the selected user's selected profile. Request validation rejects invalid URLs, duplicate URLs, invalid enabled flags/sort orders, and over 200 entries. JSON-backed SQL avoids unbounded SQL placeholder expansion.
+- Updated the draft profile_plugins table to include name and enabled fields as present in the legacy client row contract. Existing profile_addons table fields already represented the legacy selection data.
+- Collection API returns the expected list/row shape with profile_id, collections_json, updated_at and stores the complete JSON array, including unknown/future nested properties. Empty array replaces the snapshot.
+- Plugin repository metadata remains synced; scraper code/manifests are not copied into D1 because the inspected client fetches manifests/code from their repository URLs and caches scraper code locally. Plugin-wide runtime preferences remain in the existing local/settings behavior, not invented as server-side fields.
+- Shared Firestore add-on catalogue remains separate from per-profile installed add-ons.
+- Added 8 local SQLite storage tests and an HTTP/Firebase ownership test covering all three resources.
+- Final GitHub Actions run 43382547116 passed TypeScript compilation and all 61 Worker tests (0 failures), including 11 HTTP/auth tests and 8 add-on/plugin/collection storage tests: https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43382547116.
+- Verification is local/mock CI only. D1 remains draft-only and unprovisioned; no mobile adapters, UI, player, Firebase/Cloudflare resources, secrets, production data, or deployments changed.
