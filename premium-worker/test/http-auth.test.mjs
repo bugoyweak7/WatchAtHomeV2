@@ -479,3 +479,53 @@ test("watch progress HTTP routes authenticate and isolate profile data", async (
   assert.equal(denied.status, 404);
   db.close();
 });
+
+
+test("watched-items HTTP routes authenticate, preserve deltas and enforce profile ownership", async () => {
+  const db = createD1();
+  db.seedAccount("watched-http-owner");
+  db.seedAccount("watched-http-other");
+  db.seedProfile("watched-http-owner", 1);
+  const env = { ...envWithoutD1, DB: db };
+  const token = await idToken("watched-http-owner");
+  const otherToken = await idToken("watched-http-other");
+  const item = {
+    content_id: "watched-http-movie",
+    content_type: "movie",
+    title: "HTTP Watched Film",
+    season: null,
+    episode: null,
+    watched_at: 1700000000000,
+  };
+
+  const pushed = await worker.fetch(request("/v1/profiles/1/watched-items", "PUT", token, {
+    p_items: [item],
+    p_origin_client_id: "watchathome-http-test",
+  }), env);
+  assert.equal(pushed.status, 200);
+  assert.deepEqual(await pushed.json(), { saved: 1 });
+
+  const snapshot = await worker.fetch(request("/v1/profiles/1/watched-items?limit=10&offset=0", "GET", token), env);
+  assert.equal(snapshot.status, 200);
+  assert.equal((await snapshot.json())[0].content_id, item.content_id);
+
+  const cursor = await worker.fetch(request("/v1/profiles/1/watched-items/cursor", "GET", token), env);
+  assert.equal(await cursor.json(), 1);
+
+  const delta = await worker.fetch(request("/v1/profiles/1/watched-items/delta?since=0&limit=10", "GET", token), env);
+  assert.equal(delta.status, 200);
+  assert.equal((await delta.json())[0].operation, "upsert");
+
+  const removed = await worker.fetch(request("/v1/profiles/1/watched-items/delete", "POST", token, {
+    p_keys: [{ content_id: item.content_id, season: null, episode: null }],
+  }), env);
+  assert.equal(removed.status, 200);
+  assert.deepEqual(await removed.json(), { deleted: 1 });
+
+  const deleteDelta = await worker.fetch(request("/v1/profiles/1/watched-items/delta?since=1&limit=10", "GET", token), env);
+  assert.equal((await deleteDelta.json())[0].operation, "delete");
+
+  const denied = await worker.fetch(request("/v1/profiles/1/watched-items", "GET", otherToken), env);
+  assert.equal(denied.status, 404);
+  db.close();
+});
