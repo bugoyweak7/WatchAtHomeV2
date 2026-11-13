@@ -146,7 +146,7 @@ test("collection snapshots reject nested secret fields", async () => {
 
 
 test("home catalog settings round-trip by profile and platform with versioned updates", async () => {
-  const db = createDb(); db.seed("owner-a", 1); db.seed("owner-a", 2); db.seed("owner-b", 1);
+  const db = createDb(); db.seed("owner-a", 1); db.raw.prepare("INSERT INTO profiles(user_id, profile_index, profile_id, payload_json, created_at, updated_at) VALUES(?, ?, ?, '{}', 100, 100)").run("owner-a", 2, "profile-owner-a-2"); db.seed("owner-b", 1);
   const payload = {
     show_catalog_type: false,
     hide_unreleased_content: true,
