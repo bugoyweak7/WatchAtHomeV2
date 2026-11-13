@@ -3,6 +3,7 @@ import { saveProviderCredential, loadProviderCredential, saveMediaServer, loadMe
 import { setProfilePin, clearProfilePin, verifyProfilePinWithLockout } from "./pin-store";
 import { consumeRateLimit } from "./rate-limit";
 import { getAddons, getCollections, getHomeCatalogSettings, getPlugins, putAddons, putCollections, putHomeCatalogSettings, putPlugins } from "./profile-sync-api";
+import { deleteLibraryItems, getLibraryDelta, getLibrarySnapshot, parseLibraryPageParams, pushLibraryItems } from "./library-sync-api";
 import {
   deleteProfile, getProfileSettings, listProfileLocks, listProfiles, putProfileSettings, upsertProfiles,
 } from "./profile-api";
@@ -554,6 +555,24 @@ async function homeCatalogSettingsRoute(
   return response({ error: "Method not allowed." }, 405);
 }
 
+async function librarySyncRoute(request: Request, env: Env, user: VerifiedUser, index: number, action: "snapshot" | "delta" | "push" | "delete"): Promise<Response> {
+  const db = requireAccountDb(env);
+  await requireOwnedProfile(db, user.uid, index);
+  await applyRateLimits(request, db, user, "library-sync-" + action, index);
+  const url = new URL(request.url);
+  if (action === "snapshot" && request.method === "GET") {
+    const page = parseLibraryPageParams(url, "snapshot");
+    return response(await getLibrarySnapshot(db, user.uid, index, page.limit, page.offset));
+  }
+  if (action === "delta" && request.method === "GET") {
+    const page = parseLibraryPageParams(url, "delta");
+    return response(await getLibraryDelta(db, user.uid, index, page.since, page.limit));
+  }
+  if (action === "push" && request.method === "PUT") return response(await pushLibraryItems(db, user.uid, index, request));
+  if (action === "delete" && request.method === "POST") return response(await deleteLibraryItems(db, user.uid, index, request));
+  return response({ error: "Method not allowed." }, 405);
+}
+
 async function profileSyncRoute(request: Request, env: Env, user: VerifiedUser, index: number, resource: "addons" | "plugins" | "collections"): Promise<Response> {
   const db = requireAccountDb(env);
   await requireOwnedProfile(db, user.uid, index);
@@ -655,6 +674,13 @@ export default {
           /^\/v1\/profiles\/([1-9][0-9]*)(?:\/settings)?$/.test(url.pathname)) {
         const profileResponse = await profileApiRoute(request, env, user);
         if (profileResponse.status !== 404) return profileResponse;
+      }
+      const libraryMatch = /^\\/v1\\/profiles\\/([1-9][0-9]*)\\/library(?:\\/(delta|delete))?$/.exec(url.pathname);
+      if (libraryMatch) {
+        const action = libraryMatch[2] === "delta" ? "delta" : libraryMatch[2] === "delete" ? "delete" : request.method === "PUT" ? "push" : "snapshot";
+        if (["GET", "PUT", "POST"].includes(request.method)) {
+          return await librarySyncRoute(request, env, user, Number(libraryMatch[1]), action as "snapshot" | "delta" | "push" | "delete");
+        }
       }
       const profileSyncMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/(addons|plugins|collections)$/.exec(url.pathname);
       const homeCatalogMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/home-catalog$/.exec(url.pathname);
