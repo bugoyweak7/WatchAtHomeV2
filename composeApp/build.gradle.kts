@@ -32,6 +32,9 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
     abstract val cloudflareWorkerBaseUrl: Property<String>
 
     @get:Input
+    abstract val cloudflareSyncEnabled: Property<Boolean>
+
+    @get:Input
     abstract val supabaseUrl: Property<String>
 
     @get:Input
@@ -63,6 +66,7 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
                 |
                 |object CloudflareWorkerConfig {
                 |    const val BASE_URL = "${cloudflareWorkerBaseUrl.get()}"
+                |    const val SYNC_ENABLED = ${cloudflareSyncEnabled.get()}
                 |}
                 """.trimMargin()
             )
@@ -333,6 +337,7 @@ val generateRuntimeConfigs = tasks.register<GenerateRuntimeConfigsTask>("generat
     appVersionName.set(releaseAppVersionName)
     appVersionCode.set(releaseAppVersionCode)
     cloudflareWorkerBaseUrl.set(runtimeConfigValue("CLOUDFLARE_WORKER_BASE_URL"))
+    cloudflareSyncEnabled.set(runtimeConfigBoolean("CLOUDFLARE_SYNC_ENABLED", false))
     supabaseUrl.set(runtimeConfigValue("NUVIO_SUPABASE_URL"))
     supabaseAnonKey.set(runtimeConfigValue("NUVIO_SUPABASE_ANON_KEY"))
     supabaseFallbackUrl.set(runtimeConfigValue("NUVIO_SUPABASE_FALLBACK_URL"))
