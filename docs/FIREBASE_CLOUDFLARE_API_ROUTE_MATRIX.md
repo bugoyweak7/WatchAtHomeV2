@@ -425,3 +425,15 @@ The following profile-scoped routes are implemented and locally/mock verified; t
 - Calls use a Firebase ID-token bearer header, require HTTPS, and cap response body size. Profile saves enforce the six-profile maximum and unique indexes on the client; Worker validation remains authoritative.
 - Added focused adapter tests and Android CI workflow coverage. This verifies client contract behavior only, not live Worker/D1 deployment or production account migration.
 - `ProfileRepository` remains on Supabase until the Firebase auth cutover and all dependent profile operations are ready.
+
+
+### Profile settings mobile adapter — 2026-11-13
+
+| Operation | Worker route | Mobile implementation | Active in app |
+|---|---|---|---|
+| Pull profile settings | `GET /v1/profiles/{index}/settings?platform=mobile` | `CloudflareProfileSettingsHttpAdapter.pull()` | No |
+| Push profile settings | `PUT /v1/profiles/{index}/settings?platform=mobile` with `settings_json` | `CloudflareProfileSettingsHttpAdapter.push()` | No |
+
+- JSON object fields are retained rather than mapped to a closed schema, protecting forward compatibility for settings keys.
+- Firebase bearer authentication, HTTPS validation, profile/platform validation, and bounded responses are implemented. Focused client tests are included in Android CI.
+- Existing `ProfileSettingsSync` still uses Supabase RPCs; this adapter is not wired into the active app.
