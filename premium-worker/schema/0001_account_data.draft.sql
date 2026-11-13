@@ -149,8 +149,8 @@ CREATE TABLE IF NOT EXISTS provider_credentials (
   user_id TEXT NOT NULL,
   profile_index INTEGER NOT NULL,
   provider TEXT NOT NULL,
-  ciphertext BLOB NOT NULL,
-  nonce BLOB NOT NULL,
+  ciphertext BLOB NOT NULL CHECK (length(ciphertext) >= 16),
+  nonce BLOB NOT NULL CHECK (length(nonce) = 12),
   key_version INTEGER NOT NULL CHECK (key_version > 0),
   updated_at INTEGER NOT NULL,
   PRIMARY KEY (user_id, profile_index, provider),
@@ -174,7 +174,9 @@ CREATE TABLE IF NOT EXISTS media_servers (
   CHECK (
     (token_ciphertext IS NULL AND token_nonce IS NULL AND token_key_version IS NULL)
     OR
-    (token_ciphertext IS NOT NULL AND token_nonce IS NOT NULL AND token_key_version IS NOT NULL AND token_key_version > 0)
+    (token_ciphertext IS NOT NULL AND length(token_ciphertext) >= 16
+      AND token_nonce IS NOT NULL AND length(token_nonce) = 12
+      AND token_key_version IS NOT NULL AND token_key_version > 0)
   ),
   FOREIGN KEY (user_id, profile_index)
     REFERENCES profiles(user_id, profile_index) ON DELETE CASCADE
