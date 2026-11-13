@@ -56,22 +56,26 @@ function parsePage(url: URL) {
   const limit = Number(url.searchParams.get("limit") ?? 500);
   const sinceLastWatchedRaw = url.searchParams.get("sinceLastWatched");
   const sinceLastWatched = sinceLastWatchedRaw == null ? null : Number(sinceLastWatchedRaw);
+  const offset = Number(url.searchParams.get("offset") ?? 0);
   if (!Number.isSafeInteger(limit) || limit < 1 || limit > MAX_PROGRESS_ROWS) throw new AccountApiError(400, "Invalid progress page limit.");
   if (sinceLastWatched != null && (!Number.isSafeInteger(sinceLastWatched) || sinceLastWatched < 0)) {
     throw new AccountApiError(400, "Invalid progress timestamp cursor.");
   }
-  return { limit, sinceLastWatched };
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset > 1_000_000) {
+    throw new AccountApiError(400, "Invalid progress page offset.");
+  }
+  return { limit, sinceLastWatched, offset };
 }
 
 export async function getProgressSnapshot(
-  db: AccountD1Database, uid: string, profile: number, sinceLastWatched: number | null, limit: number,
+  db: AccountD1Database, uid: string, profile: number, sinceLastWatched: number | null, limit: number, offset = 0,
 ) {
   const rows = await db.prepare(`
     SELECT payload_json AS payload FROM watch_progress
     WHERE user_id = ?1 AND profile_index = ?2 AND deleted_at IS NULL
       AND (?3 IS NULL OR last_watched_at > ?3)
-    ORDER BY last_watched_at ASC, progress_key ASC LIMIT ?4
-  `).bind(uid, profile, sinceLastWatched, limit).all<{ payload: string }>();
+    ORDER BY last_watched_at ASC, progress_key ASC LIMIT ?4 OFFSET ?5
+  `).bind(uid, profile, sinceLastWatched, limit, offset).all<{ payload: string }>();
   return rows.results.map(row => JSON.parse(row.payload));
 }
 
