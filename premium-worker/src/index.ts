@@ -562,12 +562,12 @@ async function librarySyncRoute(request: Request, env: Env, user: VerifiedUser, 
   const url = new URL(request.url);
   if (action === "snapshot" && request.method === "GET") {
     const page = parseLibraryPageParams(url, "snapshot");
-    return response(await getLibrarySnapshot(db, user.uid, index, page.limit, page.offset));
+    return response(await getLibrarySnapshot(db, user.uid, index, page.limit!, page.offset!));
   }
   if (action === "cursor" && request.method === "GET") return response(await getLibraryDeltaCursor(db, user.uid, index));
   if (action === "delta" && request.method === "GET") {
     const page = parseLibraryPageParams(url, "delta");
-    return response(await getLibraryDelta(db, user.uid, index, page.since, page.limit));
+    return response(await getLibraryDelta(db, user.uid, index, page.since!, page.limit!));
   }
   if (action === "push" && request.method === "PUT") return response(await pushLibraryItems(db, user.uid, index, request));
   if (action === "delete" && request.method === "POST") return response(await deleteLibraryItems(db, user.uid, index, request));
