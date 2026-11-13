@@ -353,3 +353,9 @@ The following profile-scoped routes are implemented and locally/mock verified; t
 - Added a staged multiplatform Ktor client for snapshot, cursor, delta, upsert and delete routes; it authenticates with Firebase ID tokens and preserves `progress_key` identity.
 - Worker CI run 43414785430 passed. Mobile adapter tests run 43414877340 pending.
 - The client is not wired into `WatchProgressRepository`; Supabase remains active.
+
+
+## Progress snapshot route HTTP test follow-up — 2026-11-13
+
+- Added authenticated HTTP coverage for `GET /v1/profiles/:profileIndex/watch-progress?limit=&offset=`; Worker CI run 43415195896 passed.
+- Mobile adapter PUT/POST route tests added. Latest Android CI run 43415270909 queued after previous run cancellation.
