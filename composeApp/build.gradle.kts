@@ -29,6 +29,9 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
     abstract val appVersionCode: Property<Int>
 
     @get:Input
+    abstract val cloudflareWorkerBaseUrl: Property<String>
+
+    @get:Input
     abstract val supabaseUrl: Property<String>
 
     @get:Input
@@ -54,6 +57,15 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
         val outDir = outputDir.get().asFile
         outDir.resolve("com/nuvio/app/core/network").apply {
             mkdirs()
+            resolve("CloudflareWorkerConfig.kt").writeText(
+                """
+                |package com.nuvio.app.core.network
+                |
+                |object CloudflareWorkerConfig {
+                |    const val BASE_URL = "${cloudflareWorkerBaseUrl.get()}"
+                |}
+                """.trimMargin()
+            )
             resolve("SupabaseConfig.kt").writeText(
                 """
                 |package com.nuvio.app.core.network
@@ -320,7 +332,8 @@ val generateRuntimeConfigs = tasks.register<GenerateRuntimeConfigsTask>("generat
     localPropertiesFile.set(rootProject.layout.projectDirectory.file("local.properties"))
     appVersionName.set(releaseAppVersionName)
     appVersionCode.set(releaseAppVersionCode)
-    cloudflareWorkerBaseUrl.set(runtimeConfigValue("CLOUDFLARE_WORKER_BASE_URL"))\n    supabaseUrl.set(runtimeConfigValue("NUVIO_SUPABASE_URL"))
+    cloudflareWorkerBaseUrl.set(runtimeConfigValue("CLOUDFLARE_WORKER_BASE_URL"))\n    cloudflareWorkerBaseUrl.set(runtimeConfigValue("CLOUDFLARE_WORKER_BASE_URL"))
+    supabaseUrl.set(runtimeConfigValue("NUVIO_SUPABASE_URL"))
     supabaseAnonKey.set(runtimeConfigValue("NUVIO_SUPABASE_ANON_KEY"))
     supabaseFallbackUrl.set(runtimeConfigValue("NUVIO_SUPABASE_FALLBACK_URL"))
     sentryDsn.set(runtimeConfigValue("SENTRY_DSN"))
