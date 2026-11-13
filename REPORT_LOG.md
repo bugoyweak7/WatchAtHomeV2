@@ -247,3 +247,5 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - Previous Android workflow 43415270909 was cancelled before app compilation; its focused Firebase Auth test step passed. Fresh CI verification is pending.
 
 - Fresh Android CI run 43416885505 was triggered by the final adapter/config source commit and is currently queued; do not mark the mobile wiring build-verified until this run completes successfully.
+
+- CI follow-up: run 43416885505 has moved from queued to in progress. The focused Firebase/Auth + Cloudflare adapter host-test step is currently running; Android Play Store debug compilation is pending. No pass is claimed yet.
