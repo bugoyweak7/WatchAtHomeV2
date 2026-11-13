@@ -676,7 +676,7 @@ export default {
         const profileResponse = await profileApiRoute(request, env, user);
         if (profileResponse.status !== 404) return profileResponse;
       }
-      const libraryMatch = /^\\/v1\\/profiles\\/([1-9][0-9]*)\\/library(?:\\/(delta|delete|cursor))?$/.exec(url.pathname);
+      const libraryMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/library(?:\/(delta|delete|cursor))?$/.exec(url.pathname);
       if (libraryMatch) {
         const action = libraryMatch[2] === "delta" ? "delta" : libraryMatch[2] === "delete" ? "delete" : libraryMatch[2] === "cursor" ? "cursor" : request.method === "PUT" ? "push" : "snapshot";
         if (["GET", "PUT", "POST"].includes(request.method)) {
