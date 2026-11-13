@@ -676,7 +676,7 @@ export default {
       if (request.method === "POST" && url.pathname === "/v1/devices") {
         return await registerDeviceRoute(request, env, user);
       }
-      const revokeDeviceMatch = /^\\/v1\\/devices\\/([^/]+)$/.exec(url.pathname);
+      const revokeDeviceMatch = /^\/v1\/devices\/([^/]+)$/.exec(url.pathname);
       if (revokeDeviceMatch && request.method === "DELETE") {
         return await revokeDeviceRoute(request, env, user, revokeDeviceMatch[1]);
       }
