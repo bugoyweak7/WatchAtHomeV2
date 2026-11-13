@@ -301,3 +301,16 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - The GitHub Actions workflow run could not yet be confirmed through the available repository connector. Therefore TypeScript compilation and the complete nine-test suite remain pending actual CI results.
 - No production deployment, D1 binding/database, Firebase setting, or app adapter was changed.
 - Next: inspect the CI run and resolve any actual compiler/test failures before writing mocked D1 route tests.
+
+
+## 2026-11-13 — Worker CI corrected; schema and mocked D1 tests passed
+
+- First CI run failed at dependency installation because `@cloudflare/workers-types@^4.20261113.0` was not a published npm version. Replaced it with the verified published `^5.20261113.1` version.
+- GitHub Actions run `43376508247` then passed TypeScript compilation and all 9 schema tests.
+- Extracted account/device D1 operations and request validation into `premium-worker/src/account-device.ts` so they can be tested without connecting a live Cloudflare database.
+- Added `premium-worker/test/account-device.test.mjs` using a D1-compatible mock adapter backed by in-memory SQLite. It verifies missing D1 configuration, missing/inactive accounts, device registration and idempotent update, owner-scoped listing, revoked installation ID rejection, invalid/oversized request rejection, and ignoring caller-supplied user IDs.
+- Added `tsx` and `test:worker` to the Worker package; extended CI to run the mocked D1 tests.
+- Latest GitHub Actions run `43376689122` completed successfully: dependency install passed, TypeScript check passed, schema tests passed (9/9), mocked D1 account/device tests passed (6/6). Total verified tests: 15 passed, 0 failed.
+- This verifies TypeScript and the account/device data-access module against an in-memory SQLite-backed D1 mock. It is not a full HTTP/JWT integration test, Cloudflare D1 integration test, Firebase integration test, or production test.
+- No D1 binding/database, Firebase setting, mobile adapter, production data, or deployment was changed.
+- Next: add HTTP/auth integration coverage with a controlled Firebase token verifier, then review and approve D1 provisioning/migration before enabling the endpoints.
