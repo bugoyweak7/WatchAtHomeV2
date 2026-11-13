@@ -20,7 +20,11 @@ function optionalNumber(value: unknown, field: string): number | null {
   return Number(value);
 }
 
-function itemKey(key: WatchedKey): string {
+function itemKey(item: WatchedRecord): string {
+  return JSON.stringify([item.content_type, item.content_id, item.season, item.episode]);
+}
+
+function deleteKey(key: WatchedKey): string {
   return JSON.stringify([key.content_id, key.season, key.episode]);
 }
 
@@ -133,25 +137,26 @@ export async function deleteWatchedItems(db: AccountD1Database, uid: string, pro
     throw new AccountApiError(400, `keys must be an array with no more than ${MAX_WATCHED_ROWS} entries.`);
   }
   const keys = input.map(parseKey);
-  if (new Set(keys.map(itemKey)).size !== keys.length) throw new AccountApiError(400, "Duplicate watched item key.");
+  if (new Set(keys.map(deleteKey)).size !== keys.length) throw new AccountApiError(400, "Duplicate watched item key.");
   let deleted = 0;
   for (const key of keys) {
-    const normalized = itemKey(key);
-    const existing = await db.prepare(`
-      SELECT payload_json AS payload FROM watched_items
-      WHERE user_id = ?1 AND profile_index = ?2 AND item_key = ?3 AND deleted_at IS NULL
-    `).bind(uid, profile, normalized).first<{ payload: string }>();
-    if (!existing) continue;
-    const result = await db.prepare(`
-      UPDATE watched_items SET deleted_at = ?4, updated_at = ?4
-      WHERE user_id = ?1 AND profile_index = ?2 AND item_key = ?3 AND deleted_at IS NULL
-    `).bind(uid, profile, normalized, now).run();
-    if (result.meta.changes === 0) continue;
-    deleted++;
-    await db.prepare(`
-      INSERT INTO sync_events (user_id, profile_index, resource, record_key, operation, payload_json, origin_client_id, created_at)
-      VALUES (?1, ?2, 'watched_items', ?3, 'delete', ?4, ?5, ?6)
-    `).bind(uid, profile, normalized, existing.payload, origin, now).run();
+    const existingRows = await db.prepare(`
+      SELECT item_key AS itemKey, payload_json AS payload FROM watched_items
+      WHERE user_id = ?1 AND profile_index = ?2 AND content_id = ?3
+        AND season_number IS ?4 AND episode_number IS ?5 AND deleted_at IS NULL
+    `).bind(uid, profile, key.content_id, key.season, key.episode).all<{ itemKey: string; payload: string }>();
+    for (const existing of existingRows.results) {
+      const result = await db.prepare(`
+        UPDATE watched_items SET deleted_at = ?4, updated_at = ?4
+        WHERE user_id = ?1 AND profile_index = ?2 AND item_key = ?3 AND deleted_at IS NULL
+      `).bind(uid, profile, existing.itemKey, now).run();
+      if (result.meta.changes === 0) continue;
+      deleted++;
+      await db.prepare(`
+        INSERT INTO sync_events (user_id, profile_index, resource, record_key, operation, payload_json, origin_client_id, created_at)
+        VALUES (?1, ?2, 'watched_items', ?3, 'delete', ?4, ?5, ?6)
+      `).bind(uid, profile, existing.itemKey, existing.payload, origin, now).run();
+    }
   }
   return { deleted };
 }
