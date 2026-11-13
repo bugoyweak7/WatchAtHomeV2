@@ -6,6 +6,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.utils.io.errors.IOException
+import com.nuvio.app.features.watchprogress.WatchProgressEntry
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -79,10 +80,22 @@ class CloudflareProgressSyncAdapterTest {
         )
 
         assertEquals(7L, adapter.getDeltaCursor(1))
-        adapter.delete(1, emptyList())
+        val entry = WatchProgressEntry(
+            contentType = "movie",
+            parentMetaId = "movie-1",
+            parentMetaType = "movie",
+            videoId = "video-1",
+            title = "Test",
+            lastPositionMs = 10L,
+            durationMs = 100L,
+            lastUpdatedEpochMs = 123L,
+        )
+        adapter.push(1, listOf(entry))
+        adapter.delete(1, listOf(entry))
 
         assertEquals(HttpMethod.Get to "https://worker.example/v1/profiles/1/watch-progress/cursor", calls[0])
-        assertEquals(1, calls.size)
+        assertEquals(HttpMethod.Put to "https://worker.example/v1/profiles/1/watch-progress", calls[1])
+        assertEquals(HttpMethod.Post to "https://worker.example/v1/profiles/1/watch-progress/delete", calls[2])
         client.close()
     }
 
