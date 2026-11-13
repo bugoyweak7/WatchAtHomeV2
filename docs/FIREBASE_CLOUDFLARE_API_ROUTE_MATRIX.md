@@ -378,3 +378,21 @@ The following profile-scoped routes are implemented and locally/mock verified; t
 | Resource | Worker routes | Source status | Mobile status |
 |---|---|---|---|
 | Watched items | `GET /v1/profiles/:index/watched-items`, `GET .../cursor`, `GET .../delta`, `PUT .../watched-items`, `POST .../delete` | Implemented; local SQLite and authenticated HTTP CI pending | Still uses Supabase; no Cloudflare adapter |
+
+
+## 2026-11-13 — Mobile watched-items adapter staged behind existing opt-in gate
+
+- Added `CloudflareWatchedSyncHttpAdapter` using the existing Worker HTTPS API and a fresh Firebase ID token. It maps the current `WatchedItem` and `WatchedDeltaEvent` contracts, pages snapshots at the Worker-supported maximum of 500 rows, and sends bounded upsert/delete batches.
+- Added MockEngine tests for snapshot route/paging, delta mapping, cursor, mutation routes, wire fields, and missing-token rejection.
+- `WatchedRepository.syncAdapter` now selects the Cloudflare implementation only when `CLOUDFLARE_SYNC_ENABLED=true` and the configured Worker base URL is HTTPS; otherwise it continues using `SupabaseWatchedSyncAdapter`.
+- The global flag remains false by default. The Firebase Auth implementation is still staged rather than wired into the active app login, so this adapter is not ready for activation.
+- Android CI has been triggered by these source/test commits. Do not mark compilation/tests as passed until the matching run completes successfully.
+- No D1 binding, Cloudflare deployment, secrets, Firebase Console settings, production data, or account migration was changed.
+
+
+## 2026-11-13 — Watched-items mobile route integration status
+
+- The staged mobile adapter now calls the Worker watched-items snapshot/cursor/delta/upsert/delete routes with Firebase ID-token authorization.
+- Repository selection is opt-in only (`CLOUDFLARE_SYNC_ENABLED`) and falls back to the existing Supabase adapter when disabled or when the Worker URL is not HTTPS.
+- Snapshot page size is clamped to the Worker maximum of 500 even though the existing repository requests 900. Mutation requests are byte-bounded and batched.
+- The Firebase token provider is staged. Active Supabase authentication remains unchanged, so do not enable the flag yet.
