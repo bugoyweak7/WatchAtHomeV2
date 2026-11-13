@@ -237,3 +237,11 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - No legacy service access, data export, app source change, Worker runtime change, SQL migration, Firebase/Cloudflare setting, production data change, or deployment was performed.
 - Supabase dashboard/schema evidence remains unavailable because the user does not own the upstream project. Continue using verified client contracts and explicitly mark unverified server semantics.
 - Next gate: reconcile the proposed D1 schema and Worker API matrix against the now-expanded client inventory, then produce a local-only schema draft and tests before mobile adapter changes.
+
+
+## 2026-11-13 — Source-derived migration path confirmed
+
+- Clarified the migration contract: upstream Supabase dashboard/schema access is not a prerequisite because the user does not own that legacy project.
+- The earlier schema-export dependency is superseded. Continue from verified client source and product requirements; mark unknown legacy server semantics explicitly rather than inventing parity.
+- Authorized next design stage: prepare a source-derived D1 schema draft and local Worker tests only. This does not authorize production D1 creation, Firebase/Cloudflare account changes, data migration, or deployment.
+- Remote legacy data transfer remains conditional on an existing valid user session and verified service reachability; no shared-key bypass or cross-user export.
