@@ -90,3 +90,8 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added profile-scoped GET/PUT endpoint for home catalog settings using existing D1 schema table and shared platform key.
 - Preserves full JSON/unknown fields, increments row version, enforces owner/profile scope and request limits, and rejects sensitive fields.
 - Added tests for round-trip, isolation, replacement, invalid payloads and secret rejection. Final Worker CI pending.
+
+
+## 2026-11-13 — Home catalog test fixture fix
+- Corrected the profile-isolation test fixture to add a second profile under the existing account instead of inserting a duplicate account row.
+- CI run `43401818613` failed on the fixture setup; corrected commit `e4d38da054d928687ed759c86bcb921464c89ae7` is queued as run `43401962345`.
