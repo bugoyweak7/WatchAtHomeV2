@@ -588,3 +588,12 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Added request-size-aware batching (192 KiB mobile cap against Worker 256 KiB request bound).
 - Added four MockEngine tests and extended Android CI workflow. Run 43413914695 pending final result.
 - No Worker endpoint, D1 binding, secrets, deployment, or production config was set.
+
+
+## 2026-11-13 — Watch-progress mobile adapter staged
+
+- Added `CloudflareProgressSyncAdapter.kt` using Firebase ID-token Bearer auth and the existing multiplatform Ktor HTTP client.
+- Supports snapshot pages, delta cursor/events, push and delete tombstones; request bodies are size-batched and responses are bounded.
+- Worker snapshot route now accepts a validated offset for deterministic paging. Worker CI run 43414785430 passed.
+- Added four MockEngine tests; Android CI run 43414877340 pending.
+- `WatchProgressRepository` remains on Supabase. No production Worker URL, D1 resource/binding, secret, deployment or production data changed.
