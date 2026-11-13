@@ -213,3 +213,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Preserved platform gating for plugin operations on Android Play Store and iOS App Store builds.
 - No runtime code, SQL migration, Firebase/Cloudflare resource, production data, or deployment was changed.
 - Next gate: finish a path-based inventory of all remaining Supabase imports and feature adapters, then validate the complete D1 logical schema and API route matrix against that inventory before implementing mobile migration.
+
+
+## 2026-11-13 — Supabase Storage dependency discovered
+
+- Expanded the source scan beyond PostgREST/RPC calls and found additional Supabase Storage dependencies in `AvatarRepository.kt` and `ProfileBackgroundRepository.kt`.
+- Verified standard avatar catalogue RPC `get_avatar_catalog`, member avatar catalogue RPC `get_member_profile_avatar_catalog`, and member background catalogue RPC `get_member_profile_background_catalog`.
+- Verified member-only avatar objects use bucket `membership-profile-avatars`, authenticated downloads, and one-day signed URLs for sharing.
+- Verified supporter background objects use bucket `membership-profile-backgrounds`, authenticated downloads, optional portrait paths, and landscape fallback when portrait loading fails.
+- Replacement requirements now include R2 object migration, Worker entitlement checks, short-lived authorized delivery, asset-version cache invalidation, and preservation of local image caches. Member-only assets must not become public.
+- Updated the compatibility audit and migration contract with these asset dependencies.
+- No app code, Worker runtime, R2 object, SQL migration, Firebase setting, Cloudflare resource, production data, or deployment was changed.
