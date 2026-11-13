@@ -128,3 +128,9 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Updated `.github/workflows/watchathome-firebase-auth-check.yml` to run `:composeApp:testAndroidHostTest` before the Android Play Store debug compilation.
 - CI run `43399716638` is currently in progress; the unit-test outcome and subsequent app compilation are not yet verified.
 - No production Firebase, Supabase, Cloudflare, D1, secrets, or deployment settings were changed. Active app authentication remains Supabase.
+
+
+## 2026-11-13 — Isolate Firebase Auth CI test suite
+- CI run `43399716638` executed 2,052 Android host tests; 2 unrelated existing tests failed (`AndroidDownloadLifecycleTest` and `WatchProgressIdentityTest`). The staged Firebase Auth test class was not among the reported failures.
+- Updated the Firebase Auth workflow to filter the test task to `com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest`, preventing unrelated project test failures from blocking this focused check.
+- New workflow commit: `9a89838d131cf1427e2ea5816db276ce9ce739ef`. Awaiting its CI result; do not mark the suite passed until verified.
