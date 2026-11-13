@@ -12,6 +12,7 @@ import {
   listDevices,
   parseDeviceRegistration,
   registerDevice,
+  revokeDevice,
   requireAccountDb,
   readBoundedJson,
   type AccountD1Database,
@@ -444,6 +445,19 @@ async function registerDeviceRoute(request: Request, env: Env, user: VerifiedUse
   return response(result);
 }
 
+async function revokeDeviceRoute(request: Request, env: Env, user: VerifiedUser, encodedInstallationId: string): Promise<Response> {
+  const db = requireAccountDb(env);
+  let installationId: string;
+  try {
+    installationId = decodeURIComponent(encodedInstallationId);
+  } catch {
+    throw new AccountApiError(400, "Invalid installation ID.");
+  }
+  await ensureActiveAccount(db, user.uid);
+  await applyRateLimits(request, db, user, "device-revoke");
+  return response(await revokeDevice(db, user.uid, installationId));
+}
+
 async function listDevicesRoute(env: Env, user: VerifiedUser): Promise<Response> {
   const db = requireAccountDb(env);
   return response(await listDevices(db, user.uid));
@@ -661,6 +675,10 @@ export default {
       }
       if (request.method === "POST" && url.pathname === "/v1/devices") {
         return await registerDeviceRoute(request, env, user);
+      }
+      const revokeDeviceMatch = /^\\/v1\\/devices\\/([^/]+)$/.exec(url.pathname);
+      if (revokeDeviceMatch && request.method === "DELETE") {
+        return await revokeDeviceRoute(request, env, user, revokeDeviceMatch[1]);
       }
       if (request.method === "GET" && url.pathname === "/v1/devices") {
         return await listDevicesRoute(env, user);
