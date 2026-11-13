@@ -623,7 +623,7 @@ export default {
         const profileResponse = await profileApiRoute(request, env, user);
         if (profileResponse.status !== 404) return profileResponse;
       }
-      const profileSyncMatch = /^\\/v1\\/profiles\\/([1-9][0-9]*)\\/(addons|plugins|collections)$/.exec(url.pathname);
+      const profileSyncMatch = /^\/v1\\/profiles\\/([1-9][0-9]*)\/(addons|plugins|collections)$/.exec(url.pathname);
       if (profileSyncMatch && (request.method === "GET" || request.method === "PUT")) {
         return await profileSyncRoute(request, env, user, Number(profileSyncMatch[1]), profileSyncMatch[2] as "addons" | "plugins" | "collections");
       }
