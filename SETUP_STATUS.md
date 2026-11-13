@@ -68,3 +68,49 @@ This user app is NOT yet migrated to Firebase/Cloudflare. The Firebase Android b
 5. Test locally against local D1; add migration/rollback and export/backup plan.
 6. Migrate feature adapters incrementally; preserve all player/add-on/subtitle/catalog functionality.
 7. Run tests and builds; no production deployment without separate approval.
+
+## 2026-11-13 — Authentication migration execution audit (GO authorized)
+
+### Additional source files verified
+- `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/AuthRepository.kt`
+- `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/AuthModels.kt`
+- `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/AuthStorage.kt`
+- `composeApp/src/androidMain/kotlin/com/nuvio/app/core/auth/AuthStorage.android.kt`
+- `composeApp/src/iosMain/kotlin/com/nuvio/app/core/auth/AuthStorage.ios.kt`
+- `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/DeviceLinkAuthRepository.kt`
+- `composeApp/src/commonMain/kotlin/com/nuvio/app/features/auth/AuthScreen.kt`
+- `composeApp/src/commonMain/kotlin/com/nuvio/app/core/storage/LocalAccountDataCleaner.kt`
+- `composeApp/src/androidMain/kotlin/com/nuvio/app/core/network/FirebaseBackend.android.kt`
+- `composeApp/build.gradle.kts` and `gradle/libs.versions.toml`
+
+### Confirmed Firebase readiness
+- GitLive Firebase Auth and Firestore dependencies (2.8.0) are already declared in commonMain.
+- Native Firebase Auth and Firestore dependencies are already declared for Android.
+- Android Google Services configuration identifies project `watchathome-admin`.
+- iOS `GoogleService-Info.plist` exists in the repository.
+- The common auth repository can use the existing multiplatform Firebase SDK, subject to initialization and platform build verification.
+
+### Confirmed authentication behavior and migration blockers
+- `AuthRepository` still uses Supabase session status, email/password sign-in/up, session refresh, sign-out, and Supabase Edge Function account deletion.
+- A locally generated anonymous UUID is accepted as an authenticated app state; this violates the approved registered-account-only policy.
+- `AuthScreen` still exposes “Continue without account” and calls `signInAnonymously()`.
+- `DeviceLinkAuthRepository` currently obtains and imports a Supabase access/refresh-token session. It is not compatible with Firebase Auth without a server-side Firebase token-exchange/device-link flow.
+- Existing data repositories and sync still depend on Supabase authentication and Supabase RLS/RPC/Edge Functions. Switching only the login provider would leave authenticated data operations without a valid Supabase session.
+- Account deletion currently calls the Supabase `delete-account` function. Replacing this with Firebase Auth user deletion alone would leave backend data orphaned and would not provide a complete account-deletion workflow.
+- Existing local account cleanup wipes substantial user data. It must only run after the new server-side account/session action succeeds, and must not run during a failed migration/sign-in.
+
+### Execution decision
+- GO authorization received for Priority 1.
+- No application source code, Firebase project settings, backend resources, or production data were changed in this audit.
+- Do NOT replace `AuthRepository` in isolation. That would break Supabase-backed data sync, device-link login, and account deletion.
+- The safe implementation sequence is:
+  1. Define and implement the Cloudflare authentication/device-link/account lifecycle contract, including Firebase ID-token verification and ownership.
+  2. Add Firebase email/password auth and session state to the User App using the already-declared GitLive dependency.
+  3. Remove the anonymous/local-UUID sign-in path and its “Continue without account” UI.
+  4. Migrate device-link exchange to Firebase-compatible authentication before removing its Supabase session dependency.
+  5. Replace Supabase account deletion with a server-authorized deletion workflow covering D1/Firestore and Firebase Auth.
+  6. Keep Supabase data adapters until each corresponding API/RLS/RPC dependency has a tested Cloudflare replacement.
+  7. Run Android and iOS compilation plus auth/session/device-link/account-deletion tests before marking migration complete.
+
+### Next implementation gate
+Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoints and document the API contract before changing the User App authentication provider. Preserve the existing player, add-on, subtitle, catalogue, profile, and sync behavior throughout.
