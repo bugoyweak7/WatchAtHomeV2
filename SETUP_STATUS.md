@@ -165,3 +165,15 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Existing remote user data migration must be investigated separately. If the legacy service is reachable, evaluate a user-authorized per-account export/import using the user's own existing authenticated session and only their authorized records. Never use the shared anon key to bypass authorization or access other users' data. If the old service is unavailable, preserve local data and do not promise automatic remote transfer.
 - The migration contract was amended to reflect this ownership clarification and revised next step.
 - No application source, Worker runtime, backend resource, Firebase/Cloudflare setting, production data, or deployment was changed.
+
+
+## 2026-11-13 — Legacy backend source compatibility audit (continued)
+
+- Added `docs/LEGACY_BACKEND_SOURCE_COMPATIBILITY_AUDIT.md` with source-verified contracts for profiles, user add-ons, library, watch progress, watched history, collections, and Watch Party.
+- Re-read the actual existing `premium-worker/src/index.ts`, `wrangler.toml`, `package.json`, and `tsconfig.json` in this User App repository. Confirmed the Worker currently covers health, premium-code creation/redemption/status, and trial initialization only; it does not yet provide account lifecycle, TV device pairing, app-data sync, or Watch Party APIs.
+- Confirmed the current Worker verifies Firebase password-provider ID tokens and active admin documents, accesses Firestore through a service-account secret, and has no D1 or Durable Object binding in its current Wrangler configuration.
+- Recorded source-level Worker hardening items for review before expansion: wildcard CORS, no visible rate limiting/request-body bound, no visible structured observability, and need to verify least-privilege service-account IAM. These are review findings, not claims of an exploited vulnerability.
+- Confirmed client compatibility requirements: profile ownership, snapshot/delta cursors, pagination, batching, sync-origin metadata, tombstone/delete behavior, collection unknown-field preservation, and Watch Party realtime presence/events must be retained.
+- GitHub code search returned no results for broad Supabase queries on its indexed branch; targeted reads of known files were used instead. This does not establish that no other Supabase call sites exist.
+- No application source, Worker runtime, SQL migration, Firebase settings, Cloudflare resource, production data, or deployment was changed.
+- Next: continue auditing remaining source contracts (profile PIN/locks, profile settings, provider credentials, plugins, home catalog settings, media servers, membership, device registration/linking, account deletion), then reconcile the contract and design/test the first local-only D1 migration before any mobile adapter switch.
