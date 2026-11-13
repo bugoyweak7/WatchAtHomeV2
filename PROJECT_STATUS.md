@@ -142,3 +142,9 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Added regression tests proving nested credential fields are rejected and non-sensitive future settings fields still round-trip.
 - Worker CI runs `43401267225`, `43401273786`, `43401294134`, and `43401302072` were triggered by sequential commits; final result for the latest commit is pending.
 - No D1 binding/schema deployment, secrets, production data, app adapter switch, or Supabase change was made.
+
+
+## 2026-11-13 — Generic JSON guard verified
+- Worker CI run `43401302072` passed TypeScript compilation and all 63 tests across schema, account/device, HTTP/auth, crypto, credentials, PIN, rate limiting, profile/settings, and profile-sync suites.
+- The new nested-secret rejection tests passed; safe unknown settings fields continue to round-trip.
+- This is local SQLite/mock Worker verification only. No live D1, Firebase, Firestore, or Cloudflare deployment integration was tested.
