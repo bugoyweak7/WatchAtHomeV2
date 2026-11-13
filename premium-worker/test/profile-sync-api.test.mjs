@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   getAddons, getCollections, getHomeCatalogSettings, getPlugins, putAddons, putCollections, putHomeCatalogSettings, putPlugins,
 } from "../src/profile-sync-api.ts";
+import { deleteLibraryItems, getLibraryDelta, getLibraryDeltaCursor, getLibrarySnapshot, parseLibraryPageParams, pushLibraryItems } from "../src/library-sync-api.ts";
 
 const schema = readFileSync(new URL("../schema/0001_account_data.draft.sql", import.meta.url), "utf8");
 
