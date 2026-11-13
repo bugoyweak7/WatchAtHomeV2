@@ -123,3 +123,10 @@ This closes part of the earlier storage-layer gap, not production readiness: no 
 Added `src/pin-verifier.ts` with a versioned HMAC-SHA256 keyed verifier, server-held pepper ring, per-record 16-byte salt, UID/profile-bound message, constant-time digest comparison, and old-pepper verification during rotation. The D1 draft now constrains the stored digest to 32 bytes and salt to 16 bytes. CI run `43377933824` passed four PIN tests and all 33 tests overall.
 
 This is not a complete PIN feature: no verification route or atomic D1 lockout/attempt-count workflow is implemented. The verifier must not be exposed until persisted lockout, request throttling, account/profile ownership checks, and recovery/re-auth rules are implemented and tested. Because PINs may have low entropy, server-side throttling remains mandatory even with a pepper.
+
+
+## Implementation update — persisted PIN lockout helper added
+
+Added `src/pin-store.ts` with persisted per-profile failed-attempt tracking. It rejects attempts while `locked_until` is active, increments failed attempts through an atomic D1 update, locks for 15 minutes after 5 failures, and clears the counter after a successful verification once the lock expires. The HMAC verifier and lockout are separate primitives so the route can apply both consistently.
+
+CI run `43378244632` passed four PIN-store tests and all 37 tests. The helper is not exposed through an HTTP route yet. Add account/IP-level rate limiting, recent Firebase reauthentication for PIN reset, generic error responses, and full route tests before enabling PIN APIs.
