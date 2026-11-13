@@ -268,3 +268,13 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Premium-code access and supporter/subscription membership must remain distinct unless a product decision explicitly unifies them.
 - Updated the migration contract and route matrix to mark membership overview as blocked on identifying a trusted source-of-truth/update workflow. Do not fabricate provider or billing values.
 - No code, Firestore document, Worker runtime, or production data was changed.
+
+
+## 2026-11-13 — Local schema test harness added and executed
+
+- Added `premium-worker/test/schema.test.mjs` using Node's built-in test runner and SQLite module.
+- Added npm script `test:schema` to `premium-worker/package.json`: `node --experimental-sqlite --test test/schema.test.mjs`.
+- Executed the committed test logic locally with Node v22.16.0 against the draft schema.
+- Result: 7 tests passed, 0 failed. Coverage includes table/index counts, owner foreign keys, JSON validation, per-profile add-on uniqueness, encrypted media-server token tuple constraints, account deletion cascade/tombstone retention, and increasing sync event IDs.
+- This is a local SQLite structural test suite, not a Cloudflare D1 integration test or Worker API test. No Worker runtime endpoint was changed and no D1 database was created or migrated.
+- Next: implement Worker route handlers and route-level tests incrementally, starting with account bootstrap/device registration, while keeping current mobile Supabase adapters untouched.
