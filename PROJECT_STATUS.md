@@ -172,3 +172,10 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Focused workflow run `43400761852` completed successfully. The `FirebaseAuthSessionManagerTest` Gradle task passed, followed by successful Android Play Store debug compilation (`BUILD SUCCESSFUL`).
 - The six staged Firebase Auth session-manager tests are now verified in CI; Android source compiles with the staged integration.
 - This does not verify live Firebase project configuration, actual Firebase registration/login against production, or app UI wiring. Active `AuthRepository` and Supabase login remain unchanged.
+
+
+## 2026-11-13 — Device registry revocation endpoint staged
+- Added `DELETE /v1/devices/:installationId`, deriving UID from verified Firebase token, requiring an active account, applying per-account/IP rate limiting, and setting `revoked_at` only on the caller's matching active registry row.
+- Added data-access and Worker HTTP tests for idempotence, owner isolation, hidden revoked inventory, and unrelated account preservation.
+- Initial CI runs exposed two implementation/test issues: an over-escaped route regex and an over-escaped whitespace validator. Both were corrected. Latest verification run `43402508386` queued; do not mark passed until completed.
+- Important limitation: this only revokes the device inventory record. It does not revoke Firebase refresh tokens or remotely sign out a running app; no such claim is made.
