@@ -313,3 +313,21 @@ The following D1-backed routes are now implemented in Worker source and locally/
 - Request/page/mutation bounds, duplicate-key validation, verified-token UID ownership, profile ownership, active-account checks, and per-route rate limiting apply.
 - CI run 43405997252 passed TypeScript and 70 tests across 10 suites (0 failures).
 - Remaining gates: mobile LibrarySyncAdapter HTTP implementation and parity tests, live D1 integration, concurrent snapshot/delta validation, event retention cleanup, and deployment approval.
+
+
+## Watch-progress sync Worker source implementation — 2026-11-13
+
+The following profile-scoped routes are implemented and locally/mock verified; they are not deployed and the mobile adapter remains on Supabase.
+
+| Route | Method | Contract |
+|---|---|---|
+| /v1/profiles/:profileIndex/watch-progress?sinceLastWatched=&limit= | GET | Returns bounded active progress rows, optionally filtered by last-watched timestamp |
+| /v1/profiles/:profileIndex/watch-progress | PUT | Upserts up to 500 progress entries using the existing wire fields and stable progress_key |
+| /v1/profiles/:profileIndex/watch-progress/cursor | GET | Returns the latest watch_progress sync event cursor |
+| /v1/profiles/:profileIndex/watch-progress/delta?since=&limit= | GET | Returns ordered upsert/delete events after the cursor |
+| /v1/profiles/:profileIndex/watch-progress/delete | POST | Soft-deletes selected progress keys and emits delete tombstones |
+
+- Payload fields match the current ProgressSyncAdapter contract: content_id, content_type, video_id, season, episode, position, duration, last_watched, progress_key.
+- UID derives from verified Firebase auth; active account, profile ownership, per-route rate limiting, request bounds and validation apply.
+- CI run 43411656192 passed TypeScript and 73 tests across 10 suites (0 failures).
+- Remaining gates: mobile adapter and merge parity tests, exact legacy RPC ordering review, timestamp pagination tie handling, sync-event retention, live D1 verification and deployment approval.
