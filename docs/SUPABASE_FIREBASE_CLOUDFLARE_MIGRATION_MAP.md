@@ -190,3 +190,9 @@ This route snapshot is based on repository source inspection, not live deploymen
 ## 2026-11-13 — Generic JSON guard CI verification
 - Worker CI run `43401302072` passed TypeScript compilation and 63 tests with zero failures.
 - The settings/collection sensitive-key checks are now verified in local/mock tests. Live D1 and production service integration remain unverified; mobile adapters remain on Supabase.
+
+
+## 2026-11-13 — Home catalog settings route added
+- The proposed `/v1/profiles/:profileIndex/home-catalog?platform=` route now has Worker GET/PUT source backed by `home_catalog_settings`, with per-profile ownership checks and version increments.
+- The endpoint stores the complete JSON payload to preserve the existing `SyncHomeCatalogPayload` contract and unknown fields; it rejects sensitive fields and enforces the same bounded request policy as other profile sync resources.
+- Added SQLite contract tests. Mobile sync still calls the legacy Supabase RPCs; adapter migration is not started. Final Worker CI pending.
