@@ -82,3 +82,13 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Never remove or rewrite historical entries.
 - Preserve existing app behavior unless a specific change is approved.
 - No code, Firebase rules, Cloudflare resources, secrets, or deployments were changed by this status audit.
+
+
+## 2026-11-13 — Supabase migration source inventory
+
+- Added `docs/SUPABASE_FIREBASE_CLOUDFLARE_MIGRATION_MAP.md`, based on direct source inspection of the selected branch.
+- Mapped AuthRepository, device-link, profile/PIN, profile settings, provider credentials, media servers, add-ons, plugins, collections, library, watch progress, watched items, membership/premium, and Watch Party dependencies.
+- Confirmed library, watch-progress, watched-items, membership parity, account deletion, device-link custom-token, and Watch Party realtime routes are still missing from the inspected Worker dispatch; the design contract alone does not implement them.
+- Confirmed the current Worker route set covers account bootstrap/devices, profiles/settings/PIN, add-ons/plugins/collections, provider credentials/media servers, and premium/trial operations.
+- Recorded the safe migration order and the requirement to preserve local caches, sync cursors, tombstones, and offline behavior.
+- Documentation-only update. No application source, Firebase rules, Cloudflare resources, secrets, deployments, or Supabase data changed.
