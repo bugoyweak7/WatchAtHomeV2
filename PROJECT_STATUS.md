@@ -275,3 +275,13 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Firebase-only login cannot safely be enabled until these APIs accept and validate the new identity and existing account/data ownership is preserved.
 - No code or production configuration changed during this read-only audit. Existing Supabase login remains active; Cloudflare sync remains disabled by default.
 - Android CI 43416885505 was still running: auth/adapter tests in progress; Play Store debug compile pending.
+
+
+## 2026-11-13 — Backend migration audit and CI confirmation
+
+- Android CI run `43416885505` is now successful, including Firebase Auth session-manager unit tests and Android Play Store debug compilation.
+- The Cloudflare Worker source already has Firebase password-token verification and partial Firebase-authenticated account/profile/library/watch-progress APIs. Its token verifier currently rejects non-password providers.
+- The Worker router does not yet implement the Firebase device-link session flow needed to replace the app's current Supabase TV pairing RPCs and `tv-logins-exchange` function.
+- D1 account schema is still draft-only and no D1 binding is present in `wrangler.toml`; no live D1 deployment is verified.
+- The scanned app repository does not contain the legacy Supabase SQL migrations, RLS policies, or Edge Function source. These are required to preserve legacy account identity and authorization correctly.
+- No app source or production settings changed. Supabase remains active and Cloudflare sync remains disabled by default.
