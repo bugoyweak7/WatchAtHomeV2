@@ -236,3 +236,12 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Renamed the new adapter's private model to `CloudflareWatchedDeleteKey`; no public interface or wire JSON field changed.
 - A fresh Android CI run was triggered by the fix. Its result is pending; do not mark the mobile adapter verified until it completes.
 - The Worker watched-items implementation and content-type identity regression tests have passed their Worker CI runs.
+
+
+## 2026-11-13 — Staged Cloudflare profile metadata adapter
+
+- Added Firebase-token authenticated Cloudflare profile list, upsert, and delete client operations matching the existing Worker routes.
+- Added adapter unit tests for response mapping, request methods and payload, bearer authentication, and missing-token rejection.
+- Updated the Android Play Store CI workflow to run the new test suite and watch the new adapter/test paths.
+- Kept the adapter unwired from `ProfileRepository`; Supabase remains the active profile backend until Firebase auth, D1, and Worker are proven end to end.
+- No live cloud resources, secrets, or production data were modified.
