@@ -578,3 +578,13 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Test suites extended for local SQLite and authenticated HTTP behavior. Final CI run 43411656192 passed TypeScript and 73 tests across 10 suites, 0 failures.
 - Pending: mobile adapter implementation, legacy RPC parity review, multi-device conflict testing, timestamp pagination tie handling, sync-event retention and live D1 integration.
 - Existing SupabaseProgressSyncAdapter remains unchanged and active.
+
+
+## 2026-11-13 — Mobile Cloudflare library adapter staged
+
+- Added `CloudflareLibrarySyncAdapter.kt` implementing the existing `LibrarySyncAdapter` contract without changing the active repository adapter.
+- Uses staged Firebase fresh ID tokens, Ktor multiplatform HTTP, bounded response reads, and Worker-compatible JSON routes.
+- Added optional runtime property `CLOUDFLARE_WORKER_BASE_URL` (local.properties or environment); left blank by default.
+- Added request-size-aware batching (192 KiB mobile cap against Worker 256 KiB request bound).
+- Added four MockEngine tests and extended Android CI workflow. Run 43413914695 pending final result.
+- No Worker endpoint, D1 binding, secrets, deployment, or production config was set.
