@@ -262,6 +262,7 @@ test("watch progress snapshot, delta cursor, upsert and delete preserve stable p
   assert.equal(await getProgressCursor(db, "progress-owner", 1), 0);
   assert.deepEqual(await pushProgress(db, "progress-owner", 1, req({ p_entries: entries, p_origin_client_id: "nuvio-mobile-device1" })), { saved: 2 });
   assert.equal((await getProgressSnapshot(db, "progress-owner", 1, null, 1)).length, 1);
+  assert.equal((await getProgressSnapshot(db, "progress-owner", 1, null, 1, 1))[0].progress_key, "movie-1");
   assert.equal((await getProgressSnapshot(db, "progress-owner", 1, 1700000000000, 10)).length, 1);
   const cursor = await getProgressCursor(db, "progress-owner", 1);
   assert.equal(cursor, 2);
