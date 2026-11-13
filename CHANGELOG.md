@@ -73,3 +73,10 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - The initial broad Android host-test task completed 2,052 tests with two unrelated failures: `AndroidDownloadLifecycleTest` and `WatchProgressIdentityTest`.
 - Updated CI to run only `com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest` using Gradle's `--tests` filter. This isolates the six staged Firebase Auth tests from unrelated host-test failures.
 - Commit: `9a89838d131cf1427e2ea5816db276ce9ce739ef`; focused CI result pending.
+
+
+## 2026-11-13 — Reject sensitive fields in generic profile JSON
+- Added recursive secret-key validation for profile settings and collections before persistence in D1.
+- Preserved forward compatibility for non-sensitive unknown JSON fields.
+- Added tests for nested provider API-key rejection, nested access-token rejection, and safe unknown-field round trips.
+- Worker CI triggered; latest run `43401302072` pending verification.
