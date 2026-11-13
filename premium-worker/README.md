@@ -117,3 +117,10 @@ Additional Worker secrets required before these routes can operate:
 - `DATA_ENCRYPTION_KEYS_JSON` and `DATA_ENCRYPTION_ACTIVE_VERSION` for provider credentials and media-server tokens.
 
 The draft schema now includes `api_rate_limits`; it is not yet an active Wrangler migration. Add a retention cleanup process for expired rate-limit rows before production enablement. No D1 resource, binding, key secret, mobile adapter, or deployment is configured by this source change.
+
+
+## Profile APIs
+
+The Worker now contains owner-scoped profile CRUD and profile-settings sync routes. These routes return arrays compatible with the existing Kotlin profile/settings serializers, preserve unknown settings JSON fields, enforce the six-profile cap, and rely on the draft schema's profile foreign keys for dependent-row deletion. See docs/FIREBASE_CLOUDFLARE_API_ROUTE_MATRIX.md and SETUP_STATUS.md for route details and current verification status.
+
+These routes are source-only and remain disabled until a D1 database/schema/binding is separately approved and provisioned. No mobile adapter has been switched.
