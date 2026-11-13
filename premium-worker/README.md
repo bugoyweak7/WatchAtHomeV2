@@ -131,3 +131,10 @@ These routes are source-only and remain disabled until a D1 database/schema/bind
 The Worker now implements per-profile add-on and plugin repository snapshot sync plus collection-blob sync. Existing client-compatible row and blob response shapes are retained; unknown collection JSON fields are preserved. Plugin scraper code is not uploaded to D1; the app continues using repository URLs and its existing local code cache. See SETUP_STATUS.md and docs/FIREBASE_CLOUDFLARE_API_ROUTE_MATRIX.md for route details and CI evidence.
 
 The profile_plugins draft table now includes name and enabled fields. No D1 database has been created or bound, and no mobile adapter has been switched.
+
+
+### Watched-items sync API
+
+The Worker now exposes owner-scoped snapshot, cursor, delta, upsert, and delete-tombstone endpoints under `/v1/profiles/{profileIndex}/watched-items`. Payload fields match the existing mobile watched-sync contract (`content_id`, `content_type`, `title`, `season`, `episode`, and `watched_at`). Deletes retain the previous record payload in the event log so clients can apply the deletion to the matching watched item.
+
+The endpoint is source-only. The mobile app still uses its Supabase watched-items adapter; no D1 binding, live deployment, or client cutover has occurred.
