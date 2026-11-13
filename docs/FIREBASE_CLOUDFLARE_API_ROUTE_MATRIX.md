@@ -294,3 +294,22 @@ GitHub Actions run 43382547116 passed TypeScript and all 61 Worker tests (0 fail
 - `DELETE /v1/devices/:installationId` implemented with Firebase-token-derived owner, active account validation, rate limiting, installation ID validation, and soft revocation.
 - Regression tests verify cross-user isolation, idempotence and active inventory filtering. Worker CI `43402508386` passed TypeScript and 67 tests with 0 failures.
 - Source-only; deployment and mobile client integration remain pending.
+
+
+## Library sync Worker source implementation — 2026-11-13
+
+The following D1-backed routes are now implemented in Worker source and locally/mock verified. They are not deployed and the mobile adapter remains on Supabase.
+
+| Route | Method | Contract |
+|---|---|---|
+| /v1/profiles/:profileIndex/library?limit=&offset= | GET | Returns one bounded page of active library items ordered by stable item key |
+| /v1/profiles/:profileIndex/library | PUT | Upserts up to 500 items using the current LibraryItem.toSyncItem() wire fields |
+| /v1/profiles/:profileIndex/library/cursor | GET | Returns the latest library-specific sync_events.event_id cursor |
+| /v1/profiles/:profileIndex/library/delta?since=&limit= | GET | Returns ordered upsert/delete events after the supplied cursor |
+| /v1/profiles/:profileIndex/library/delete | POST | Marks selected content keys deleted and appends delete tombstones |
+
+- Stable record identity matches the app's libraryItemKey: lowercased content type plus content ID.
+- The server preserves p_origin_client_id in event metadata and returns the event payload fields expected by LibraryDeltaSyncItem.
+- Request/page/mutation bounds, duplicate-key validation, verified-token UID ownership, profile ownership, active-account checks, and per-route rate limiting apply.
+- CI run 43405997252 passed TypeScript and 70 tests across 10 suites (0 failures).
+- Remaining gates: mobile LibrarySyncAdapter HTTP implementation and parity tests, live D1 integration, concurrent snapshot/delta validation, event retention cleanup, and deployment approval.
