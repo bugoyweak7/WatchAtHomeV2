@@ -305,3 +305,17 @@ Therefore:
 - Keep premium-code/trial access distinct from supporter membership and subscription/grant status unless the product owner explicitly defines them as one entitlement model.
 - Before replacing membership reads, define the authoritative membership record and the trusted process that provisions/updates it (e.g. verified provider webhook or explicit admin grant workflow). Client apps must never write these fields.
 - Until the source of supporter/subscription/grant truth is identified, `/v1/membership/overview` is a contract placeholder and must not fabricate billing/provider values.
+
+
+## 15. First Worker implementation checkpoint — account bootstrap and device registry (2026-11-13)
+
+Implemented in source only:
+- `POST /v1/account/bootstrap`: verify Firebase email/password ID token, verify account creation timestamp through Firebase Identity Toolkit, create D1 account row idempotently, reject non-active account state, and initialize the immutable 7-day trial using the existing Firestore create-only flow.
+- `POST /v1/devices`: validate bounded JSON/device metadata and register/update a device under the UID derived from the verified Firebase token.
+- `GET /v1/devices`: list at most 100 active device records scoped to the verified UID.
+
+The Worker has no D1 binding in `wrangler.toml`, so these endpoints are intentionally disabled at runtime and return 503 until D1 setup and schema review are separately approved. The draft schema is still not an active migration.
+
+No device-revocation route is exposed: marking a registry row revoked would not invalidate Firebase ID/refresh tokens because the current request authentication is not installation-bound. A true revocation workflow must be designed and tested before advertising remote sign-out.
+
+No mobile client was switched, no D1 database was provisioned, no production resource was changed, and no deployment was performed.
