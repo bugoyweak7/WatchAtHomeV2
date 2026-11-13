@@ -518,3 +518,9 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 ## 2026-11-13 — Worker security guard CI result
 - Verified: Worker CI run `43401302072` passed TypeScript and all 63 tests (0 failures).
 - Still not configured: Cloudflare D1 database/binding, production key-ring secrets, Firebase service-account secret, and live deployment. SQL remains draft-only.
+
+
+## 2026-11-13 — Home catalog API source added
+- Worker source now includes profile-scoped home-catalog settings GET/PUT using the existing draft D1 table; no new Cloudflare setup variables are required.
+- The app still uses Supabase for home catalog sync. D1 is not provisioned/bound and no deployment was performed.
+- Final Worker route/test CI run `43401818613` pending verification.
