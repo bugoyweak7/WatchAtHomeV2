@@ -258,3 +258,13 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Member asset catalogue metadata placement remains open. Premium/admin/trial/entitlements and shared add-on catalogue remain Firestore; Watch Party realtime remains Durable Objects; image bytes remain R2.
 - No Worker runtime, mobile app code, D1 resource, Firebase setting, production data, or deployment was changed.
 - Next: review the schema and route matrix against the Admin App premium-code mismatch and membership source-of-truth, then add local Worker contract tests without changing production bindings or switching mobile adapters.
+
+
+## 2026-11-13 — Membership source-of-truth gap confirmed
+
+- Re-read the User App membership models/repositories and existing Worker Firestore logic.
+- Legacy `get_my_member_access` returns tier plus cosmetic entitlements; legacy `get_my_membership_overview` returns additional provider, subscription, billing-period, cancellation, verified/supporter and grant/lifetime metadata.
+- The existing Worker currently calculates premium-code/trial access from `users/{uid}` fields and returns premium/trial flags, tier, a fixed cosmetic entitlement set and expiry timestamps. It does not implement the full supporter/subscription/billing/grant overview.
+- Premium-code access and supporter/subscription membership must remain distinct unless a product decision explicitly unifies them.
+- Updated the migration contract and route matrix to mark membership overview as blocked on identifying a trusted source-of-truth/update workflow. Do not fabricate provider or billing values.
+- No code, Firestore document, Worker runtime, or production data was changed.
