@@ -11,7 +11,8 @@
     "test:worker": "node --import tsx --test test/account-device.test.mjs",
     "test:http": "node --import tsx --test test/http-auth.test.mjs",
     "test:crypto": "node --import tsx --test test/data-crypto.test.mjs",
-    "test:credentials": "node --import tsx --test test/credential-store.test.mjs"
+    "test:credentials": "node --import tsx --test test/credential-store.test.mjs",
+    "test:pin": "node --import tsx --test test/pin-verifier.test.mjs"
   },
   "dependencies": {
     "jose": "^6.1.3"
