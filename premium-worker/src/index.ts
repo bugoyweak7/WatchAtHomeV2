@@ -55,7 +55,7 @@ function response(body: unknown, status = 200): Response {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
       "access-control-allow-origin": "*",
-      "access-control-allow-methods": "GET,POST,OPTIONS",
+      "access-control-allow-methods": "GET,POST,PUT,DELETE,OPTIONS",
       "access-control-allow-headers": "authorization,content-type",
     },
   });
