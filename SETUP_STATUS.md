@@ -524,3 +524,8 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Worker source now includes profile-scoped home-catalog settings GET/PUT using the existing draft D1 table; no new Cloudflare setup variables are required.
 - The app still uses Supabase for home catalog sync. D1 is not provisioned/bound and no deployment was performed.
 - Final Worker route/test CI run `43401818613` pending verification.
+
+
+## 2026-11-13 — Home catalog CI fixture correction
+- The first route/test CI run failed because its test fixture inserted the same account twice; the implementation compiled and the other test passed.
+- Fixture corrected. Run `43401962345` is queued for final verification. No production resources were touched.
