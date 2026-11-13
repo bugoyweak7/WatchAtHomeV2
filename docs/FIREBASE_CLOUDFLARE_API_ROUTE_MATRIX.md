@@ -246,3 +246,19 @@ All routes require a verified Firebase email/password token, active D1 account a
 - GitHub Actions run 43381569837 passed TypeScript and all 52 Worker tests, including profile/settings HTTP and D1-mock tests.
 - Test URL: https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43381569837
 - No live D1 database/binding, production secrets, mobile adapter, or deployment was used in this verification.
+
+
+## Add-ons, Plugins and Collections — routes and verification (2026-11-13)
+
+| Route | Method | Contract |
+|---|---|---|
+| /v1/profiles/{profileIndex}/addons | GET | Ordered per-profile installed add-on rows: url, name, enabled, sort_order |
+| /v1/profiles/{profileIndex}/addons | PUT | Replace the selected profile's add-on selection snapshot; omitted old rows are deleted; empty list clears it |
+| /v1/profiles/{profileIndex}/plugins | GET | Ordered per-profile plugin repository rows: url, name, enabled, sort_order |
+| /v1/profiles/{profileIndex}/plugins | PUT | Replace the selected profile's plugin repository snapshot; scraper source code is not copied to D1 |
+| /v1/profiles/{profileIndex}/collections | GET | Returns collection blob rows with profile_id, collections_json and updated_at |
+| /v1/profiles/{profileIndex}/collections | PUT | Stores the complete collections JSON array, retaining unknown/future nested fields |
+
+All endpoints require Firebase email/password token verification, an active D1 account, and an owned profile. Writes are bounded and rate limited. Add-ons and plugin rows are per-user/per-profile D1 data; the shared admin catalogue remains in Firestore. Plugin manifests and scraper code continue to be fetched from their repository URLs and cached locally as in the existing client.
+
+GitHub Actions run 43382547116 passed TypeScript and all 61 Worker tests (0 failures), including the three HTTP route ownership checks and eight storage contract tests. This is not live D1 or deployment verification. The D1 schema remains draft-only.
