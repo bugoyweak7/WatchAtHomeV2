@@ -611,3 +611,5 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - No player, catalogue UI, subtitle, add-on, auth provider, local user data, Firebase Console setting, Cloudflare resource, secret, or production deployment was changed.
 - Android CI run 43415270909 was cancelled before the Android compilation step completed; the Firebase Auth unit-test step passed. A fresh workflow run is required for the new wiring/config changes.
 - Next: verify the fresh Android host tests and Play Store debug compilation; then complete D1-backed live integration and feature parity before enabling the flag.
+
+- Fresh Android CI run 43416885505 was triggered by the final adapter/config source commit and is currently queued; do not mark the mobile wiring build-verified until this run completes successfully.
