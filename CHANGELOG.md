@@ -140,3 +140,12 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added SQLite and HTTP regression tests for data semantics, validation, ownership and auth.
 - [Final Worker CI run 43411656192](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43411656192) passed TypeScript and 73 tests across 10 suites (0 failures).
 - Active mobile sync remains on Supabase; no live D1 or Worker deployment.
+
+
+## 2026-11-13 — Staged Cloudflare mobile library adapter
+
+- Added a separate Cloudflare HTTP implementation of the existing library sync interface for snapshot, cursor, delta, upsert and delete operations.
+- Added Firebase Bearer-token injection, bounded response handling, HTTPS-only Worker URL validation and size-aware request batching.
+- Added optional build-time Worker URL configuration via `CLOUDFLARE_WORKER_BASE_URL`; default remains empty and no production URL is assumed.
+- Added MockEngine tests and included them in the Android CI test workflow. Run 43413914695 pending final result.
+- Active LibraryRepository wiring remains on Supabase.
