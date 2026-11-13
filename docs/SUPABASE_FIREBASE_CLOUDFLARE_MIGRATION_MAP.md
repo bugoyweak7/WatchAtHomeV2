@@ -288,3 +288,22 @@ This route snapshot is based on repository source inspection, not live deploymen
 - The account D1 schema is draft-only; no D1 binding is configured. Source presence must not be treated as a deployed or live-tested service.
 - Supabase SQL migrations, RLS policies, and Edge Function source are absent from the scanned WatchAtHomeV2 repository. Obtain an authorized export before legacy UID mapping or data migration design.
 - Keep Supabase as the active provider and keep `CLOUDFLARE_SYNC_ENABLED` false. No production or app source changes were made in this read-only audit.
+
+
+## 2026-11-13 — Watched-items Worker sync API staged
+
+- Re-scanned the current approved branch before implementation. Branch head at the start of this work: `726bd9d58de41dd1c184314f1e1852051e6c93d0`.
+- Added `premium-worker/src/watched-items-sync-api.ts` with D1 snapshot paging, stable per-profile event cursor, delta reads, bounded upserts, and delete tombstones.
+- Added authenticated Worker routes for `GET /v1/profiles/:profileIndex/watched-items`, `GET .../cursor`, `GET .../delta`, `PUT .../watched-items`, and `POST .../delete`.
+- Ownership is derived from the verified Firebase UID and checked against the requested profile before every operation. Batch size is capped at 500; request bodies are bounded; episode season/episode values must be paired; duplicate keys are rejected.
+- Delete events retain the prior watched-item payload so delta consumers receive the identity and metadata needed to apply the tombstone.
+- Added local SQLite data-access tests and authenticated HTTP route tests. CI has been triggered by these commits; results must be checked before calling the change verified.
+- This closes the Worker source gap for watched-items sync only. The mobile adapter remains Supabase-backed; no D1 database/binding, Firebase/Cloudflare secret, deployment, production data migration, or sync flag change occurred.
+- The existing `CLOUDFLARE_SYNC_ENABLED` default remains false. Do not enable it until the mobile watched adapter is implemented and end-to-end parity is tested.
+
+
+## 2026-11-13 — Watched-items API source implementation
+
+- The route parity inventory is updated: Worker source now includes a watched-items snapshot/cursor/delta/upsert/delete API backed by the draft `watched_items` and `sync_events` tables.
+- The API is tested in local SQLite/mock D1 and authenticated Worker tests once CI completes. It does not yet replace `SupabaseWatchedSyncAdapter`.
+- Mobile adapter wiring, real D1 validation, production binding/secrets, and live integration remain outstanding.
