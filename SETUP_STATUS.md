@@ -556,3 +556,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Device registration and listing now have a companion owner-scoped soft-revocation endpoint in Worker source.
 - CI run `43402508386` passed TypeScript and 67 tests, 0 failures.
 - Still not provisioned/deployed: Cloudflare D1 database/binding, production Worker, Firebase production settings, and mobile device UI/API migration.
+
+
+## 2026-11-13 — Library sync API source implementation and verification
+
+- Source added: premium-worker/src/library-sync-api.ts.
+- Worker routes added: snapshot GET/PUT /v1/profiles/:profileIndex/library, cursor GET /v1/profiles/:profileIndex/library/cursor, delta GET /v1/profiles/:profileIndex/library/delta, and tombstone POST /v1/profiles/:profileIndex/library/delete.
+- Uses existing draft tables library_items and sync_events; no schema migration was applied.
+- Validation limits: maximum 500 rows per mutation/page, bounded JSON body, validated content ID/type and metadata, duplicate-key rejection, and per-account/profile/IP route rate limiting.
+- Tests added to profile-sync-api.test.mjs and http-auth.test.mjs. CI run 43405997252 passed TypeScript and 70 tests across 10 suites, 0 failures.
+- Still pending: mobile LibrarySyncAdapter implementation/wiring, real D1 provisioning and integration, sync-event retention cleanup, production Worker deployment, and full multi-device/offline parity validation.
+- Active Supabase library sync is unchanged.
