@@ -105,3 +105,8 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 - Added SQLite tests for JSON round-trip, profile/user/platform isolation, empty replacement, malformed/oversized payloads and nested secret rejection.
 - CI runs: module addition `43401753132` passed; route wiring `43401792563` and final test addition `43401818613` were pending at the time of this entry.
 - No app client migration, live D1, Cloudflare secrets or production deployment.
+
+
+## 2026-11-13 — Home catalog CI test fixture correction
+- Worker CI [run 43401818613](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401818613) failed in the new round-trip test fixture due to duplicate account seeding for the second profile; TypeScript and other test suites passed.
+- Fixed the fixture by inserting the second profile row under the already-seeded account. Verification run [43401962345](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401962345) queued.
