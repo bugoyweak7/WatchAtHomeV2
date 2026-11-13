@@ -14,7 +14,8 @@
     "test:credentials": "node --import tsx --test test/credential-store.test.mjs",
     "test:pin": "node --import tsx --test test/pin-verifier.test.mjs",
     "test:pin-store": "node --import tsx --test test/pin-store.test.mjs",
-    "test:rate-limit": "node --import tsx --test test/rate-limit.test.mjs"
+    "test:rate-limit": "node --import tsx --test test/rate-limit.test.mjs",
+    "test:profiles": "node --import tsx --test test/profile-api.test.mjs"
   },
   "dependencies": {
     "jose": "^6.1.3"
