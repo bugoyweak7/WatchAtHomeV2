@@ -12,7 +12,8 @@
     "test:http": "node --import tsx --test test/http-auth.test.mjs",
     "test:crypto": "node --import tsx --test test/data-crypto.test.mjs",
     "test:credentials": "node --import tsx --test test/credential-store.test.mjs",
-    "test:pin": "node --import tsx --test test/pin-verifier.test.mjs"
+    "test:pin": "node --import tsx --test test/pin-verifier.test.mjs",
+    "test:pin-store": "node --import tsx --test test/pin-store.test.mjs"
   },
   "dependencies": {
     "jose": "^6.1.3"
