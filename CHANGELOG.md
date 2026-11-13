@@ -271,3 +271,11 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Re-scanned `premium-worker/wrangler.toml`: Worker name is `watchathome-premium-api`, `workers_dev = true`, and Firebase project variable is `watchathome-admin`. The Admin build configuration contains the supplied base URL `https://watchathome-premium-api.adminenzoreviewer.workers.dev`.
 - Live endpoint verification could not be completed from this environment. Therefore no HTTP 404, live deployment, Cloudflare secret, or service health claim is recorded. A mismatch between the live workers.dev hostname/deployment and the configured URL remains possible.
 - No Worker deployment, Cloudflare secret/binding changes, Firebase changes, or production data changes were performed. Next deployment verification requires an authenticated Cloudflare deployment context with the existing `FIREBASE_SERVICE_ACCOUNT_JSON` secret available.
+
+
+## 2026-11-13 — Premium API 404 observed during Admin APK test
+
+- User confirmed Admin Firebase login works. The installed Admin APK's Premium screen displays `Premium service request failed (HTTP 404)`; user did not press Generate Codes.
+- Rechecked Admin client request path (`POST /v1/admin/premium-codes`), configured base URL, Worker source route, and Wrangler Worker name. The source/configured paths match.
+- No application source change is justified yet. Investigate live Cloudflare deployment and workers.dev hostname/account-subdomain parity before changing code.
+- Live `/health` could not be independently queried from this environment. No deployment, secrets, Firebase configuration, or production Firestore data was changed.
