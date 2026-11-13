@@ -23,7 +23,7 @@ test("draft creates the expected application tables and indexes", () => {
   const db = createDatabase();
   const tables = db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").get().n;
   const indexes = db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%'").get().n;
-  assert.equal(tables, 18);
+  assert.equal(tables, 19);
   assert.equal(indexes, 9);
   db.close();
 });
