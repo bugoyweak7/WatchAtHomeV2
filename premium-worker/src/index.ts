@@ -3,6 +3,9 @@ import { saveProviderCredential, loadProviderCredential, saveMediaServer, loadMe
 import { setProfilePin, clearProfilePin, verifyProfilePinWithLockout } from "./pin-store";
 import { consumeRateLimit } from "./rate-limit";
 import {
+  deleteProfile, getProfileSettings, listProfileLocks, listProfiles, putProfileSettings, upsertProfiles,
+} from "./profile-api";
+import {
   AccountApiError,
   ensureActiveAccount,
   listDevices,
@@ -478,6 +481,45 @@ async function applyRateLimits(request: Request, db: AccountD1Database, user: Ve
   ]);
   if (!a.allowed || !n.allowed) throw new HttpError(429, "Too many requests. Please wait before trying again.");
 }
+async function profileApiRoute(request: Request, env: Env, user: VerifiedUser): Promise<Response> {
+  const db = requireAccountDb(env);
+  const url = new URL(request.url);
+  if (url.pathname === "/v1/profiles" && request.method === "GET") {
+    await ensureActiveAccount(db, user.uid);
+    await applyRateLimits(request, db, user, "profiles-list");
+    return response(await listProfiles(db, user.uid));
+  }
+  if (url.pathname === "/v1/profiles" && request.method === "PUT") {
+    await ensureActiveAccount(db, user.uid);
+    await applyRateLimits(request, db, user, "profiles-save");
+    return response(await upsertProfiles(db, user.uid, request));
+  }
+  if (url.pathname === "/v1/profiles/locks" && request.method === "GET") {
+    await ensureActiveAccount(db, user.uid);
+    await applyRateLimits(request, db, user, "profile-locks");
+    return response(await listProfileLocks(db, user.uid));
+  }
+  const deleteMatch = /^\/v1\/profiles\/([1-9][0-9]*)$/.exec(url.pathname);
+  if (deleteMatch && request.method === "DELETE") {
+    const index = Number(deleteMatch[1]);
+    await requireOwnedProfile(db, user.uid, index);
+    await applyRateLimits(request, db, user, "profile-delete", index);
+    return response(await deleteProfile(db, user.uid, index));
+  }
+  const settingsMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/settings$/.exec(url.pathname);
+  if (settingsMatch && (request.method === "GET" || request.method === "PUT")) {
+    const index = Number(settingsMatch[1]);
+    await requireOwnedProfile(db, user.uid, index);
+    await applyRateLimits(request, db, user, "profile-settings", index);
+    const platform = url.searchParams.get("platform") ?? "mobile";
+    if (request.method === "GET") {
+      return response(await getProfileSettings(db, user.uid, index, platform));
+    }
+    return response(await putProfileSettings(db, user.uid, index, platform, request));
+  }
+  return response({ error: "Not found." }, 404);
+}
+
 async function pinRoute(request: Request, env: Env, user: VerifiedUser, action: "set" | "verify" | "clear"): Promise<Response> {
   const db = requireAccountDb(env);
   const index = Number(/^\/v1\/profiles\/([1-9][0-9]*)\/pin$/.exec(new URL(request.url).pathname)?.[1]);
@@ -556,6 +598,11 @@ export default {
 
     try {
       const user = await verifyUser(request, env);
+      if (url.pathname === "/v1/profiles" || url.pathname === "/v1/profiles/locks" ||
+          /^\/v1\/profiles\/([1-9][0-9]*)(?:\/settings)?$/.test(url.pathname)) {
+        const profileResponse = await profileApiRoute(request, env, user);
+        if (profileResponse.status !== 404) return profileResponse;
+      }
       const pinMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/pin$/.exec(url.pathname);
       if (pinMatch && request.method === "POST") { const action = url.searchParams.get("action"); if (action === "set" || action === "verify" || action === "clear") return await pinRoute(request, env, user, action); }
       const providerMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/provider-credentials$/.exec(url.pathname);
