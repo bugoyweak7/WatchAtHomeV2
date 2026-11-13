@@ -64,3 +64,10 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 - New validation run `43388218215` was queued by commit `4db2c6c59448e039c4cf36cad718f79a01bdafd9`; status pending.
 - The first failure is a build-script configuration issue and is not evidence that the new Kotlin Firebase Auth source compiles or fails.
 - Verified iOS Firebase initialization/linking from source: Swift app startup calls `FirebaseApp.configure()`; Xcode project references FirebaseCore, FirebaseAuth and FirebaseFirestore; `GoogleService-Info.plist` is present.
+
+
+### Firebase Auth SDK API correction — 2026-11-13
+- Re-read actual CI logs for run `43388218215`; build failed at Kotlin compilation with three exact errors in `FirebaseAuthGateway.kt`: unresolved `Firebase.apps`, unresolved `Firebase.initialize`, and unresolved `.token` after `getIdToken`.
+- Checked GitLive Firebase Kotlin SDK tag `v2.8.0` source: `FirebaseUser.getIdToken(forceRefresh)` directly returns `String?`. Its common API declares `Firebase.apps(context)` and `Firebase.initialize(context)`, while Android default-app initialization is automatically handled by FirebaseInitProvider with Google Services configuration. This app already invokes `FirebaseApp.configure()` in iOS startup.
+- Removed the invalid no-context initialization block and corrected token retrieval. Commit: `6cf909beab6bcf7301614f6cfc9d6784e2116d60`.
+- Validation is pending on the commit-triggered workflow. No production services or user data were modified.
