@@ -692,3 +692,12 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - This is a staged adapter only. `ProfileRepository` remains Supabase-backed and no active auth or profile-sync cutover was made. The adapter must not be selected until Firebase authentication is the active app session and the Worker/D1 deployment is verified.
 - Android CI run `43421702839` was still in progress at the time of this update; the new profile adapter tests are included in subsequent matching CI runs, not that already-running run.
 - No live D1 database, Worker deployment, Firebase Console setting, secret, or production data was changed.
+
+
+## 2026-11-13 — Staged Cloudflare profile settings adapter
+
+- Added `CloudflareProfileSettingsSyncAdapter.kt` for the existing Worker profile-settings contract: GET and PUT `/v1/profiles/{index}/settings?platform=mobile`.
+- The adapter carries a Firebase ID-token bearer header, requires HTTPS, validates profile/platform values, bounds response size, and uses `JsonObject` so unknown future settings fields can be retained.
+- Added tests for remote settings decode, upload payload/route, and missing-token rejection; added the adapter and test to Android CI path filters and test execution.
+- The adapter is staged only. `ProfileSettingsSync` still calls Supabase RPCs; it is not wired or selected. Do not enable Cloudflare sync until Firebase is the active app session and live Worker/D1 is verified.
+- No live cloud resources, secrets, Firebase Console settings, or production data were changed.
