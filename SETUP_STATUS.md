@@ -154,3 +154,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Recorded the missing Supabase SQL migrations/RLS/Edge Function source as a required evidence blocker before exact schema migration and parity implementation.
 - No application source, Worker runtime, SQL migration, Firebase/Cloudflare settings, production data, or deployment was changed. This step is documentation/design only.
 - Next step: acquire/read the authoritative existing Supabase schema, RLS policies, RPC definitions, Edge Function contracts and Realtime channel definitions; then validate the draft contract and create the first local-only D1 migration with tests.
+
+
+## 2026-11-13 — User clarification: Supabase is inherited upstream backend
+
+- User clarified they do not have or own a Supabase account for this integration; Supabase is the legacy/default backend inherited from the upstream Nuvio source.
+- Do not ask the user to create a Supabase account or provide Supabase dashboard credentials as a prerequisite for source-level migration work.
+- Continue reverse-engineering the legacy contract from actual client source: request/response serializers, RPC names and parameters, table access, sync adapters, realtime usage, and existing product behavior.
+- Without upstream project ownership, dashboard access, SQL migrations, RLS policies, Edge Function source, backups, and server logs cannot be inspected through the user's account. Do not claim server behavior or remote-data export has been verified.
+- Existing remote user data migration must be investigated separately. If the legacy service is reachable, evaluate a user-authorized per-account export/import using the user's own existing authenticated session and only their authorized records. Never use the shared anon key to bypass authorization or access other users' data. If the old service is unavailable, preserve local data and do not promise automatic remote transfer.
+- The migration contract was amended to reflect this ownership clarification and revised next step.
+- No application source, Worker runtime, backend resource, Firebase/Cloudflare setting, production data, or deployment was changed.
