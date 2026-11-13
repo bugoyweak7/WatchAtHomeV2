@@ -71,3 +71,10 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 - Checked GitLive Firebase Kotlin SDK tag `v2.8.0` source: `FirebaseUser.getIdToken(forceRefresh)` directly returns `String?`. Its common API declares `Firebase.apps(context)` and `Firebase.initialize(context)`, while Android default-app initialization is automatically handled by FirebaseInitProvider with Google Services configuration. This app already invokes `FirebaseApp.configure()` in iOS startup.
 - Removed the invalid no-context initialization block and corrected token retrieval. Commit: `6cf909beab6bcf7301614f6cfc9d6784e2116d60`.
 - Validation is pending on the commit-triggered workflow. No production services or user data were modified.
+
+
+## 2026-11-13 — Firebase Auth unit-test CI integration
+- Change: workflow now executes `:composeApp:testAndroidHostTest` before Android Play Store debug compilation.
+- Commit: `4629adb63172064bf29c546e178cf8f2c0f57f1b`.
+- CI: [run 43399716638](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43399716638) was in progress when recorded; results remain pending.
+- Scope guard: active Supabase authentication and app UI were not changed; no production cloud resources or credentials were touched.
