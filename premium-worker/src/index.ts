@@ -317,21 +317,77 @@ async function redeemCode(request: Request, env: Env, user: VerifiedUser): Promi
   return response({ success: true, premium: true, expiresAt: new Date(expiresAt).toISOString() });
 }
 
+async function initializeTrial(env: Env, user: VerifiedUser): Promise<Response> {
+  const path = `users/${user.uid}`;
+  const existing = await readDocument(env, path);
+  const fields = fieldsOf(existing);
+  let startedAt = timestampField(fields, "trialStartedAt");
+  let expiresAt = timestampField(fields, "trialExpiresAt");
+
+  // The app calls this immediately after successful account creation.
+  // Create-only write makes the seven-day window immutable on retries.
+  if (!startedAt || !expiresAt) {
+    const now = Date.now();
+    startedAt = now;
+    expiresAt = now + 7 * 24 * 60 * 60 * 1000;
+    const write = await firestoreRequest(env, ":commit", {
+      method: "POST",
+      body: JSON.stringify({
+        writes: [{
+          update: {
+            name: `${firestoreRoot(env)}/${path}`,
+            fields: {
+              ...fields,
+              trialStartedAt: { timestampValue: new Date(startedAt).toISOString() },
+              trialExpiresAt: { timestampValue: new Date(expiresAt).toISOString() },
+            },
+          },
+          ...(existing?.updateTime
+            ? { currentDocument: { updateTime: existing.updateTime } }
+            : { currentDocument: { exists: false } }),
+        }],
+      }),
+    });
+    if (!write.ok && write.status !== 409 && write.status !== 400) {
+      throw new Error(`Trial initialization failed (${write.status}).`);
+    }
+    const latest = await readDocument(env, path);
+    const latestFields = fieldsOf(latest);
+    startedAt = timestampField(latestFields, "trialStartedAt");
+    expiresAt = timestampField(latestFields, "trialExpiresAt");
+  }
+
+  return response({
+    initialized: startedAt > 0 && expiresAt > 0,
+    trialStartedAt: startedAt ? new Date(startedAt).toISOString() : null,
+    trialExpiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+  });
+}
+
 async function premiumStatus(env: Env, user: VerifiedUser): Promise<Response> {
   const doc = await readDocument(env, `users/${user.uid}`);
   const fields = fieldsOf(doc);
   const expiresAt = timestampField(fields, "premiumExpiresAt");
-  const active = boolField(fields, "premium") && expiresAt > Date.now();
+  const now = Date.now();
+  const premiumActive = boolField(fields, "premium") && expiresAt > now;
+  const trialStartedAt = timestampField(fields, "trialStartedAt");
+  const trialExpiresAt = timestampField(fields, "trialExpiresAt");
+  const trialActive = trialStartedAt > 0 && trialExpiresAt > now;
+  const active = premiumActive;
+  const fullAccess = premiumActive || trialActive;
   const tier = active ? stringField(fields, "membershipTier") : "";
   // Cosmetics are permanent for every verified registered account.
   // Premium-code expiry controls full functionality, not cosmetic ownership.
   const entitlements = ["GOLD_THEME","JADE_THEME","ROSE_GOLD_THEME","ARCTIC_BLUE_THEME","GRAPHITE_THEME","PROFILE_BACKGROUNDS","PROFILE_AVATARS"];
   return response({
-    premium: active,
-    fullAccess: active,
+    premium: premiumActive,
+    trialActive,
+    fullAccess,
     tier: active && tier === "SUPPORTER_PLUS" ? tier : null,
     entitlements,
-    expiresAt: active ? new Date(expiresAt).toISOString() : null,
+    trialStartedAt: trialStartedAt ? new Date(trialStartedAt).toISOString() : null,
+    trialExpiresAt: trialExpiresAt ? new Date(trialExpiresAt).toISOString() : null,
+    expiresAt: premiumActive ? new Date(expiresAt).toISOString() : null,
   });
 }
 
@@ -350,6 +406,9 @@ export default {
       }
       if (request.method === "POST" && url.pathname === "/v1/premium/redeem") {
         return await redeemCode(request, env, user);
+      }
+      if (request.method === "POST" && url.pathname === "/v1/trial/initialize") {
+        return await initializeTrial(env, user);
       }
       if (request.method === "GET" && url.pathname === "/v1/premium/status") {
         return await premiumStatus(env, user);
