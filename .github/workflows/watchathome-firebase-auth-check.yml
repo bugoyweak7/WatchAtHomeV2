@@ -1,0 +1,52 @@
+name: WatchAtHome Firebase Auth Build
+
+on:
+  push:
+    branches:
+      - setup/firebase-cloudflare-zero-cost
+    paths:
+      - "composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/FirebaseAuth*.kt"
+      - "composeApp/src/commonTest/kotlin/com/nuvio/app/core/auth/FirebaseAuthSessionManagerTest.kt"
+      - "composeApp/build.gradle.kts"
+      - "gradle/libs.versions.toml"
+      - ".github/workflows/watchathome-firebase-auth-check.yml"
+  pull_request:
+    branches:
+      - setup/firebase-cloudflare-zero-cost
+    paths:
+      - "composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/FirebaseAuth*.kt"
+      - "composeApp/src/commonTest/kotlin/com/nuvio/app/core/auth/FirebaseAuthSessionManagerTest.kt"
+      - "composeApp/build.gradle.kts"
+      - "gradle/libs.versions.toml"
+      - ".github/workflows/watchathome-firebase-auth-check.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: watchathome-firebase-auth-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-playstore-build:
+    name: Compile Firebase Auth integration (Android Play Store variant)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout approved branch
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Prepare local properties
+        run: touch local.properties
+
+      - name: Compile Android Play Store debug app
+        run: ./gradlew :androidApp:assemblePlaystoreDebug -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace
