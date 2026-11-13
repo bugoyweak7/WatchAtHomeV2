@@ -121,3 +121,10 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 ## 2026-11-13 — Firebase Auth tests and Android build passed
 - [Workflow run 43400761852](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43400761852) completed successfully: focused `FirebaseAuthSessionManagerTest` task passed and Android Play Store debug compilation returned `BUILD SUCCESSFUL`.
 - Six staged Firebase Auth session-manager test cases are now verified by the focused suite. This is compile/unit-test validation only; live Firebase auth and UI wiring remain untested and inactive.
+
+
+## 2026-11-13 — Device registry revoke API
+- Added `DELETE /v1/devices/:installationId` with verified UID ownership, active account requirement, rate limiting and idempotent `revoked_at` update.
+- Added SQLite data-access test and Worker HTTP test for cross-account isolation.
+- Initial CI failures revealed an over-escaped route matcher and whitespace regex; both corrected. [Final run 43402508386](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43402508386) pending.
+- Scope is registry inventory only; Firebase refresh-token revocation/remote logout is not implemented.
