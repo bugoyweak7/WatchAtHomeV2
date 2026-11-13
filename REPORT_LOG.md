@@ -267,3 +267,23 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 
 ### Next work
 - Map all Supabase-backed operations and their SQL/Edge Function authorization assumptions, then define one migration strategy that preserves existing account identity and user-owned data before implementation.
+
+
+## 2026-11-13 — Backend identity and Worker route audit (read-only)
+
+### CI result
+- GitHub Actions run `43416885505` completed successfully. The Firebase Auth session-manager unit-test step and Android Play Store debug compilation both have `success` conclusions.
+
+### Worker findings
+- The in-repository `premium-worker/src/index.ts` verifies Firebase ID tokens against the configured Firebase project and currently requires `firebase.sign_in_provider == password`.
+- Source includes Firebase-protected account bootstrap/device registration, profile, profile PIN, add-on/plugin/collection, library, watch-progress, premium, and trial routes. This confirms implementation in source only, not production deployment.
+- No Firebase device-link start/poll/approve/exchange route is present in the Worker router. The active mobile pairing implementation remains coupled to Supabase RPCs and the `tv-logins-exchange` Edge Function.
+- `premium-worker/schema/0001_account_data.draft.sql` is explicitly draft-only and `premium-worker/wrangler.toml` has no D1 binding. D1-backed account/profile sync is not live-verified.
+
+### Migration blockers / decision
+- No Supabase SQL migrations, RLS policy source, or Edge Function source were found in the scanned WatchAtHomeV2 repository tree. A trusted Supabase schema/function export is required to map legacy UID ownership and authorization accurately.
+- Do not map accounts by email alone, create parallel Firebase/Supabase identities, switch the active login repository, or enable Cloudflare sync until an explicit verified identity-mapping and session/device-link design is implemented and tested.
+- No source or production configuration changed in this audit. Supabase remains active; `CLOUDFLARE_SYNC_ENABLED` remains false.
+
+### Next step
+- Obtain/inspect the authorized Supabase schema, RLS policies, RPC definitions, and Edge Function contracts; then define a deterministic legacy-account linking process and a device-link compatibility plan before implementation.
