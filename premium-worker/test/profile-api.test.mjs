@@ -96,8 +96,8 @@ test("profile deletion cascades dependent settings and PIN data only for the own
     method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ settings_json: { version: 4 } }),
   }));
   assert.deepEqual(await deleteProfile(db, "user-a", 1), { deleted: true });
-  assert.equal((await listProfiles(db, "user-a")).profiles.length, 0);
-  assert.equal((await listProfiles(db, "user-b")).profiles.length, 1);
+  assert.equal((await listProfiles(db, "user-a")).length, 0);
+  assert.equal((await listProfiles(db, "user-b")).length, 1);
   assert.equal(db.raw.prepare("SELECT count(*) AS n FROM profile_settings WHERE user_id='user-a'").get().n, 0);
   db.close();
 });
