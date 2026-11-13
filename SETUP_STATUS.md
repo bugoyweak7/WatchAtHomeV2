@@ -359,3 +359,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - This repository layer is not yet exposed through HTTP endpoints; D1 remains unconfigured and unapplied, and no real encryption key ring is configured. No production credentials were stored.
 - Remaining before enabling: provision secrets with an approved process, add provider/media-server route auth and payload validation, test real D1 behavior, complete PIN verifier/lockout design, and finish deletion/retention/rate-limit controls.
 - No D1 resource/binding, Firebase setting, production secret, mobile adapter, user data, or deployment was changed.
+
+
+## 2026-11-13 — Pepper-protected profile PIN verifier added and tested
+
+- Added `premium-worker/src/pin-verifier.ts` implementing a versioned HMAC-SHA256 keyed PIN verifier with a server-held pepper key ring, per-record 16-byte random salt, UID/profile binding, and constant-time digest comparison.
+- The verifier stores only a 32-byte digest, 16-byte salt, algorithm identifier, and pepper-version metadata; it never stores the PIN itself. Old pepper versions remain available for verification during rotation.
+- Updated the D1 draft to enforce 32-byte PIN digests and 16-byte salts.
+- Added `premium-worker/test/pin-verifier.test.mjs`, `test:pin`, and a CI step. Tests cover correct/incorrect PINs, owner/profile binding, pepper rotation, invalid lengths, and missing historical peppers.
+- Latest CI run `43377933824` passed TypeScript and 33 tests total: 9 schema, 6 account/device D1 mock, 5 Worker HTTP/auth, 5 AES-GCM, 4 credential-store, and 4 PIN-verifier tests. Zero failures.
+- Important remaining control: the PIN verifier primitive is not yet connected to a route or D1 lockout workflow. Implement atomic failed-attempt increments, persisted lockout, request throttling, and recovery/re-auth rules before enabling PIN APIs. The keyed verifier is not a substitute for online throttling.
+- No D1 database/binding, pepper secret, encryption secret, Firebase setting, production credential, mobile adapter, user data, or deployment was changed.
