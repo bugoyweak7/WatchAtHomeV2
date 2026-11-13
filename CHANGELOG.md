@@ -56,3 +56,9 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - First compile workflow run `43387942928` exposed an existing Gradle Kotlin DSL issue: the Firebase BOM `platform(...)` call was unresolved in the Android source-set dependency block. The build failed before compiling Kotlin source.
 - Updated the declaration to `project.dependencies.platform(libs.firebase.bom)` to preserve BOM dependency alignment using the project DependencyHandler.
 - Second workflow run `43388218215` queued; awaiting actual Android compile result.
+
+
+### Firebase Auth SDK API correction — 2026-11-13
+- Fixed three Firebase Auth gateway compile errors using the actual GitLive Firebase SDK 2.8.0 API: removed unsupported no-context initialization calls and corrected ID-token retrieval to use the returned nullable string.
+- Source fix commit: `6cf909beab6bcf7301614f6cfc9d6784e2116d60`.
+- Android build run `43388218215` failed at Kotlin compilation; the source fix triggers the next validation run.
