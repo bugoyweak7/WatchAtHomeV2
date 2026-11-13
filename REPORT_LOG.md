@@ -209,3 +209,25 @@ Implement the mobile side of the Worker library sync contract while preserving t
 - `LibraryRepository.syncAdapter` still points to `SupabaseLibrarySyncAdapter`.
 - No active auth cutover, production Worker URL, D1 provisioning/binding/schema application, deployment, or production data change.
 - Next gates: CI pass, verify delta/delete merge semantics against local sync-state behavior, test live D1-backed Worker once provisioned, and only then consider wiring behind an explicit rollout gate.
+
+
+## 2026-11-13 — Staged mobile Cloudflare watch-progress adapter
+
+### Objective
+Implement the mobile HTTP client for the already-staged D1 watch-progress routes without switching the active repository.
+
+### Source changes
+- Added `composeApp/src/commonMain/kotlin/com/nuvio/app/features/watching/sync/CloudflareProgressSyncAdapter.kt`.
+- Implements snapshot, delta cursor, delta events, upserts and delete tombstones using Firebase ID-token Bearer auth.
+- Snapshot requests page by deterministic offset. Worker snapshot query orders by `last_watched_at, progress_key` and validates offset; existing timestamp filtering remains available.
+- Request payloads are size-batched below the Worker bound; response reads are capped. Worker URL uses the optional blank-by-default `CLOUDFLARE_WORKER_BASE_URL` config.
+- Added four MockEngine tests and extended Android CI.
+
+### Verification
+- Worker pagination change CI run 43414785430 passed TypeScript and the Worker test suite.
+- Android CI run 43414877340 pending at the time of this entry.
+
+### Scope and limitations
+- `WatchProgressRepository.syncAdapter` still points to `SupabaseProgressSyncAdapter`.
+- No live D1 provisioning, production Worker URL, deployment, auth cutover or production data change.
+- Next gates: Android CI pass, mutation request assertions, live D1 verification, and merge/conflict behavior validation.
