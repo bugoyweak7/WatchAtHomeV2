@@ -3,6 +3,7 @@ package com.nuvio.app.features.watchprogress
 import co.touchlab.kermit.Logger
 import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.auth.AuthState
+import com.nuvio.app.core.network.CloudflareWorkerConfig
 import com.nuvio.app.core.tracking.ensureTrackingProvidersRegistered
 import com.nuvio.app.features.addons.AddonManifest
 import com.nuvio.app.features.addons.AddonRepository
@@ -24,6 +25,7 @@ import com.nuvio.app.features.tracking.providerId
 import com.nuvio.app.features.watching.application.WatchingActions
 import com.nuvio.app.features.watching.sync.ProgressDeltaEvent
 import com.nuvio.app.features.watching.sync.ProgressSyncRecord
+import com.nuvio.app.features.watching.sync.CloudflareProgressSyncAdapter
 import com.nuvio.app.features.watching.sync.ProgressSyncAdapter
 import com.nuvio.app.features.watching.sync.SupabaseProgressSyncAdapter
 import kotlinx.coroutines.CancellationException
@@ -277,7 +279,14 @@ object WatchProgressRepository {
     private var deltaCursorEventId = 0L
     private var deltaInitialized = false
     private val remoteWriteDeduplicator = RemoteProgressWriteDeduplicator()
-    internal var syncAdapter: ProgressSyncAdapter = SupabaseProgressSyncAdapter
+    internal var syncAdapter: ProgressSyncAdapter = if (
+        CloudflareWorkerConfig.SYNC_ENABLED &&
+        CloudflareWorkerConfig.BASE_URL.startsWith("https://", ignoreCase = true)
+    ) {
+        CloudflareProgressSyncAdapter
+    } else {
+        SupabaseProgressSyncAdapter
+    }
 
     init {
         ensureTrackingProvidersRegistered()
