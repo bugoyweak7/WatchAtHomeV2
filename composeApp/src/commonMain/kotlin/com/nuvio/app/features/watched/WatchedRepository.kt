@@ -3,6 +3,7 @@ package com.nuvio.app.features.watched
 import co.touchlab.kermit.Logger
 import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.auth.AuthState
+import com.nuvio.app.core.network.CloudflareWorkerConfig
 import com.nuvio.app.core.tracking.ensureTrackingProvidersRegistered
 import com.nuvio.app.features.details.MetaDetails
 import com.nuvio.app.features.details.MetaVideo
@@ -15,6 +16,7 @@ import com.nuvio.app.features.tracking.WatchProgressSource
 import com.nuvio.app.features.tracking.effectiveWatchProgressSource
 import com.nuvio.app.features.tracking.providerId
 import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesRepository
+import com.nuvio.app.features.watching.sync.CloudflareWatchedSyncAdapter
 import com.nuvio.app.features.watching.sync.SupabaseWatchedSyncAdapter
 import com.nuvio.app.features.watching.sync.WatchedDeltaEvent
 import com.nuvio.app.features.watching.sync.WatchedSyncAdapter
@@ -154,7 +156,14 @@ object WatchedRepository {
     private var lastSuccessfulPushEpochMs: Long = 0L
     private var deltaCursorEventId: Long = 0L
     private var deltaInitialized: Boolean = false
-    internal var syncAdapter: WatchedSyncAdapter = SupabaseWatchedSyncAdapter
+    internal var syncAdapter: WatchedSyncAdapter = if (
+        CloudflareWorkerConfig.SYNC_ENABLED &&
+        CloudflareWorkerConfig.BASE_URL.startsWith("https://", ignoreCase = true)
+    ) {
+        CloudflareWatchedSyncAdapter
+    } else {
+        SupabaseWatchedSyncAdapter
+    }
     private var extraKeysObserverJob: Job? = null
 
     fun ensureLoaded() {
