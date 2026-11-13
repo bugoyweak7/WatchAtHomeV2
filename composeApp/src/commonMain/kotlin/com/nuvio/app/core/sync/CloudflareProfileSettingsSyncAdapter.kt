@@ -4,7 +4,6 @@ import com.nuvio.app.core.auth.FirebaseAuthRepository
 import com.nuvio.app.core.network.CloudflareWorkerConfig
 import com.nuvio.app.core.network.createApiHttpClient
 import com.nuvio.app.core.network.readBoundedResponseBody
-import com.nuvio.app.features.profiles.ProfileRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.request
