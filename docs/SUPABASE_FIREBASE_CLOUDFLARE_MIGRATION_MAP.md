@@ -220,3 +220,8 @@ This route snapshot is based on repository source inspection, not live deploymen
 ## 2026-11-13 — Device registry revoke route CI passed
 - Worker CI run `43402508386` passed TypeScript and all 67 tests (0 failures), including device revoke ownership/idempotence tests.
 - This validates registry status changes only; it does not revoke Firebase refresh tokens or remotely sign out an app. No live D1 or mobile migration.
+
+
+## 2026-11-13 — Device registry revocation route
+- Implemented `DELETE /v1/devices/:installationId` using the authenticated Firebase UID, active-account check, route rate limit and soft revoke in D1. Revoked installations are excluded from active device listings; repeated or cross-owner revocation requests do not modify another owner's row.
+- Worker CI `43402508386` passed TypeScript and 67 tests (0 failures), including authenticated HTTP coverage. The app-side device management flow is not migrated, and the route is not deployed to a live D1-backed Worker.
