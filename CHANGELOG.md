@@ -149,3 +149,11 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added optional build-time Worker URL configuration via `CLOUDFLARE_WORKER_BASE_URL`; default remains empty and no production URL is assumed.
 - Added MockEngine tests and included them in the Android CI test workflow. Run 43413914695 pending final result.
 - Active LibraryRepository wiring remains on Supabase.
+
+
+## 2026-11-13 — Staged Cloudflare watch-progress mobile adapter
+
+- Added a separate Worker HTTP implementation of `ProgressSyncAdapter` for snapshot, cursor, delta, upsert and delete operations.
+- Added deterministic offset pagination for the Worker progress snapshot route, retaining the existing timestamp filter.
+- Added MockEngine regression tests and included them in Android CI. Run 43414877340 pending.
+- Supabase remains the active WatchProgressRepository adapter.
