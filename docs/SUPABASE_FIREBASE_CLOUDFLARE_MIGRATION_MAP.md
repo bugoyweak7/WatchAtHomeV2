@@ -160,3 +160,10 @@ This route snapshot is based on repository source inspection, not live deploymen
 - The staged repository is not wired into the active auth UI. Existing Supabase authentication remains active until dependent data APIs, device-link and account deletion have tested replacements.
 - The Worker account-bootstrap route still depends on D1, which is not bound/provisioned in the inspected Wrangler configuration. The staged Firebase layer therefore does not call it.
 - See `SETUP_STATUS.md` and `REPORT_LOG.md` for implementation commits and build status.
+
+
+### Firebase Auth SDK API correction — 2026-11-13
+- Updated the staged Firebase Auth gateway to match the pinned GitLive Firebase SDK 2.8.0 API after CI identified three compile errors.
+- Removed redundant no-context Firebase initialization from common code. Android default initialization is provided by FirebaseInitProvider under Google Services configuration; iOS is initialized by `FirebaseApp.configure()` in app startup.
+- Corrected ID-token retrieval to use `FirebaseUser.getIdToken(forceRefresh)` directly as `String?`.
+- The source-only change is committed as `6cf909beab6bcf7301614f6cfc9d6784e2116d60`; see `REPORT_LOG.md` for the exact CI findings.
