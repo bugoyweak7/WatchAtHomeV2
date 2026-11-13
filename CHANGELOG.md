@@ -245,3 +245,10 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Updated the Android Play Store CI workflow to run the new test suite and watch the new adapter/test paths.
 - Kept the adapter unwired from `ProfileRepository`; Supabase remains the active profile backend until Firebase auth, D1, and Worker are proven end to end.
 - No live cloud resources, secrets, or production data were modified.
+
+
+## 2026-11-13 — Staged Cloudflare profile settings adapter
+
+- Added Firebase-token authenticated profile-settings GET/PUT adapter using the existing Worker routes and a JSON-object payload that preserves unknown settings fields.
+- Added focused adapter tests and Android CI workflow coverage.
+- Kept active profile settings synchronization on Supabase; no cutover or live cloud changes occurred.
