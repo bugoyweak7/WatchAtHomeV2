@@ -56,3 +56,6 @@ jobs:
 
       - name: Profile CRUD and settings sync tests
         run: npm run test:profiles
+
+      - name: Profile add-on plugin and collection sync tests
+        run: npm run test:profile-sync
