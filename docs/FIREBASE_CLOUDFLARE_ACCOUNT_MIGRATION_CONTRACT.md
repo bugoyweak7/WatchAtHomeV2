@@ -364,3 +364,10 @@ CI run `43377725695` passed 29 tests (9 schema, 6 account/device, 5 HTTP/auth, 5
 Added `premium-worker/src/pin-verifier.ts` using a versioned HMAC-SHA256 pepper key ring, per-record random salt, UID/profile binding, constant-time digest comparison, and pepper rotation support. The draft schema constrains PIN hash/salt dimensions. CI run `43377933824` passed all 33 tests, including 4 PIN verifier tests.
 
 No PIN HTTP route or atomic D1 failed-attempt/lockout workflow exists yet. Do not enable PIN verification until lockout, rate limits, recovery/re-authentication, and owner/profile authorization are integrated and tested.
+
+
+## 22. Persisted profile PIN lockout checkpoint (2026-11-13)
+
+Added `premium-worker/src/pin-store.ts`: per-profile persisted failed attempts, 5-attempt threshold, 15-minute lockout, blocking during lockout, and counter reset after successful verification once lockout expires. CI run `43378244632` passed all 37 tests, including four lockout tests.
+
+No PIN HTTP route is enabled. Request-level rate limits, recent reauthentication for reset, generic response behavior, and end-to-end route tests remain required before switching the mobile PIN adapter.
