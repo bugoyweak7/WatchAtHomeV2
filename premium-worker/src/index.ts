@@ -496,6 +496,9 @@ export default {
       }
       return response({ error: "Not found." }, 404);
     } catch (error) {
+      if (!(error instanceof HttpError) && !(error instanceof AccountApiError)) {
+        console.error("Unhandled Worker request error", error);
+      }
       if (error instanceof HttpError || error instanceof AccountApiError) return response({ error: error.message }, error.status);
       return response({ error: "The premium service is temporarily unavailable." }, 500);
     }
