@@ -185,3 +185,10 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Worker CI run `43402508386` passed TypeScript and all 67 tests across 10 suites (0 failures).
 - The data-access suite now has 7 passing tests and the HTTP/auth suite has 12 passing tests, including owner-scoped device DELETE behavior.
 - The endpoint only updates the D1 device registry and hides revoked rows; it does not invalidate Firebase refresh tokens or remotely log out the device.
+
+
+## 2026-11-13 — Device registry revocation API verified
+- Added owner-scoped `DELETE /v1/devices/:installationId` to revoke a device installation. The Worker derives the owner exclusively from the verified Firebase ID token, checks active account status, applies a route-specific rate limit, validates the installation ID, and soft-revokes the matching device row. Repeated revocation is idempotent and returns `{ revoked: false }` when no active owned row matches.
+- Added unit and HTTP tests for owner isolation, idempotence, revoked-device exclusion from inventory, and attempted cross-account revocation.
+- Final Worker CI run `43402508386` passed TypeScript and 67 tests across 10 suites (0 failures), including 12 authenticated HTTP/Firebase tests and 7 account/device module tests.
+- This is source and local SQLite/mock verification only. No D1 resource, production Worker deployment, mobile device-management UI, or active auth migration was performed.
