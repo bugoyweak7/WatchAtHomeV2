@@ -48,5 +48,8 @@ jobs:
       - name: Prepare local properties
         run: touch local.properties
 
+      - name: Run Firebase Auth session manager unit tests
+        run: ./gradlew :composeApp:testAndroidHostTest -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace
+
       - name: Compile Android Play Store debug app
         run: ./gradlew :androidApp:assemblePlaystoreDebug -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace
