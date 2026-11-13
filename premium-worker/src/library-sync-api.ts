@@ -53,7 +53,7 @@ function parseItems(input: unknown): LibraryRecord[] {
     if (typeof (row.name ?? "") !== "string" || String(row.name ?? "").length > 500) {
       throw new AccountApiError(400, `Invalid library item name at index ${index}.`);
     }
-    if (!Array.isArray(row.genres ?? []) || (row.genres ?? []).some(v => typeof v !== "string" || v.length > 100)) {
+    const genres = row.genres ?? [];\n    if (!Array.isArray(genres) || genres.some((v: unknown) => typeof v !== "string" || v.length > 100)) {
       throw new AccountApiError(400, `Invalid library genres at index ${index}.`);
     }
     if (!Number.isSafeInteger(row.added_at ?? 0) || Number(row.added_at ?? 0) < 0) {
