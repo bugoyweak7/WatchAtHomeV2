@@ -424,3 +424,13 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Initial response-shape test runs failed because test assertions still expected wrapper objects after the API was changed to serializer-compatible arrays. The assertions were corrected; the subsequent profile helper CI run passed.
 - The final HTTP-expanded CI run is pending at this append. Do not count the new HTTP test as passing until its run completes.
 - No mobile adapter was changed, no D1 resource/binding or migration was applied, no secrets were configured, and no production deployment/data was changed.
+
+
+## 2026-11-13 — Profile API CI verification completed
+
+- Final profile/API implementation checkpoint: commit 7b8e76b2d27b637bd2b40378bfc11a447d806f97.
+- GitHub Actions run 43381569837 completed successfully: https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43381569837.
+- Verified TypeScript compilation and all Worker CI suites: 52 tests passed, 0 failed. This includes 10 HTTP/Firebase-auth tests (including the new profile CRUD/settings route test) and 6 profile API storage tests, plus the existing schema, account/device, crypto, credential, PIN and rate-limit suites.
+- The earlier response-shape test failures were test-expectation mismatches; the assertions were corrected and the final complete run passed.
+- This is CI with local SQLite/D1 mocks and generated Firebase test signing keys, not live Cloudflare D1, Firebase project, production API, Android/iOS build, or deployment verification.
+- Profile CRUD/settings routes are implemented in source but remain disabled until the D1 schema/database/binding and required secrets are separately reviewed and approved. No mobile adapters, production data, Cloudflare resources, Firebase settings, or deployments were changed.
