@@ -54,3 +54,13 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 2. Add/run the common auth tests in CI.
 3. Complete D1 provisioning/schema approval and verify Worker account bootstrap readiness before enabling registration flow.
 4. Migrate profile/data APIs, device-link and account deletion before wiring Firebase into the active auth UI.
+
+
+## 2026-11-13 — Android compile check failure and Gradle correction
+
+- First Firebase Auth build workflow run `43387942928` failed at Gradle script configuration, before Kotlin compilation or test execution.
+- Exact failure: `composeApp/build.gradle.kts:455` reported `Unresolved reference 'platform'` for the pre-existing `implementation(platform(libs.firebase.bom))` declaration inside the Android source-set dependency handler.
+- Updated that declaration to `implementation(project.dependencies.platform(libs.firebase.bom))`. This preserves the intended Firebase BOM dependency alignment and uses the project-level Gradle DependencyHandler explicitly.
+- New validation run `43388218215` was queued by commit `4db2c6c59448e039c4cf36cad718f79a01bdafd9`; status pending.
+- The first failure is a build-script configuration issue and is not evidence that the new Kotlin Firebase Auth source compiles or fails.
+- Verified iOS Firebase initialization/linking from source: Swift app startup calls `FirebaseApp.configure()`; Xcode project references FirebaseCore, FirebaseAuth and FirebaseFirestore; `GoogleService-Info.plist` is present.
