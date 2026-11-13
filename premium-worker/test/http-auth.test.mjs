@@ -132,7 +132,7 @@ test("authenticated device endpoints use verified UID and return only the owner'
     platform: "android_tv",
     deviceName: "Living Room TV",
     userId: "owner-b",
-  }));
+  }), env);
   assert.equal(createResponse.status, 200);
   assert.deepEqual(await createResponse.json(), { registered: true, installationId: "install-a" });
 
