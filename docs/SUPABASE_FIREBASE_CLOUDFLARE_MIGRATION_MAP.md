@@ -179,3 +179,9 @@ This route snapshot is based on repository source inspection, not live deploymen
 - The first Android host-test run reported 2,052 tests with two failures in unrelated existing suites (`AndroidDownloadLifecycleTest`, `WatchProgressIdentityTest`). No Firebase Auth session-manager test appeared in the failure list.
 - CI was narrowed to `com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest` to provide a focused signal for the staged Firebase Auth implementation.
 - Focused test run is pending. This does not change the staged status of Firebase Auth or the active Supabase auth integration.
+
+
+## 2026-11-13 — Generic JSON secret exclusion
+- Server-side validation now rejects sensitive key names recursively in profile-settings and collection JSON before D1 persistence. This complements the existing client-side `withoutProfileCredentials` filtering and prevents a modified client from bypassing that policy.
+- Non-sensitive unknown fields remain preserved for forward compatibility.
+- Added Worker tests for nested secret rejection and safe unknown-field round-trip. Latest CI run `43401302072` pending.
