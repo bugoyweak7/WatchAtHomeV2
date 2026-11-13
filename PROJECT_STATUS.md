@@ -266,3 +266,12 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Fresh Android CI run 43416885505 was triggered by the final adapter/config source commit and is currently queued; do not mark the mobile wiring build-verified until this run completes successfully.
 
 - CI follow-up: run 43416885505 has moved from queued to in progress. The focused Firebase/Auth + Cloudflare adapter host-test step is currently running; Android Play Store debug compilation is pending. No pass is claimed yet.
+
+
+## 2026-11-13 — Active authentication dependency audit
+
+- Confirmed the active app still initializes and observes Supabase `AuthRepository`; the login UI calls its sign-up/sign-in methods. FirebaseAuthRepository is staged, not active.
+- Supabase identity is consumed by profile RPCs (sync, deletion, PIN and lock operations), device-link session RPCs/exchange function, device registration, membership access/overview RPCs, and account deletion function.
+- Firebase-only login cannot safely be enabled until these APIs accept and validate the new identity and existing account/data ownership is preserved.
+- No code or production configuration changed during this read-only audit. Existing Supabase login remains active; Cloudflare sync remains disabled by default.
+- Android CI 43416885505 was still running: auth/adapter tests in progress; Play Store debug compile pending.
