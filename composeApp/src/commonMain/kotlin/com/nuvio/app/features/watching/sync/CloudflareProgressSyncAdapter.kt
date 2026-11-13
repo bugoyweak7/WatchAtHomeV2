@@ -24,8 +24,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
- * Staged Worker-backed progress sync. WatchProgressRepository continues to use
- * SupabaseProgressSyncAdapter until the Worker/D1 environment is provisioned and verified.
+ * Worker-backed progress sync. WatchProgressRepository selects this adapter only when
+ * CLOUDFLARE_SYNC_ENABLED is explicitly true and an HTTPS Worker URL is configured.
+ * Keep the flag disabled until Firebase auth and production Worker/D1 are verified.
  */
 internal class CloudflareProgressSyncHttpAdapter(
     private val baseUrl: String,
