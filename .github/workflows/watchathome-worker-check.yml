@@ -40,3 +40,5 @@ jobs:
         run: npm run test:schema
       - name: Mocked D1 account and device API tests
         run: npm run test:worker
+      - name: Worker HTTP and Firebase authentication tests
+        run: npm run test:http
