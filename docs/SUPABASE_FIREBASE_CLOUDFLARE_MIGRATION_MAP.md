@@ -332,3 +332,11 @@ This route snapshot is based on repository source inspection, not live deploymen
 - The legacy delete request intentionally carries only `content_id`, `season`, and `episode`; the Worker now resolves all matching active content-type variants and appends a separate tombstone for each exact stored item.
 - Added a SQLite regression test covering same-ID movie/series rows and the legacy delete-key behavior.
 - Worker CI rerun is pending. This change remains source-only and does not affect live data or deployments.
+
+
+### Watched-items verification update — 2026-11-13
+
+- Worker CI run `43420974177` passed TypeScript compilation and all configured Worker test steps, including the watched-items same-ID/different-content-type regression test and the authenticated route tests.
+- The watched-items API now preserves distinct movie/series identities for a shared content ID. Legacy delete keys (which omit content type) resolve and tombstone each matching media-type row separately.
+- Android CI run `43420777374` is still in progress at this status update. The new mobile adapter and guarded repository selection remain unverified until that run completes.
+- No live D1, Worker deployment, Firebase Console, production data, or active Supabase cutover was performed.
