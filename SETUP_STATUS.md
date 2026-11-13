@@ -370,3 +370,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Latest CI run `43377933824` passed TypeScript and 33 tests total: 9 schema, 6 account/device D1 mock, 5 Worker HTTP/auth, 5 AES-GCM, 4 credential-store, and 4 PIN-verifier tests. Zero failures.
 - Important remaining control: the PIN verifier primitive is not yet connected to a route or D1 lockout workflow. Implement atomic failed-attempt increments, persisted lockout, request throttling, and recovery/re-auth rules before enabling PIN APIs. The keyed verifier is not a substitute for online throttling.
 - No D1 database/binding, pepper secret, encryption secret, Firebase setting, production credential, mobile adapter, user data, or deployment was changed.
+
+
+## 2026-11-13 — Persisted profile PIN lockout implemented and verified
+
+- Added `premium-worker/src/pin-store.ts` to load the owner/profile-bound verifier, check persisted lockout, verify the PIN, reset failed attempts on successful verification, increment failures atomically in D1, and apply a 15-minute lock after 5 failed attempts.
+- Lockout state is stored in the draft `profile_pin_credentials.failed_attempts` and `locked_until` fields. The helper does not expose a PIN HTTP route yet.
+- Added `premium-worker/test/pin-store.test.mjs` and `test:pin-store`; tests cover threshold lockout, blocking correct PIN during active lockout, successful reset after expiry, missing/other-profile isolation, and repeated lockout after cooldown.
+- First test run exposed two test-harness-only issues (SQLite null-prototype result comparison and duplicate account seeding); corrected both. The implementation itself compiled and the final suite passed.
+- Latest CI run `43378244632` passed TypeScript and all 37 tests: 9 schema, 6 account/device D1 mock, 5 Worker HTTP/auth, 5 AES-GCM, 4 credential-store, 4 PIN-verifier, and 4 PIN-lockout tests. Zero failures.
+- Important: PIN store/verifier are not yet connected to an authenticated HTTP route. Before enabling them, add request-level throttling beyond the per-profile lockout, recent reauthentication for PIN reset, generic client responses, and full route authorization tests.
+- No D1 database/binding, pepper secret, encryption secret, Firebase setting, production credential, mobile adapter, user data, or deployment was changed.
