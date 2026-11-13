@@ -356,3 +356,10 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Added a Kotlin Cloudflare profile adapter that maps the existing `NuvioProfile` and `ProfilePushPayload` models to those routes and uses Firebase ID-token authentication.
 - The adapter is intentionally staged and not selected by `ProfileRepository`. Active profile sync still calls Supabase RPCs. Switching it now would mix Supabase-authenticated app sessions with Firebase-token Worker authorization and could strand account data.
 - Unit tests and CI coverage were added. Live Worker/D1 integration remains unverified.
+
+
+## 2026-11-13 — Profile settings client staging
+
+- Added `CloudflareProfileSettingsHttpAdapter` for GET/PUT profile settings blobs on the existing Worker API.
+- It uses Firebase ID-token authentication, HTTPS-only transport, bounded responses, and `JsonObject` payloads to preserve unknown settings keys.
+- The existing `ProfileSettingsSync` remains Supabase-backed and is not switched. The adapter is staged until Firebase auth is the active app session and Worker/D1 is deployed and verified.
