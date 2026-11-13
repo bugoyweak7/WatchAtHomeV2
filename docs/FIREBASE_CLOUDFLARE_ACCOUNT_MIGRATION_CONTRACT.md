@@ -234,3 +234,16 @@ The current User App also depends on Supabase Storage for membership assets:
 | Member profile backgrounds | `get_member_profile_background_catalog` | `membership-profile-backgrounds` | R2 object migration, authenticated download, landscape/portrait paths, asset-version cache, portrait fallback |
 
 Do not expose member-only assets publicly. Use Worker authorization and short-lived signed R2 URLs or an authenticated streaming proxy. Keep metadata in the database and binary objects in R2. Preserve local cache behavior and version-based invalidation. Legacy bucket policies and object ACLs are unknown because the user does not own the upstream Supabase project.
+
+
+## 11. Source-audit addendum — replace app-wide Supabase infrastructure (2026-11-13)
+
+The migration must replace shared SDK infrastructure as well as feature APIs:
+
+- Backend configuration/discovery: replace Supabase URL/publishable-key configuration and custom server discovery with the official Worker API configuration and a reviewed environment/capability document. Do not ship a Supabase anon key as the new API authorization mechanism.
+- Reachability: replace Supabase REST endpoint health probes with a lightweight Worker health/capability probe that distinguishes internet failure from API/backend failure.
+- Retry/fallback: explicitly define safe retry behavior, origin-failure handling, backoff/cooldown, and fallback routing for idempotent operations. Do not blindly retry mutations.
+- Realtime: replace Phoenix/Supabase channel transport with authenticated Durable Object WebSocket rooms. Preserve Watch Party heartbeat, reconnect, membership, presence, broadcast and event semantics; validate the protocol rather than retaining Supabase-internal socket hooks.
+- Storage: migrate member-only avatars/backgrounds to R2 with authenticated short-lived access; retain entitlement checks and cache/version behavior.
+
+The source scan of 296 relevant common/full-common Kotlin files found the above client dependencies. It does not establish upstream server-side policies or prove all repository code has zero Supabase references.
