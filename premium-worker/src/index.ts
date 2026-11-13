@@ -2,6 +2,7 @@ import { createRemoteJWKSet, importPKCS8, jwtVerify, SignJWT } from "jose";
 import { saveProviderCredential, loadProviderCredential, saveMediaServer, loadMediaServerToken } from "./credential-store";
 import { setProfilePin, clearProfilePin, verifyProfilePinWithLockout } from "./pin-store";
 import { consumeRateLimit } from "./rate-limit";
+import { getAddons, getCollections, getPlugins, putAddons, putCollections, putPlugins } from "./profile-sync-api";
 import {
   deleteProfile, getProfileSettings, listProfileLocks, listProfiles, putProfileSettings, upsertProfiles,
 } from "./profile-api";
@@ -520,6 +521,25 @@ async function profileApiRoute(request: Request, env: Env, user: VerifiedUser): 
   return response({ error: "Not found." }, 404);
 }
 
+async function profileSyncRoute(request: Request, env: Env, user: VerifiedUser, index: number, resource: "addons" | "plugins" | "collections"): Promise<Response> {
+  const db = requireAccountDb(env);
+  await requireOwnedProfile(db, user.uid, index);
+  await applyRateLimits(request, db, user, "profile-sync-" + resource, index);
+  if (resource === "addons") {
+    if (request.method === "GET") return response(await getAddons(db, user.uid, index));
+    if (request.method === "PUT") return response(await putAddons(db, user.uid, index, request));
+  }
+  if (resource === "plugins") {
+    if (request.method === "GET") return response(await getPlugins(db, user.uid, index));
+    if (request.method === "PUT") return response(await putPlugins(db, user.uid, index, request));
+  }
+  if (resource === "collections") {
+    if (request.method === "GET") return response(await getCollections(db, user.uid, index));
+    if (request.method === "PUT") return response(await putCollections(db, user.uid, index, request));
+  }
+  return response({ error: "Method not allowed." }, 405);
+}
+
 async function pinRoute(request: Request, env: Env, user: VerifiedUser, action: "set" | "verify" | "clear"): Promise<Response> {
   const db = requireAccountDb(env);
   const index = Number(/^\/v1\/profiles\/([1-9][0-9]*)\/pin$/.exec(new URL(request.url).pathname)?.[1]);
@@ -602,6 +622,10 @@ export default {
           /^\/v1\/profiles\/([1-9][0-9]*)(?:\/settings)?$/.test(url.pathname)) {
         const profileResponse = await profileApiRoute(request, env, user);
         if (profileResponse.status !== 404) return profileResponse;
+      }
+      const profileSyncMatch = /^\\/v1\\/profiles\\/([1-9][0-9]*)\\/(addons|plugins|collections)$/.exec(url.pathname);
+      if (profileSyncMatch && (request.method === "GET" || request.method === "PUT")) {
+        return await profileSyncRoute(request, env, user, Number(profileSyncMatch[1]), profileSyncMatch[2] as "addons" | "plugins" | "collections");
       }
       const pinMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/pin$/.exec(url.pathname);
       if (pinMatch && request.method === "POST") { const action = url.searchParams.get("action"); if (action === "set" || action === "verify" || action === "clear") return await pinRoute(request, env, user, action); }
