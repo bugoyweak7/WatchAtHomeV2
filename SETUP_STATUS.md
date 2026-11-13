@@ -142,3 +142,15 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 
 ### Changes in this continuation
 - Documentation only. No application source, Worker runtime code, deployment, Firebase settings, Cloudflare resources, or production data were changed.
+
+
+## 2026-11-13 — Account migration contract drafted
+
+- Added `docs/FIREBASE_CLOUDFLARE_ACCOUNT_MIGRATION_CONTRACT.md` as a draft API/ownership contract based on verified User App source calls.
+- Documented current Supabase integration points for Auth, account deletion, device-link, profiles/PINs, add-ons, library sync, watch progress, watched items, membership, and Watch Party.
+- Defined proposed Firebase-token-authenticated Worker route groups for account lifecycle, device pairing, profile-scoped sync, membership, and Watch Party.
+- Defined device-link requirements: existing registered account only, explicit approval, nonce binding, short expiry, hashed secrets/codes, replay protection, one-time exchange, and narrowly scoped Firebase custom-token acceptance.
+- Documented a proposed D1 logical ownership model. It is explicitly not a SQL migration and does not claim that these tables exist.
+- Recorded the missing Supabase SQL migrations/RLS/Edge Function source as a required evidence blocker before exact schema migration and parity implementation.
+- No application source, Worker runtime, SQL migration, Firebase/Cloudflare settings, production data, or deployment was changed. This step is documentation/design only.
+- Next step: acquire/read the authoritative existing Supabase schema, RLS policies, RPC definitions, Edge Function contracts and Realtime channel definitions; then validate the draft contract and create the first local-only D1 migration with tests.
