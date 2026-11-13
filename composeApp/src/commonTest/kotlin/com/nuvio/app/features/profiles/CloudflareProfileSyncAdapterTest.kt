@@ -5,6 +5,7 @@ import io.ktor.client.engine.mock.*
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -49,7 +50,7 @@ class CloudflareProfileSyncAdapterTest {
         val client = HttpClient(MockEngine { request ->
             method = request.method
             requestedUrl = request.url.toString()
-            requestBody = request.body.toByteArray().decodeToString()
+            requestBody = (request.body as TextContent).text
             respond("""{"saved":1}""", HttpStatusCode.OK)
         })
         val adapter = CloudflareProfileHttpAdapter(
