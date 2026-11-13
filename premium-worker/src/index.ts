@@ -2,7 +2,7 @@ import { createRemoteJWKSet, importPKCS8, jwtVerify, SignJWT } from "jose";
 import { saveProviderCredential, loadProviderCredential, saveMediaServer, loadMediaServerToken } from "./credential-store";
 import { setProfilePin, clearProfilePin, verifyProfilePinWithLockout } from "./pin-store";
 import { consumeRateLimit } from "./rate-limit";
-import { getAddons, getCollections, getPlugins, putAddons, putCollections, putPlugins } from "./profile-sync-api";
+import { getAddons, getCollections, getHomeCatalogSettings, getPlugins, putAddons, putCollections, putHomeCatalogSettings, putPlugins } from "./profile-sync-api";
 import {
   deleteProfile, getProfileSettings, listProfileLocks, listProfiles, putProfileSettings, upsertProfiles,
 } from "./profile-api";
@@ -521,6 +521,25 @@ async function profileApiRoute(request: Request, env: Env, user: VerifiedUser): 
   return response({ error: "Not found." }, 404);
 }
 
+async function homeCatalogSettingsRoute(
+  request: Request,
+  env: Env,
+  user: VerifiedUser,
+  index: number,
+): Promise<Response> {
+  const db = requireAccountDb(env);
+  await requireOwnedProfile(db, user.uid, index);
+  await applyRateLimits(request, db, user, "home-catalog-settings", index);
+  const platform = new URL(request.url).searchParams.get("platform") ?? "home_catalog_shared";
+  if (request.method === "GET") {
+    return response(await getHomeCatalogSettings(db, user.uid, index, platform));
+  }
+  if (request.method === "PUT") {
+    return response(await putHomeCatalogSettings(db, user.uid, index, platform, request));
+  }
+  return response({ error: "Method not allowed." }, 405);
+}
+
 async function profileSyncRoute(request: Request, env: Env, user: VerifiedUser, index: number, resource: "addons" | "plugins" | "collections"): Promise<Response> {
   const db = requireAccountDb(env);
   await requireOwnedProfile(db, user.uid, index);
@@ -624,6 +643,10 @@ export default {
         if (profileResponse.status !== 404) return profileResponse;
       }
       const profileSyncMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/(addons|plugins|collections)$/.exec(url.pathname);
+      const homeCatalogMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/home-catalog$/.exec(url.pathname);
+      if (homeCatalogMatch && (request.method === "GET" || request.method === "PUT")) {
+        return await homeCatalogSettingsRoute(request, env, user, Number(homeCatalogMatch[1]));
+      }
       if (profileSyncMatch && (request.method === "GET" || request.method === "PUT")) {
         return await profileSyncRoute(request, env, user, Number(profileSyncMatch[1]), profileSyncMatch[2] as "addons" | "plugins" | "collections");
       }
