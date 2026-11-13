@@ -49,3 +49,10 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Account bootstrap is not connected from the app; the Worker route currently requires a D1 binding that is not configured.
 - GitHub Actions run `43387942928` started; Android compilation result pending at the time of this entry.
 - No live Firebase settings, Firestore rules, Cloudflare resources, D1 binding/database, secrets, deployments, or production data changed.
+
+
+### Firebase Auth build follow-up
+
+- First compile workflow run `43387942928` exposed an existing Gradle Kotlin DSL issue: the Firebase BOM `platform(...)` call was unresolved in the Android source-set dependency block. The build failed before compiling Kotlin source.
+- Updated the declaration to `project.dependencies.platform(libs.firebase.bom)` to preserve BOM dependency alignment using the project DependencyHandler.
+- Second workflow run `43388218215` queued; awaiting actual Android compile result.
