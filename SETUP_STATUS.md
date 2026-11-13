@@ -347,3 +347,15 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Latest CI run `43377463012` passed TypeScript, 9 schema tests, 6 mocked D1 tests, 5 HTTP/auth tests, and 5 AES-GCM tests: 25 total passed, 0 failed.
 - Important: encryption primitives are not yet wired into provider-credential or media-server API routes; no key-ring secret has been configured and no credential has been written to D1. Do not store sensitive values until integration, key setup, and end-to-end tests are complete.
 - No D1 database/binding, Firebase configuration, production secret, mobile adapter, user data, or deployment was changed.
+
+
+## 2026-11-13 — Encrypted credential storage layer added and verified
+
+- Added `premium-worker/src/credential-store.ts` with D1 repository operations for provider credentials and media-server access tokens.
+- Provider credential JSON is AES-GCM encrypted before D1 storage. Media-server access tokens are stored in encrypted token columns separately from metadata; metadata rejects keys containing token, password, secret, API-key, or authorization markers.
+- D1 draft now enforces AES-GCM ciphertext minimum length (16 bytes) and nonce length (12 bytes) for provider credentials and media-server token tuples.
+- Added `premium-worker/test/credential-store.test.mjs` and `test:credentials`; tests verify encrypted-at-rest storage, owner-scoped lookup, old-key reads/new-key writes during rotation, media-server token separation, and rejection of secret-bearing metadata.
+- Latest CI run `43377725695` passed TypeScript and all 29 tests: 9 schema, 6 account/device D1 mock, 5 Worker HTTP/auth, 5 AES-GCM, and 4 encrypted credential-storage tests. Zero failures.
+- This repository layer is not yet exposed through HTTP endpoints; D1 remains unconfigured and unapplied, and no real encryption key ring is configured. No production credentials were stored.
+- Remaining before enabling: provision secrets with an approved process, add provider/media-server route auth and payload validation, test real D1 behavior, complete PIN verifier/lockout design, and finish deletion/retention/rate-limit controls.
+- No D1 resource/binding, Firebase setting, production secret, mobile adapter, user data, or deployment was changed.
