@@ -306,6 +306,7 @@ async function redeemCode(request: Request, env: Env, user: VerifiedUser): Promi
             },
           },
           premiumExpiresAt: { timestampValue: new Date(expiresAt).toISOString() },
+          premiumExpiresAtEpochMs: { integerValue: String(expiresAt) },
           premiumUpdatedAt: { timestampValue: new Date(now).toISOString() },
         },
       },
