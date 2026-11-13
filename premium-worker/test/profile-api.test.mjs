@@ -151,3 +151,38 @@ test("settings payload must be a JSON object and platform must be bounded", asyn
   await assert.rejects(() => putProfileSettings(db, "user-a", 1, "../invalid", valid), /Invalid settings platform/);
   db.close();
 });
+
+
+test("profile settings reject nested credential fields but preserve non-sensitive future fields", async () => {
+  const db = createDb();
+  db.seed("user-a");
+  await upsertProfiles(db, "user-a", request({ profiles: [profile(1)] }));
+  const sensitive = new Request("https://worker.test/settings", {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      settings_json: {
+        version: 4,
+        features: {
+          future_feature: { supported: true },
+          debrid_settings: { debrid_real_debrid_api_key: "must-not-be-stored-here" },
+        },
+      },
+    }),
+  });
+  await assert.rejects(
+    () => putProfileSettings(db, "user-a", 1, "mobile", sensitive),
+    /contains a sensitive field/,
+  );
+  const safe = new Request("https://worker.test/settings", {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ settings_json: { version: 4, future_feature: { supported: true } } }),
+  });
+  assert.deepEqual(await putProfileSettings(db, "user-a", 1, "mobile", safe), { saved: true });
+  assert.deepEqual((await getProfileSettings(db, "user-a", 1, "mobile"))[0].settings_json, {
+    version: 4,
+    future_feature: { supported: true },
+  });
+  db.close();
+});
