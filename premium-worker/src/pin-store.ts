@@ -1,4 +1,4 @@
-import { verifyPin, type PinPepperEnv } from "./pin-verifier";
+import { createPinVerifier, verifyPin, type PinPepperEnv } from "./pin-verifier";
 
 export interface PinD1Database {
   prepare(query: string): PinD1Statement;
@@ -107,4 +107,53 @@ export async function verifyProfilePinWithLockout(
   }>();
   const retryAfterMs = Math.max(0, Number(latest?.lockedUntil ?? 0) - now);
   return { verified: false, locked: retryAfterMs > 0, retryAfterMs };
+}
+
+
+/** Create or replace a profile PIN. The caller must enforce recent Firebase reauthentication. */
+export async function setProfilePin(
+  db: PinD1Database,
+  env: PinPepperEnv,
+  userId: string,
+  profileIndex: number,
+  pin: string,
+  now = Date.now(),
+): Promise<void> {
+  if (!userId || userId.length > 128 || !Number.isSafeInteger(profileIndex) || profileIndex < 1) {
+    throw new Error("Invalid profile PIN owner.");
+  }
+  const verifier = await createPinVerifier(env, userId, profileIndex, pin);
+  await db.prepare(`
+    INSERT INTO profile_pin_credentials (
+      user_id, profile_index, pin_hash, pin_salt, hash_algorithm,
+      hash_parameters_json, failed_attempts, locked_until, updated_at
+    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0, NULL, ?7)
+    ON CONFLICT(user_id, profile_index) DO UPDATE SET
+      pin_hash = excluded.pin_hash,
+      pin_salt = excluded.pin_salt,
+      hash_algorithm = excluded.hash_algorithm,
+      hash_parameters_json = excluded.hash_parameters_json,
+      failed_attempts = 0,
+      locked_until = NULL,
+      updated_at = excluded.updated_at
+  `).bind(
+    userId, profileIndex, verifier.pinHash, verifier.pinSalt,
+    verifier.hashAlgorithm, verifier.hashParametersJson, now,
+  ).run();
+}
+
+/** Remove a profile PIN. The caller must enforce recent Firebase reauthentication. */
+export async function clearProfilePin(
+  db: PinD1Database,
+  userId: string,
+  profileIndex: number,
+): Promise<boolean> {
+  if (!userId || userId.length > 128 || !Number.isSafeInteger(profileIndex) || profileIndex < 1) {
+    throw new Error("Invalid profile PIN owner.");
+  }
+  const result = await db.prepare(`
+    DELETE FROM profile_pin_credentials
+    WHERE user_id = ?1 AND profile_index = ?2
+  `).bind(userId, profileIndex).run();
+  return result.meta.changes > 0;
 }
