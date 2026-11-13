@@ -260,6 +260,62 @@ test("media-server access tokens are encrypted and restored only to the owning p
   db.close();
 });
 
+test("profile CRUD and settings HTTP routes preserve serializer shapes and enforce ownership", async () => {
+  const db = createD1();
+  db.seedAccount("profile-http-owner");
+  db.seedAccount("profile-http-other");
+  const env = { ...envWithoutD1, DB: db };
+  const token = await idToken("profile-http-owner");
+  const otherToken = await idToken("profile-http-other");
+
+  const save = await worker.fetch(request("/v1/profiles", "PUT", token, {
+    profiles: [{
+      profile_index: 1,
+      name: "Main",
+      avatar_color_hex: "#1E88E5",
+      uses_primary_addons: false,
+      uses_primary_plugins: true,
+      avatar_id: "avatar-main",
+      avatar_url: null,
+      profile_background_id: null,
+      profile_background_url: null,
+    }],
+  }), env);
+  assert.equal(save.status, 200);
+  assert.equal((await save.json()).saved, 1);
+
+  const list = await worker.fetch(request("/v1/profiles", "GET", token), env);
+  const profiles = await list.json();
+  assert.equal(list.status, 200);
+  assert.ok(Array.isArray(profiles));
+  assert.equal(profiles[0].name, "Main");
+  assert.equal(profiles[0].user_id, "profile-http-owner");
+
+  const settings = {
+    version: 4,
+    features: { theme_settings: { mode: "dark" }, future_setting: { keep: true } },
+  };
+  const putSettings = await worker.fetch(request("/v1/profiles/1/settings?platform=mobile", "PUT", token, { settings_json: settings }), env);
+  assert.equal(putSettings.status, 200);
+  const getSettings = await worker.fetch(request("/v1/profiles/1/settings?platform=mobile", "GET", token), env);
+  const settingsRows = await getSettings.json();
+  assert.equal(getSettings.status, 200);
+  assert.ok(Array.isArray(settingsRows));
+  assert.deepEqual(settingsRows[0].settings_json, settings);
+
+  const denied = await worker.fetch(request("/v1/profiles/1/settings?platform=mobile", "GET", otherToken), env);
+  assert.equal(denied.status, 404);
+
+  const locks = await worker.fetch(request("/v1/profiles/locks", "GET", token), env);
+  assert.deepEqual(await locks.json(), [{ profile_id: 1, pin_enabled: false, pin_locked_until: null }]);
+
+  const remove = await worker.fetch(request("/v1/profiles/1", "DELETE", token), env);
+  assert.equal(remove.status, 200);
+  assert.deepEqual(await remove.json(), { deleted: true });
+  assert.deepEqual(await (await worker.fetch(request("/v1/profiles", "GET", token), env)).json(), []);
+  db.close();
+});
+
 after(() => {
   globalThis.fetch = originalFetch;
 });
