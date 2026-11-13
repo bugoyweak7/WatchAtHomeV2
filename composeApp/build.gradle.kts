@@ -332,7 +332,7 @@ val generateRuntimeConfigs = tasks.register<GenerateRuntimeConfigsTask>("generat
     localPropertiesFile.set(rootProject.layout.projectDirectory.file("local.properties"))
     appVersionName.set(releaseAppVersionName)
     appVersionCode.set(releaseAppVersionCode)
-    cloudflareWorkerBaseUrl.set(runtimeConfigValue("CLOUDFLARE_WORKER_BASE_URL"))\n    cloudflareWorkerBaseUrl.set(runtimeConfigValue("CLOUDFLARE_WORKER_BASE_URL"))
+    cloudflareWorkerBaseUrl.set(runtimeConfigValue("CLOUDFLARE_WORKER_BASE_URL"))
     supabaseUrl.set(runtimeConfigValue("NUVIO_SUPABASE_URL"))
     supabaseAnonKey.set(runtimeConfigValue("NUVIO_SUPABASE_ANON_KEY"))
     supabaseFallbackUrl.set(runtimeConfigValue("NUVIO_SUPABASE_FALLBACK_URL"))
