@@ -314,3 +314,15 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - This verifies TypeScript and the account/device data-access module against an in-memory SQLite-backed D1 mock. It is not a full HTTP/JWT integration test, Cloudflare D1 integration test, Firebase integration test, or production test.
 - No D1 binding/database, Firebase setting, mobile adapter, production data, or deployment was changed.
 - Next: add HTTP/auth integration coverage with a controlled Firebase token verifier, then review and approve D1 provisioning/migration before enabling the endpoints.
+
+
+## 2026-11-13 — Worker HTTP/Firebase authentication tests passed
+
+- Added `premium-worker/test/http-auth.test.mjs` with a generated RSA signing key and mocked Firebase Secure Token JWKS response; no real Firebase user or credential is used.
+- Exercised the actual Worker `fetch` entry point for public health, missing token rejection, anonymous-provider token rejection, fail-closed behavior when D1 is absent, and authenticated device registration/listing with a SQLite-backed D1 mock.
+- The first HTTP test attempt found a test-harness omission: the mock D1 environment was not passed to one Worker invocation. Corrected the test; no production endpoint logic change was needed for that failure.
+- Added bounded unexpected-error logging in the Worker catch path to improve operational diagnosis without returning internal error details to clients.
+- Latest CI run `43377044568` passed all checks: TypeScript compilation; 9 schema tests; 6 D1 data-access tests; 5 HTTP/Firebase-auth tests. Total: 20 tests passed, 0 failed.
+- HTTP tests use a generated test signing key and mocked JWKS; they do not validate against the real Firebase project, Identity Toolkit, Firestore service account, or live Cloudflare D1.
+- No D1 database/binding, Firebase configuration, mobile app adapter, production data, or deployment was changed.
+- Next: complete a security review of the D1 schema and decide the D1 database provisioning/binding step. Do not enable the new routes until the reviewed schema is applied and the D1 binding is configured.
