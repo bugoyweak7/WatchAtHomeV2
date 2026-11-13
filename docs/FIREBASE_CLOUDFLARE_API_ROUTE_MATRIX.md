@@ -331,3 +331,16 @@ The following profile-scoped routes are implemented and locally/mock verified; t
 - UID derives from verified Firebase auth; active account, profile ownership, per-route rate limiting, request bounds and validation apply.
 - CI run 43411656192 passed TypeScript and 73 tests across 10 suites (0 failures).
 - Remaining gates: mobile adapter and merge parity tests, exact legacy RPC ordering review, timestamp pagination tie handling, sync-event retention, live D1 verification and deployment approval.
+
+
+## Mobile library adapter client status — 2026-11-13
+
+- A staged multiplatform Ktor client now targets the existing library routes:
+  - GET `/v1/profiles/:profileIndex/library?limit=&offset=`
+  - GET `/v1/profiles/:profileIndex/library/cursor`
+  - GET `/v1/profiles/:profileIndex/library/delta?since=&limit=`
+  - PUT `/v1/profiles/:profileIndex/library`
+  - POST `/v1/profiles/:profileIndex/library/delete`
+- Auth header is a fresh Firebase ID token. Mutations include `p_origin_client_id`; request bodies are split at 192 KiB to remain below the Worker 256 KiB bound.
+- Worker route behavior is unchanged. Mobile client tests are in Android CI run 43413914695 (pending at entry time).
+- Client is not wired into LibraryRepository; Supabase remains active.
