@@ -242,3 +242,11 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Added optional `CLOUDFLARE_WORKER_BASE_URL` runtime configuration, blank by default, and request-size-aware batching.
 - Added MockEngine coverage; Android CI run 43413914695 pending final result.
 - No change to active `LibraryRepository.syncAdapter`; Supabase remains the live path. No production Worker/D1 resources were configured.
+
+
+## 2026-11-13 — Mobile watch-progress adapter staged
+
+- Added a separate Cloudflare `ProgressSyncAdapter` client using Firebase ID tokens for snapshot, cursor, delta, upsert and delete routes.
+- Added validated deterministic offset paging to Worker snapshot reads; Worker CI run 43414785430 passed.
+- Android MockEngine tests are included in run 43414877340 (pending).
+- Supabase remains active in `WatchProgressRepository`; no live D1 or Worker deployment.
