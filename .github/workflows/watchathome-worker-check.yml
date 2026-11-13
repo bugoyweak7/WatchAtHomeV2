@@ -46,3 +46,5 @@ jobs:
         run: npm run test:crypto
       - name: Encrypted provider and media-server storage tests
         run: npm run test:credentials
+      - name: Pepper-protected profile PIN verifier tests
+        run: npm run test:pin
