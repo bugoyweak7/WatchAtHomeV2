@@ -200,3 +200,52 @@ test("home catalog settings reject malformed payloads, oversized bodies and nest
   );
   db.close();
 });
+
+
+test("library snapshot, delta cursor, upsert and delete preserve sync contract", async () => {
+  const db = createDb(); db.seed("library-owner");
+  const items = [
+    { content_id: "tt123", content_type: "movie", name: "Film", poster_shape: "POSTER", genres: ["Drama"], added_at: 1000, logo: "https://img.example/logo.png" },
+    { content_id: "series-1", content_type: "series", name: "Series", poster_shape: "LANDSCAPE", genres: [], added_at: 2000 },
+  ];
+  assert.deepEqual(await getLibraryDeltaCursor(db, "library-owner", 1), 0);
+  assert.deepEqual(await pushLibraryItems(db, "library-owner", 1, req({ items })), { saved: 2 });
+  assert.deepEqual(await getLibrarySnapshot(db, "library-owner", 1, 1, 0), [items[0]]);
+  assert.deepEqual(await getLibrarySnapshot(db, "library-owner", 1, 1, 1), [items[1]]);
+  const cursor = await getLibraryDeltaCursor(db, "library-owner", 1);
+  assert.equal(cursor, 2);
+  const events = await getLibraryDelta(db, "library-owner", 1, 0, 10);
+  assert.equal(events.length, 2);
+  assert.equal(events[0].operation, "upsert");
+  assert.equal(events[0].content_id, "tt123");
+  assert.equal(events[0].logo, "https://img.example/logo.png");
+
+  assert.deepEqual(
+    await deleteLibraryItems(db, "library-owner", 1, req({ keys: [{ content_id: "tt123", content_type: "movie" }] })),
+    { deleted: 1 },
+  );
+  assert.deepEqual(await getLibrarySnapshot(db, "library-owner", 1, 10, 0), [items[1]]);
+  const nextCursor = await getLibraryDeltaCursor(db, "library-owner", 1);
+  const delta = await getLibraryDelta(db, "library-owner", 1, cursor, 10);
+  assert.equal(nextCursor, 3);
+  assert.equal(delta.length, 1);
+  assert.equal(delta[0].operation, "delete");
+  assert.deepEqual({ content_id: delta[0].content_id, content_type: delta[0].content_type }, { content_id: "tt123", content_type: "movie" });
+  db.close();
+});
+
+test("library writes reject duplicate keys, malformed fields and oversized batches", async () => {
+  const db = createDb(); db.seed("library-validation");
+  const duplicate = [
+    { content_id: "tt1", content_type: "movie", name: "One" },
+    { content_id: "tt1", content_type: "MOVIE", name: "Duplicate" },
+  ];
+  await assert.rejects(() => pushLibraryItems(db, "library-validation", 1, req({ items: duplicate })), /Duplicate library item key/);
+  await assert.rejects(() => pushLibraryItems(db, "library-validation", 1, req({ items: [{ content_id: "", content_type: "movie" }] })), /Invalid content_id/);
+  await assert.rejects(() => pushLibraryItems(db, "library-validation", 1, req({ items: Array.from({ length: 501 }, (_, i) => ({ content_id: String(i), content_type: "movie" })) })), /no more than 500/);
+  await assert.rejects(() => deleteLibraryItems(db, "library-validation", 1, req({ keys: [{ content_id: "tt1", content_type: "movie" }, { content_id: "tt1", content_type: "MOVIE" }] })), /Duplicate library item key/);
+  assert.deepEqual(parseLibraryPageParams(new URL("https://worker.test/?limit=20&offset=40"), "snapshot"), { limit: 20, offset: 40 });
+  assert.deepEqual(parseLibraryPageParams(new URL("https://worker.test/?limit=50&since=9"), "delta"), { limit: 50, since: 9 });
+  assert.throws(() => parseLibraryPageParams(new URL("https://worker.test/?limit=501"), "snapshot"), /Invalid library page limit/);
+  db.close();
+});
