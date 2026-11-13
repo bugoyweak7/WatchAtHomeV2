@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 import {
-  getAddons, getCollections, getPlugins, putAddons, putCollections, putPlugins,
+  getAddons, getCollections, getHomeCatalogSettings, getPlugins, putAddons, putCollections, putHomeCatalogSettings, putPlugins,
 } from "../src/profile-sync-api.ts";
 
 const schema = readFileSync(new URL("../schema/0001_account_data.draft.sql", import.meta.url), "utf8");
@@ -140,6 +140,63 @@ test("collection snapshots reject nested secret fields", async () => {
       collections_json: [{ id: "watchlist", metadata: { access_token: "must-not-be-stored-here" } }],
     })),
     /contains a sensitive field/,
+  );
+  db.close();
+});
+
+
+test("home catalog settings round-trip by profile and platform with versioned updates", async () => {
+  const db = createDb(); db.seed("owner-a", 1); db.seed("owner-a", 2); db.seed("owner-b", 1);
+  const payload = {
+    show_catalog_type: false,
+    hide_unreleased_content: true,
+    items: [
+      { addon_id: "addon-a", type: "movie", catalog_id: "popular", enabled: true, order: 0, custom_title: "My Movies", is_collection: false, collection_id: "", key: "addon-a:movie:popular" },
+      { addon_id: "", type: "", catalog_id: "", enabled: false, order: 1, custom_title: "Watch Later", is_collection: true, collection_id: "col-1", key: "collection_col-1" },
+    ],
+    future_option: { retain: true },
+  };
+  assert.deepEqual(await getHomeCatalogSettings(db, "owner-a", 1, "home_catalog_shared"), []);
+  assert.deepEqual(
+    await putHomeCatalogSettings(db, "owner-a", 1, "home_catalog_shared", req({ p_settings_json: payload }), 7000),
+    { saved: true },
+  );
+  const rows = await getHomeCatalogSettings(db, "owner-a", 1, "home_catalog_shared");
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].profile_id, 1);
+  assert.equal(rows[0].platform, "home_catalog_shared");
+  assert.equal(rows[0].updated_at, new Date(7000).toISOString());
+  assert.deepEqual(rows[0].settings_json, payload);
+  await putHomeCatalogSettings(db, "owner-a", 1, "home_catalog_shared", req({ settings_json: { items: [], show_catalog_type: true } }), 8000);
+  assert.deepEqual((await getHomeCatalogSettings(db, "owner-a", 1, "home_catalog_shared"))[0].settings_json, { items: [], show_catalog_type: true });
+  assert.deepEqual(await getHomeCatalogSettings(db, "owner-a", 2, "home_catalog_shared"), []);
+  assert.deepEqual(await getHomeCatalogSettings(db, "owner-b", 1, "home_catalog_shared"), []);
+  assert.deepEqual(await getHomeCatalogSettings(db, "owner-a", 1, "mobile"), []);
+  db.close();
+});
+
+test("home catalog settings reject malformed payloads, oversized bodies and nested secrets", async () => {
+  const db = createDb(); db.seed("owner");
+  await assert.rejects(
+    () => putHomeCatalogSettings(db, "owner", 1, "home_catalog_shared", req({ settings_json: [] })),
+    /must be a JSON object/,
+  );
+  await assert.rejects(
+    () => putHomeCatalogSettings(db, "owner", 1, "home_catalog_shared", req({ settings_json: { items: [{ metadata: { refresh_token: "secret" } }] } })),
+    /contains a sensitive field/,
+  );
+  await assert.rejects(
+    () => putHomeCatalogSettings(db, "owner", 1, "bad platform", req({ settings_json: {} })),
+    /Invalid home catalog platform/,
+  );
+  const huge = new Request("https://worker.test/sync", {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ settings_json: { payload: "x".repeat(270 * 1024) } }),
+  });
+  await assert.rejects(
+    () => putHomeCatalogSettings(db, "owner", 1, "home_catalog_shared", huge),
+    /too large/,
   );
   db.close();
 });
