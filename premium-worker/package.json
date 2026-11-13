@@ -9,7 +9,8 @@
     "check": "tsc --noEmit",
     "test:schema": "node --experimental-sqlite --test test/schema.test.mjs",
     "test:worker": "node --import tsx --test test/account-device.test.mjs",
-    "test:http": "node --import tsx --test test/http-auth.test.mjs"
+    "test:http": "node --import tsx --test test/http-auth.test.mjs",
+    "test:crypto": "node --import tsx --test test/data-crypto.test.mjs"
   },
   "dependencies": {
     "jose": "^6.1.3"
