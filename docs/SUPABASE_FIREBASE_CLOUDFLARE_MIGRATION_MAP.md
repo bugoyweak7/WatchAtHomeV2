@@ -150,3 +150,13 @@ This route snapshot is based on repository source inspection, not live deploymen
 - File references were fetched directly from the selected repository branch.
 - The migration contract and route matrix under `docs/` are design documents; they do not prove route implementation or deployment.
 - No Supabase account/project, Firebase Console rules, Cloudflare secrets, D1 database, Worker deployment, or production data were modified or verified in this source-only audit.
+
+
+## 11. Staged Firebase Auth foundation — 2026-11-13
+
+- Added a separate multiplatform Firebase Auth gateway and session manager under `core/auth/FirebaseAuthGateway.kt` and `FirebaseAuthSessionManager.kt`.
+- The staged layer supports email/password registration/sign-in, auth-state observation, sign-out, and fresh ID-token retrieval; anonymous Firebase sessions are rejected.
+- Six common tests were added with a fake gateway.
+- The staged repository is not wired into the active auth UI. Existing Supabase authentication remains active until dependent data APIs, device-link and account deletion have tested replacements.
+- The Worker account-bootstrap route still depends on D1, which is not bound/provisioned in the inspected Wrangler configuration. The staged Firebase layer therefore does not call it.
+- See `SETUP_STATUS.md` and `REPORT_LOG.md` for implementation commits and build status.
