@@ -336,3 +336,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Identified operational configuration prerequisite: `FIREBASE_WEB_API_KEY` is required by account bootstrap registration lookup but is not declared in committed `wrangler.toml`; confirm it is configured as a Worker variable/secret before enabling bootstrap. No secret was requested or changed.
 - D1 schema remains draft-only; no D1 database or binding was created. No Firebase/Cloudflare setting, user data, mobile adapter, or deployment was changed.
 - Decision: do not provision/apply D1 yet. Resolve critical encryption/PIN design, add schema constraints/tests, and obtain explicit approval before creating a Cloudflare D1 resource and binding.
+
+
+## 2026-11-13 — Versioned AES-GCM data-encryption primitives added
+
+- Added `premium-worker/src/data-crypto.ts` implementing AES-256-GCM encryption/decryption using a versioned key ring supplied through Worker secrets/configuration.
+- Each encrypted record uses a fresh 12-byte nonce and 128-bit authentication tag. Additional authenticated data binds ciphertext to `userId`, `profileIndex`, resource name, and record key, preventing cross-user/profile/record substitution.
+- Added key rotation support: new writes use `DATA_ENCRYPTION_ACTIVE_VERSION`; retained older key versions remain available for decrypting existing records until data is re-encrypted.
+- Added `premium-worker/test/data-crypto.test.mjs` and `test:crypto`; tests cover round-trip, AAD ownership binding, tamper rejection, old-key decryption after rotation, invalid key size, and missing historical key.
+- Latest CI run `43377463012` passed TypeScript, 9 schema tests, 6 mocked D1 tests, 5 HTTP/auth tests, and 5 AES-GCM tests: 25 total passed, 0 failed.
+- Important: encryption primitives are not yet wired into provider-credential or media-server API routes; no key-ring secret has been configured and no credential has been written to D1. Do not store sensitive values until integration, key setup, and end-to-end tests are complete.
+- No D1 database/binding, Firebase configuration, production secret, mobile adapter, user data, or deployment was changed.
