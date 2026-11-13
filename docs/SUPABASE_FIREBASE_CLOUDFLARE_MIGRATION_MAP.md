@@ -200,3 +200,8 @@ This route snapshot is based on repository source inspection, not live deploymen
 
 ### Home catalog route test follow-up — 2026-11-13
 - The first route/test CI run exposed a test-fixture-only duplicate account insert in the new profile-isolation case. The test setup was corrected to add a second profile row under the existing account. Follow-up CI `43401962345` queued; endpoint verification remains pending.
+
+
+### Home catalog route verification — 2026-11-13
+- Worker CI `43401962345` passed TypeScript and 65 tests across 10 suites (0 failures), including home-catalog read/write, round-trip, owner/profile/platform isolation, body bounds and sensitive-field rejection.
+- This validates the Worker module against local SQLite/mocked D1 only. The mobile `HomeCatalogSettingsSyncService` still uses Supabase RPCs; no production cutover has occurred.
