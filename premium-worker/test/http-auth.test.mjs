@@ -316,6 +316,46 @@ test("profile CRUD and settings HTTP routes preserve serializer shapes and enfor
   db.close();
 });
 
+test("add-on, plugin and collection HTTP sync routes enforce Firebase profile ownership", async () => {
+  const db = createD1();
+  db.seedAccount("sync-http-owner");
+  db.seedProfile("sync-http-owner", 1);
+  db.seedAccount("sync-http-other");
+  const env = { ...envWithoutD1, DB: db };
+  const token = await idToken("sync-http-owner");
+  const otherToken = await idToken("sync-http-other");
+
+  const addonUrl = "https://addons.example.test/manifest.json";
+  const putAddons = await worker.fetch(request("/v1/profiles/1/addons", "PUT", token, {
+    addons: [{ url: addonUrl, name: "Example Addon", enabled: true, sort_order: 0 }],
+  }), env);
+  assert.equal(putAddons.status, 200);
+  assert.deepEqual(await (await worker.fetch(request("/v1/profiles/1/addons", "GET", token), env)).json(), [
+    { url: addonUrl, name: "Example Addon", enabled: true, sort_order: 0 },
+  ]);
+
+  const pluginUrl = "https://plugins.example.test/manifest.json";
+  const putPlugins = await worker.fetch(request("/v1/profiles/1/plugins", "PUT", token, {
+    plugins: [{ url: pluginUrl, name: "Example Plugin", enabled: true, sort_order: 0 }],
+  }), env);
+  assert.equal(putPlugins.status, 200);
+  assert.equal((await (await worker.fetch(request("/v1/profiles/1/plugins", "GET", token), env)).json())[0].url, pluginUrl);
+
+  const collections = [{ id: "watchlist", title: "Watchlist", futureProperty: { preserve: true } }];
+  const putCollections = await worker.fetch(request("/v1/profiles/1/collections", "PUT", token, {
+    collections_json: collections,
+  }), env);
+  assert.equal(putCollections.status, 200);
+  const pulledCollections = await worker.fetch(request("/v1/profiles/1/collections", "GET", token), env);
+  const collectionRows = await pulledCollections.json();
+  assert.equal(pulledCollections.status, 200);
+  assert.deepEqual(collectionRows[0].collections_json, collections);
+
+  const denied = await worker.fetch(request("/v1/profiles/1/addons", "GET", otherToken), env);
+  assert.equal(denied.status, 404);
+  db.close();
+});
+
 after(() => {
   globalThis.fetch = originalFetch;
 });
