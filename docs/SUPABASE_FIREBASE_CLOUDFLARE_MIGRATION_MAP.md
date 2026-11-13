@@ -324,3 +324,11 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Added a Cloudflare HTTP adapter matching the current watched-item snapshot, delta, upsert, and delete contract.
 - The repository selection is guarded by the existing global opt-in flag and HTTPS Worker URL validation. The default false setting keeps the Supabase adapter active.
 - CI verification is pending; no production cutover is claimed.
+
+
+### Watched-items identity and delete-key compatibility follow-up — 2026-11-13
+
+- Tightened watched-item storage identity to include `content_type`, preserving the same content ID when it represents different media types.
+- The legacy delete request intentionally carries only `content_id`, `season`, and `episode`; the Worker now resolves all matching active content-type variants and appends a separate tombstone for each exact stored item.
+- Added a SQLite regression test covering same-ID movie/series rows and the legacy delete-key behavior.
+- Worker CI rerun is pending. This change remains source-only and does not affect live data or deployments.
