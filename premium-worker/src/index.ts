@@ -327,7 +327,7 @@ async function firebaseAccountCreatedAt(
     throw new HttpError(503, "Trial registration verification is not configured.");
   }
   const authorization = request.headers.get("authorization") ?? "";
-  const match = /^Bearer\\s+(.+)$/i.exec(authorization);
+  const match = /^Bearer\s+(.+)$/i.exec(authorization);
   if (!match) throw new HttpError(401, "Sign in is required.");
   const lookup = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(env.FIREBASE_WEB_API_KEY)}`,
@@ -379,13 +379,16 @@ async function initializeTrial(env: Env, user: VerifiedUser, registeredAt: numbe
         }],
       }),
     });
-    if (!write.ok && write.status !== 409 && write.status !== 400) {
+    if (!write.ok && write.status !== 409) {
       throw new Error(`Trial initialization failed (${write.status}).`);
     }
     const latest = await readDocument(env, path);
     const latestFields = fieldsOf(latest);
     startedAt = timestampField(latestFields, "trialStartedAt");
     expiresAt = timestampField(latestFields, "trialExpiresAt");
+    if (!(startedAt > 0 && expiresAt > startedAt)) {
+      throw new Error("Trial initialization could not be confirmed.");
+    }
   }
 
   return response({
