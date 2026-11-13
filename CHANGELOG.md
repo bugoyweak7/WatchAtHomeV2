@@ -19,3 +19,13 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Preserved complete collection JSON including unknown fields. Kept plugin scraper code/manifests on their existing repository/local-cache flow.
 - Added eight SQLite storage tests and HTTP route ownership coverage. GitHub Actions run 43382547116 passed all 61 tests and TypeScript compilation (0 failures).
 - D1 remains draft-only; no mobile adapter, UI, player, production resource, secret, data, or deployment changed.
+
+## 2026-11-13 — Verified migration status baseline
+
+- Audited the newest User App branch `setup/firebase-cloudflare-zero-cost` at commit `c4b106b8b994154208d2672f381750cf29665352` and inspected the Admin App repository on `main`.
+- Confirmed the User App authentication repository still uses Supabase, including email/password auth and anonymous sign-in; Firebase Android configuration, SDK dependencies and an Android Firebase backend wrapper are present but do not yet replace the main auth repository.
+- Confirmed Supabase profile/library/watch-progress adapters and Supabase runtime configuration remain in source.
+- Confirmed Worker premium/trial and additional account/profile APIs exist, while D1 remains draft-only and no D1 binding is present in the inspected Wrangler configuration.
+- Confirmed Admin App Firebase Auth/Firestore integration and shared `watchathome-admin` Firebase project configuration.
+- Added `PROJECT_STATUS.md` as the verified source-of-truth status record. Live Firebase rules, Cloudflare secrets, D1 provisioning and deployed Worker state remain unverified.
+- Documentation-only audit: no app source, database rules, cloud resources, secrets or deployments were changed.
