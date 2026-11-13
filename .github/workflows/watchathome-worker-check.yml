@@ -53,3 +53,6 @@ jobs:
 
       - name: D1-backed API rate-limit tests
         run: npm run test:rate-limit
+
+      - name: Profile CRUD and settings sync tests
+        run: npm run test:profiles
