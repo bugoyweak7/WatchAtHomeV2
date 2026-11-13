@@ -130,3 +130,16 @@ test("collections must be a JSON array", async () => {
   await assert.rejects(() => putCollections(db, "owner", 1, req({ collections_json: { not: "array" } })), /must be a JSON array/);
   db.close();
 });
+
+
+test("collection snapshots reject nested secret fields", async () => {
+  const db = createDb();
+  db.seed("owner");
+  await assert.rejects(
+    () => putCollections(db, "owner", 1, req({
+      collections_json: [{ id: "watchlist", metadata: { access_token: "must-not-be-stored-here" } }],
+    })),
+    /contains a sensitive field/,
+  );
+  db.close();
+});
