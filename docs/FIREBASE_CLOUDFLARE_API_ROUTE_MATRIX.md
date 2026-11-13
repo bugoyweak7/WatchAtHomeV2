@@ -158,3 +158,22 @@ Before any mobile adapter switch:
 The legacy member-access RPC returns a small tier/entitlement pair, while the legacy membership-overview RPC returns billing-provider, subscription, verified/supporter and grant/lifetime fields. The current Worker only calculates premium-code/trial access from Firestore `users/{uid}` and does not implement the full overview model.
 
 Do not infer a subscription or supporter grant from a premium-code activation. Before implementing these routes, define the authoritative membership record and a trusted update source (verified provider webhook or admin grant workflow). Until then, `GET /v1/membership/overview` must return an explicit unavailable/not-configured result rather than invented values. Client writes to membership, premium, trial, billing or grant fields remain forbidden.
+
+
+## 12. First Worker account/device endpoints — implemented in source, not enabled
+
+The following handlers are now present in `premium-worker/src/index.ts`:
+
+| Route | Implementation | Notes |
+|---|---|---|
+| `POST /v1/account/bootstrap` | Implemented | Requires verified Firebase email/password ID token; verifies Firebase account creation time; creates the D1 account row idempotently; rejects non-active account rows; initializes the immutable 7-day trial through the existing create-only Firestore logic |
+| `POST /v1/devices` | Implemented | Requires an active D1 account; validates bounded JSON and device metadata; derives owner UID only from verified token; idempotently registers/updates the caller's installation |
+| `GET /v1/devices` | Implemented | Returns only active device records belonging to the verified UID, newest activity first, maximum 100 |
+
+### Enablement and security limits
+
+- `Env.DB` is optional in the Worker type so the current deployment remains unchanged. No D1 binding exists in `wrangler.toml`; these new routes return HTTP 503 until a separately reviewed D1 database/binding and schema are provisioned.
+- The SQL draft remains outside Wrangler's active migrations directory and has not been applied.
+- Device registration is inventory metadata only. No device-revocation endpoint was added because the current authentication middleware does not bind Firebase sessions to installation IDs or invalidate existing refresh tokens. Do not treat this registry as a remote sign-out/security revocation feature.
+- Account bootstrap is retry-safe: the account row uses create-only conflict handling, and trial initialization uses the existing immutable create-only Firestore write.
+- Existing premium routes and mobile Supabase adapters remain unchanged.
