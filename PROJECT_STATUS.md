@@ -247,3 +247,10 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Added four MockEngine tests for Firebase Bearer auth, snapshot field mapping, delta delete mapping, and missing-token behavior. Android CI run 43414877340 pending.
 - Active `WatchProgressRepository.syncAdapter` remains `SupabaseProgressSyncAdapter`; no auth switch, production Worker URL, live D1, deployment, or production data changes.
 - Before cutover: complete Android CI, add mutation payload/route tests, verify merge behavior and timestamp/filter semantics against production-safe fixtures, and test live D1-backed Worker.
+
+
+## 2026-11-13 — Progress adapter mutation tests and HTTP paging verification
+
+- Added progress adapter test assertions for PUT upsert and POST delete route/method selection.
+- Added authenticated Worker HTTP coverage for snapshot offset requests. Worker CI run 43415195896 passed.
+- Android run 43414877340 was cancelled by a subsequent branch push; replacement run 43415270909 is queued. Do not treat the mobile adapter as CI-verified until the replacement completes successfully.
