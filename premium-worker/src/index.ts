@@ -2,6 +2,7 @@ import { createRemoteJWKSet, importPKCS8, jwtVerify, SignJWT } from "jose";
 
 interface Env {
   FIREBASE_PROJECT_ID: string;
+  FIREBASE_WEB_API_KEY: string;
   FIREBASE_SERVICE_ACCOUNT_JSON: string;
 }
 
@@ -317,7 +318,34 @@ async function redeemCode(request: Request, env: Env, user: VerifiedUser): Promi
   return response({ success: true, premium: true, expiresAt: new Date(expiresAt).toISOString() });
 }
 
-async function initializeTrial(env: Env, user: VerifiedUser): Promise<Response> {
+async function firebaseAccountCreatedAt(request: Request, env: Env): Promise<number> {
+  if (!env.FIREBASE_WEB_API_KEY) {
+    throw new HttpError(503, "Trial registration verification is not configured.");
+  }
+  const authorization = request.headers.get("authorization") ?? "";
+  const match = /^Bearer\\s+(.+)$/i.exec(authorization);
+  if (!match) throw new HttpError(401, "Sign in is required.");
+  const lookup = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(env.FIREBASE_WEB_API_KEY)}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ idToken: match[1] }),
+    },
+  );
+  if (!lookup.ok) throw new HttpError(401, "Could not verify account registration.");
+  const payload = await lookup.json() as {
+    users?: Array<{ localId?: string; createdAt?: string }>;
+  };
+  const account = payload.users?.[0];
+  const createdAt = Number(account?.createdAt);
+  if (!account?.localId || !Number.isFinite(createdAt) || createdAt <= 0) {
+    throw new HttpError(401, "Firebase account creation time is unavailable.");
+  }
+  return createdAt;
+}
+
+async function initializeTrial(env: Env, user: VerifiedUser, registeredAt: number): Promise<Response> {
   const path = `users/${user.uid}`;
   const existing = await readDocument(env, path);
   const fields = fieldsOf(existing);
@@ -327,9 +355,8 @@ async function initializeTrial(env: Env, user: VerifiedUser): Promise<Response> 
   // The app calls this immediately after successful account creation.
   // Create-only write makes the seven-day window immutable on retries.
   if (!startedAt || !expiresAt) {
-    const now = Date.now();
-    startedAt = now;
-    expiresAt = now + 7 * 24 * 60 * 60 * 1000;
+    startedAt = registeredAt;
+    expiresAt = registeredAt + 7 * 24 * 60 * 60 * 1000;
     const write = await firestoreRequest(env, ":commit", {
       method: "POST",
       body: JSON.stringify({
@@ -408,7 +435,24 @@ export default {
         return await redeemCode(request, env, user);
       }
       if (request.method === "POST" && url.pathname === "/v1/trial/initialize") {
-        return await initializeTrial(env, user);
+        const registeredAt = await firebaseAccountCreatedAt(request, env);
+        const accountToken = request.headers.get("authorization") ?? "";
+        const accountMatch = /^Bearer\\s+(.+)$/i.exec(accountToken);
+        if (!accountMatch) throw new HttpError(401, "Sign in is required.");
+        const lookupResponse = await fetch(
+          `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(env.FIREBASE_WEB_API_KEY)}`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ idToken: accountMatch[1] }),
+          },
+        );
+        if (!lookupResponse.ok) throw new HttpError(401, "Could not verify account registration.");
+        const lookupPayload = await lookupResponse.json() as { users?: Array<{ localId?: string }> };
+        if (lookupPayload.users?.[0]?.localId !== user.uid) {
+          throw new HttpError(401, "Account identity verification failed.");
+        }
+        return await initializeTrial(env, user, registeredAt);
       }
       if (request.method === "GET" && url.pathname === "/v1/premium/status") {
         return await premiumStatus(env, user);
