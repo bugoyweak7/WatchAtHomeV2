@@ -363,3 +363,12 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Added `CloudflareProfileSettingsHttpAdapter` for GET/PUT profile settings blobs on the existing Worker API.
 - It uses Firebase ID-token authentication, HTTPS-only transport, bounded responses, and `JsonObject` payloads to preserve unknown settings keys.
 - The existing `ProfileSettingsSync` remains Supabase-backed and is not switched. The adapter is staged until Firebase auth is the active app session and Worker/D1 is deployed and verified.
+
+
+## 2026-11-13 — Admin premium-code Worker integration cross-repository update
+
+- Re-scanned the Admin App and Premium Worker source. Admin premium-code creation now calls the existing authenticated `POST /v1/admin/premium-codes` endpoint using a Firebase ID token; direct Admin-side creation of raw-ID Firestore documents was removed.
+- Worker-created code documents use SHA-256 IDs and preserve the `code`, `durationLabel`, `durationDays`, `durationMinutes`, `status`, and timestamp fields consumed by the Admin history screen. The existing Admin Firestore history query remains compatible with those hashed documents, subject to deployed Firestore rules.
+- Admin build configuration now accepts the non-secret `watchathome.premiumApiBaseUrl` Gradle property. No live Worker URL was present in repository configuration, so the app is not yet configured for a live call.
+- Admin build verification is pending: its current GitHub Actions workflow automatically targets `main`, not the approved setup branch. Do not treat this as production-ready until the branch build and authenticated API flow pass.
+- No Firebase/Cloudflare resources, secrets, production data, deployments, or account settings were changed.
