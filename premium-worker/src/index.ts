@@ -1,4 +1,7 @@
 import { createRemoteJWKSet, importPKCS8, jwtVerify, SignJWT } from "jose";
+import { saveProviderCredential, loadProviderCredential, saveMediaServer, loadMediaServerToken } from "./credential-store";
+import { setProfilePin, clearProfilePin, verifyProfilePinWithLockout } from "./pin-store";
+import { consumeRateLimit } from "./rate-limit";
 import {
   AccountApiError,
   ensureActiveAccount,
@@ -6,12 +9,17 @@ import {
   parseDeviceRegistration,
   registerDevice,
   requireAccountDb,
+  readBoundedJson,
 } from "./account-device";
 
 interface Env {
   FIREBASE_PROJECT_ID: string;
   FIREBASE_WEB_API_KEY: string;
   FIREBASE_SERVICE_ACCOUNT_JSON: string;
+  DATA_ENCRYPTION_KEYS_JSON?: string;
+  DATA_ENCRYPTION_ACTIVE_VERSION?: string;
+  PIN_PEPPER_KEYS_JSON?: string;
+  PIN_PEPPER_ACTIVE_VERSION?: string;
   DB?: D1Database;
 }
 
@@ -25,6 +33,7 @@ interface ServiceAccount {
 interface VerifiedUser {
   uid: string;
   email?: string;
+  authTime: number;
 }
 
 const FIREBASE_SCOPE = "https://www.googleapis.com/auth/datastore";
@@ -79,7 +88,7 @@ async function verifyUser(request: Request, env: Env): Promise<VerifiedUser> {
   ) {
     throw new HttpError(401, "A registered email/password account is required.");
   }
-  return { uid: payload.sub, email: typeof payload.email === "string" ? payload.email : undefined };
+  return { uid: payload.sub, email: typeof payload.email === "string" ? payload.email : undefined, authTime: payload.auth_time };
 }
 
 async function serviceToken(env: Env): Promise<string> {
@@ -435,6 +444,76 @@ async function listDevicesRoute(env: Env, user: VerifiedUser): Promise<Response>
   return response(await listDevices(db, user.uid));
 }
 
+type ProfileScopedEnv = Env & { DATA_ENCRYPTION_KEYS_JSON: string; DATA_ENCRYPTION_ACTIVE_VERSION: string; PIN_PEPPER_KEYS_JSON: string; PIN_PEPPER_ACTIVE_VERSION: string };
+function requireSecretConfiguration(env: Env): asserts env is ProfileScopedEnv {
+  if (!env.DATA_ENCRYPTION_KEYS_JSON || !env.DATA_ENCRYPTION_ACTIVE_VERSION || !env.PIN_PEPPER_KEYS_JSON || !env.PIN_PEPPER_ACTIVE_VERSION) throw new HttpError(503, "Secure profile storage is not configured.");
+}
+function requireRecentReauthentication(user: VerifiedUser): void {
+  const age = Math.floor(Date.now() / 1000) - user.authTime;
+  if (age < 0 || age > 300) throw new HttpError(401, "Please reauthenticate and try again.");
+}
+function boundedText(value: unknown, max: number): string {
+  if (typeof value !== "string" || !value.trim() || value.trim().length > max) throw new HttpError(400, "Invalid profile data.");
+  return value.trim();
+}
+async function requireOwnedProfile(db: D1Database, uid: string, index: number): Promise<void> {
+  await ensureActiveAccount(db, uid);
+  const row = await db.prepare("SELECT 1 AS owned FROM profiles WHERE user_id = ?1 AND profile_index = ?2").bind(uid, index).first();
+  if (!row) throw new HttpError(404, "Profile not found.");
+}
+async function applyRateLimits(request: Request, db: D1Database, user: VerifiedUser, route: string, profileIndex?: number): Promise<void> {
+  const ip = request.headers.get("cf-connecting-ip") ?? "unavailable";
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip));
+  const ipKey = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+  const owner = profileIndex ? user.uid + ":profile:" + profileIndex : user.uid;
+  const limit = route === "pin-verify" ? 10 : 30;
+  const [a, n] = await Promise.all([
+    consumeRateLimit(db, owner, route, "account", limit, 900000),
+    consumeRateLimit(db, "ip:" + ipKey, route, "network", limit * 3, 900000),
+  ]);
+  if (!a.allowed || !n.allowed) throw new HttpError(429, "Too many requests. Please wait before trying again.");
+}
+async function pinRoute(request: Request, env: Env, user: VerifiedUser, action: "set" | "verify" | "clear"): Promise<Response> {
+  const db = requireAccountDb(env);
+  const index = Number(/^\/v1\/profiles\/([1-9][0-9]*)\/pin$/.exec(new URL(request.url).pathname)?.[1]);
+  if (!Number.isSafeInteger(index) || index < 1 || index > 100) throw new HttpError(404, "Profile route not found.");
+  await requireOwnedProfile(db, user.uid, index);
+  await applyRateLimits(request, db, user, "pin-" + action, index);
+  if (action !== "verify") requireRecentReauthentication(user);
+  requireSecretConfiguration(env);
+  if (action === "clear") return response({ success: true, removed: await clearProfilePin(db, user.uid, index) });
+  const input = await readBoundedJson(request, 2048);
+  if (typeof input.pin !== "string" || input.pin.length < 4 || input.pin.length > 64) throw new HttpError(400, "Invalid PIN request.");
+  if (action === "set") { await setProfilePin(db, env, user.uid, index, input.pin); return response({ success: true }); }
+  const result = await verifyProfilePinWithLockout(db, env, user.uid, index, input.pin);
+  return response({ verified: result.verified, locked: result.locked, retryAfterSeconds: Math.ceil(result.retryAfterMs / 1000) });
+}
+async function providerCredentialRoute(request: Request, env: Env, user: VerifiedUser, index: number): Promise<Response> {
+  const db = requireAccountDb(env); await requireOwnedProfile(db, user.uid, index); await applyRateLimits(request, db, user, "provider-credentials", index); requireSecretConfiguration(env);
+  if (request.method === "GET") {
+    const provider = boundedText(new URL(request.url).searchParams.get("provider"), 160);
+    const value = await loadProviderCredential(db, env, user.uid, index, provider);
+    return response({ provider, credential: value === null ? null : JSON.parse(value) });
+  }
+  const input = await readBoundedJson(request, 32768);
+  const provider = boundedText(input.provider, 160);
+  if (!input.credential || typeof input.credential !== "object" || Array.isArray(input.credential)) throw new HttpError(400, "Invalid credential payload.");
+  await saveProviderCredential(db, env, user.uid, index, provider, JSON.stringify(input.credential));
+  return response({ success: true, provider });
+}
+async function mediaServersRoute(request: Request, env: Env, user: VerifiedUser, index: number): Promise<Response> {
+  const db = requireAccountDb(env); await requireOwnedProfile(db, user.uid, index); await applyRateLimits(request, db, user, "media-servers", index); requireSecretConfiguration(env);
+  if (request.method === "PUT") {
+    const input = await readBoundedJson(request, 32768); const metadata = input.metadata ?? {};
+    if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) throw new HttpError(400, "Invalid media-server metadata.");
+    await saveMediaServer(db, env, { userId: user.uid, profileIndex: index, serverKey: boundedText(input.serverKey, 160), providerId: boundedText(input.providerId, 120), remoteServerId: boundedText(input.remoteServerId, 200), remoteUserId: boundedText(input.remoteUserId, 200), metadataJson: JSON.stringify(metadata), accessToken: input.accessToken == null ? null : boundedText(input.accessToken, 8192) });
+    return response({ success: true });
+  }
+  const rows = await db.prepare("SELECT server_key AS serverKey, provider_id AS providerId, remote_server_id AS remoteServerId, remote_user_id AS remoteUserId, metadata_json AS metadata FROM media_servers WHERE user_id = ?1 AND profile_index = ?2 ORDER BY server_key LIMIT 100").bind(user.uid, index).all();
+  const servers = await Promise.all(rows.results.map(async (row: Record<string, unknown>) => ({ serverKey: row.serverKey, providerId: row.providerId, remoteServerId: row.remoteServerId, remoteUserId: row.remoteUserId, metadata: JSON.parse(String(row.metadata)), accessToken: await loadMediaServerToken(db, env, user.uid, index, String(row.serverKey)) })));
+  return response({ servers });
+}
+
 async function premiumStatus(env: Env, user: VerifiedUser): Promise<Response> {
   const doc = await readDocument(env, `users/${user.uid}`);
   const fields = fieldsOf(doc);
@@ -472,6 +551,12 @@ export default {
 
     try {
       const user = await verifyUser(request, env);
+      const pinMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/pin$/.exec(url.pathname);
+      if (pinMatch && request.method === "POST") { const action = url.searchParams.get("action"); if (action === "set" || action === "verify" || action === "clear") return await pinRoute(request, env, user, action); }
+      const providerMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/provider-credentials$/.exec(url.pathname);
+      if (providerMatch && (request.method === "GET" || request.method === "PUT")) return await providerCredentialRoute(request, env, user, Number(providerMatch[1]));
+      const mediaMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/media-servers$/.exec(url.pathname);
+      if (mediaMatch && (request.method === "GET" || request.method === "PUT")) return await mediaServersRoute(request, env, user, Number(mediaMatch[1]));
       if (request.method === "POST" && url.pathname === "/v1/account/bootstrap") {
         return await bootstrapAccount(request, env, user);
       }
