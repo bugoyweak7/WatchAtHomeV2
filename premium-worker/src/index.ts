@@ -445,11 +445,12 @@ async function listDevicesRoute(env: Env, user: VerifiedUser): Promise<Response>
   return response(await listDevices(db, user.uid));
 }
 
-type ProfileScopedEnv = Env & { DATA_ENCRYPTION_KEYS_JSON: string; DATA_ENCRYPTION_ACTIVE_VERSION: string; PIN_PEPPER_KEYS_JSON: string; PIN_PEPPER_ACTIVE_VERSION: string };
-function requirePinConfiguration(env: Env): asserts env is ProfileScopedEnv {
+type PinConfiguredEnv = Env & { PIN_PEPPER_KEYS_JSON: string; PIN_PEPPER_ACTIVE_VERSION: string };
+type EncryptionConfiguredEnv = Env & { DATA_ENCRYPTION_KEYS_JSON: string; DATA_ENCRYPTION_ACTIVE_VERSION: string };
+function requirePinConfiguration(env: Env): asserts env is PinConfiguredEnv {
   if (!env.PIN_PEPPER_KEYS_JSON || !env.PIN_PEPPER_ACTIVE_VERSION) throw new HttpError(503, "Profile PIN storage is not configured.");
 }
-function requireEncryptionConfiguration(env: Env): asserts env is ProfileScopedEnv {
+function requireEncryptionConfiguration(env: Env): asserts env is EncryptionConfiguredEnv {
   if (!env.DATA_ENCRYPTION_KEYS_JSON || !env.DATA_ENCRYPTION_ACTIVE_VERSION) throw new HttpError(503, "Encrypted credential storage is not configured.");
 }
 function requireRecentReauthentication(user: VerifiedUser): void {
