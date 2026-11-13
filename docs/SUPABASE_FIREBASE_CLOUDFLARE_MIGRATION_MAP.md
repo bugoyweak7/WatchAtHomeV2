@@ -307,3 +307,20 @@ This route snapshot is based on repository source inspection, not live deploymen
 - The route parity inventory is updated: Worker source now includes a watched-items snapshot/cursor/delta/upsert/delete API backed by the draft `watched_items` and `sync_events` tables.
 - The API is tested in local SQLite/mock D1 and authenticated Worker tests once CI completes. It does not yet replace `SupabaseWatchedSyncAdapter`.
 - Mobile adapter wiring, real D1 validation, production binding/secrets, and live integration remain outstanding.
+
+
+## 2026-11-13 — Mobile watched-items adapter staged behind existing opt-in gate
+
+- Added `CloudflareWatchedSyncHttpAdapter` using the existing Worker HTTPS API and a fresh Firebase ID token. It maps the current `WatchedItem` and `WatchedDeltaEvent` contracts, pages snapshots at the Worker-supported maximum of 500 rows, and sends bounded upsert/delete batches.
+- Added MockEngine tests for snapshot route/paging, delta mapping, cursor, mutation routes, wire fields, and missing-token rejection.
+- `WatchedRepository.syncAdapter` now selects the Cloudflare implementation only when `CLOUDFLARE_SYNC_ENABLED=true` and the configured Worker base URL is HTTPS; otherwise it continues using `SupabaseWatchedSyncAdapter`.
+- The global flag remains false by default. The Firebase Auth implementation is still staged rather than wired into the active app login, so this adapter is not ready for activation.
+- Android CI has been triggered by these source/test commits. Do not mark compilation/tests as passed until the matching run completes successfully.
+- No D1 binding, Cloudflare deployment, secrets, Firebase Console settings, production data, or account migration was changed.
+
+
+## 2026-11-13 — Watched-items mobile adapter and guarded selection
+
+- Added a Cloudflare HTTP adapter matching the current watched-item snapshot, delta, upsert, and delete contract.
+- The repository selection is guarded by the existing global opt-in flag and HTTPS Worker URL validation. The default false setting keeps the Supabase adapter active.
+- CI verification is pending; no production cutover is claimed.
