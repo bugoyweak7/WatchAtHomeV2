@@ -254,3 +254,11 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Added progress adapter test assertions for PUT upsert and POST delete route/method selection.
 - Added authenticated Worker HTTP coverage for snapshot offset requests. Worker CI run 43415195896 passed.
 - Android run 43414877340 was cancelled by a subsequent branch push; replacement run 43415270909 is queued. Do not treat the mobile adapter as CI-verified until the replacement completes successfully.
+
+## 2026-11-13 — Library and watch-progress adapters connected behind a disabled-by-default gate
+
+- Generated CloudflareWorkerConfig.SYNC_ENABLED from CLOUDFLARE_SYNC_ENABLED; default is false.
+- Wired both repositories to choose the existing Cloudflare adapter only when explicitly enabled and an HTTPS Worker base URL is configured.
+- Default behavior remains on Supabase, so no account/data cutover occurs from this commit.
+- Do not enable until Firebase auth is active in the mobile app, production D1 schema is applied, Worker deployment/bindings/secrets are verified, and live integration/parity tests pass.
+- No production resources, data, credentials, or deployments changed. Android CI must be rerun because run 43415270909 was cancelled before the APK compile step.
