@@ -99,3 +99,8 @@ Entries are append-only. Do not rewrite or remove earlier records.
 
 ## 2026-11-13 — Home catalog API CI passed
 - [Worker CI run 43401962345](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401962345) passed TypeScript and 65 tests across 10 suites with 0 failures, including all 11 profile add-on/plugin/collection/home-catalog tests.
+
+
+## 2026-11-13 — Firebase Auth CI passed
+- [Firebase Auth workflow run 43400761852](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43400761852) passed the focused `FirebaseAuthSessionManagerTest` suite and Android Play Store debug app compilation.
+- No production Firebase configuration or active Supabase auth flow was changed.
