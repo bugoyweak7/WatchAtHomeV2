@@ -180,3 +180,13 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Confirmed active Supabase dependencies in AuthRepository, profile RPCs, device-link login exchange, device registration, membership access/overview, and account deletion.
 - Confirmed staged FirebaseAuthRepository is not yet wired into AuthScreen or AppGate. This is intentional; replacing only the login screen would leave feature calls expecting Supabase sessions.
 - No source behavior changed. CI run 43416885505 was still running at audit time; do not claim Android build success.
+
+
+## 2026-11-13 — Backend auth audit and Android CI verification
+
+- Android CI run `43416885505` completed successfully: Firebase Auth session-manager unit tests and Android Play Store debug compilation both passed.
+- Audited the existing in-repository Cloudflare Worker: Firebase email/password ID-token verification is implemented; account bootstrap, device registration, profile, library, watch-progress, PIN, premium, and trial routes exist in source.
+- The Worker currently rejects non-password Firebase sign-in providers. It does not implement the proposed Firebase device-link exchange, while the active app's TV pairing still depends on Supabase RPCs and the `tv-logins-exchange` Edge Function.
+- D1 schema is draft-only and no D1 binding is configured in `wrangler.toml`; no live D1 integration is established. Keep Cloudflare sync disabled.
+- Supabase schema/RLS/Edge Function source is not present in the scanned app repository. An authorized schema export is required before safe legacy UID mapping and migration design.
+- No production or application behavior changed; Supabase remains active.
