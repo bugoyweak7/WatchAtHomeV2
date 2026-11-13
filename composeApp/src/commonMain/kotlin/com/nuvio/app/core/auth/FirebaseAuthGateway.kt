@@ -1,0 +1,71 @@
+package com.nuvio.app.core.auth
+
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.FirebaseAuth
+import dev.gitlive.firebase.auth.FirebaseUser
+import dev.gitlive.firebase.auth.auth
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+internal data class FirebaseAccountSnapshot(
+    val userId: String,
+    val email: String?,
+    val isAnonymous: Boolean,
+)
+
+internal interface FirebaseAuthGateway {
+    val authState: Flow<FirebaseAccountSnapshot?>
+
+    suspend fun createAccount(email: String, password: String): FirebaseAccountSnapshot
+    suspend fun signIn(email: String, password: String): FirebaseAccountSnapshot
+    suspend fun signOut()
+    suspend fun getIdToken(forceRefresh: Boolean): String?
+}
+
+/**
+ * Multiplatform Firebase Auth adapter.
+ *
+ * Android uses the default app created by the Google Services plugin.
+ * iOS initializes the default app from the checked-in GoogleService-Info.plist.
+ */
+internal object GitLiveFirebaseAuthGateway : FirebaseAuthGateway {
+    private val auth: FirebaseAuth by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        if (Firebase.apps().isEmpty()) {
+            Firebase.initialize()
+        }
+        Firebase.auth
+    }
+
+    override val authState: Flow<FirebaseAccountSnapshot?> by lazy {
+        auth.authStateChanged.map { user -> user?.toSnapshot() }
+    }
+
+    override suspend fun createAccount(
+        email: String,
+        password: String,
+    ): FirebaseAccountSnapshot =
+        requireNotNull(auth.createUserWithEmailAndPassword(email, password).user) {
+            "Firebase did not return a user after registration."
+        }.toSnapshot()
+
+    override suspend fun signIn(
+        email: String,
+        password: String,
+    ): FirebaseAccountSnapshot =
+        requireNotNull(auth.signInWithEmailAndPassword(email, password).user) {
+            "Firebase did not return a user after sign-in."
+        }.toSnapshot()
+
+    override suspend fun signOut() {
+        auth.signOut()
+    }
+
+    override suspend fun getIdToken(forceRefresh: Boolean): String? =
+        auth.currentUser?.getIdToken(forceRefresh)?.token
+
+    private fun FirebaseUser.toSnapshot() = FirebaseAccountSnapshot(
+        userId = uid,
+        email = email,
+        isAnonymous = isAnonymous,
+    )
+}
