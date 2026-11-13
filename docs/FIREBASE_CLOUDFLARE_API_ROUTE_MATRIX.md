@@ -277,3 +277,9 @@ GitHub Actions run 43382547116 passed TypeScript and all 61 Worker tests (0 fail
 ### Home catalog route verification — 2026-11-13
 - Worker CI run `43401962345` passed TypeScript and all 65 tests (0 failures), including the home catalog endpoint tests.
 - Source implementation is verified against local SQLite/mocked D1. Deployment and mobile adapter migration remain pending.
+
+
+### Device registry revoke route implementation note — 2026-11-13
+- `DELETE /v1/devices/:installationId` is implemented in Worker source with caller UID from the verified token, active-account check, rate limiting and owner-scoped idempotent revocation.
+- This marks the inventory record revoked and hides it from `GET /v1/devices`; it does not invalidate Firebase refresh tokens or remotely sign out an app session.
+- SQLite and HTTP tests added; final CI run `43402508386` pending.
