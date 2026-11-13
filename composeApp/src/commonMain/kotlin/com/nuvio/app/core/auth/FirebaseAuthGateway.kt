@@ -29,10 +29,11 @@ internal interface FirebaseAuthGateway {
  * iOS initializes the default app from the checked-in GoogleService-Info.plist.
  */
 internal object GitLiveFirebaseAuthGateway : FirebaseAuthGateway {
+    // Android initializes the default app through FirebaseInitProvider when
+    // google-services.json is present. iOS initializes it in iOSApp.swift.
+    // Avoid calling Firebase.initialize() here: the Android overload requires
+    // an Application context, and the iOS app is already configured.
     private val auth: FirebaseAuth by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        if (Firebase.apps().isEmpty()) {
-            Firebase.initialize()
-        }
         Firebase.auth
     }
 
@@ -61,7 +62,7 @@ internal object GitLiveFirebaseAuthGateway : FirebaseAuthGateway {
     }
 
     override suspend fun getIdToken(forceRefresh: Boolean): String? =
-        auth.currentUser?.getIdToken(forceRefresh)?.token
+        auth.currentUser?.getIdToken(forceRefresh)
 
     private fun FirebaseUser.toSnapshot() = FirebaseAccountSnapshot(
         userId = uid,
