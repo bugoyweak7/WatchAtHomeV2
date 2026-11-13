@@ -130,3 +130,13 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added SQLite and HTTP regression coverage for paging, delta events, delete behavior, validation, authentication, and profile isolation.
 - Worker CI run 43405997252 passed TypeScript and 70 tests across 10 suites (0 failures).
 - Mobile remains on Supabase; no live D1 or Worker deployment.
+
+
+## 2026-11-13 — Watch-progress sync Worker API
+
+- Added D1 snapshot, cursor, delta, upsert and delete-tombstone operations for watch progress.
+- Added authenticated routes under /v1/profiles/:profileIndex/watch-progress, including cursor, delta and delete endpoints.
+- Preserved the existing sync record fields and stable progress_key identity; sync events retain p_origin_client_id.
+- Added SQLite and HTTP regression tests for data semantics, validation, ownership and auth.
+- [Final Worker CI run 43411656192](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43411656192) passed TypeScript and 73 tests across 10 suites (0 failures).
+- Active mobile sync remains on Supabase; no live D1 or Worker deployment.
