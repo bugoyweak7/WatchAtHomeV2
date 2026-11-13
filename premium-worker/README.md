@@ -66,3 +66,15 @@ Latest verified GitHub Actions run: `43376689122` (TypeScript passed; 9 schema t
 - `npm run test:http` — 5 Worker HTTP/Firebase-token tests using a generated test key and mocked JWKS.
 
 The CI suite currently runs 20 tests in total (9 schema, 6 mocked D1 data-access, 5 Worker HTTP/auth). Latest passing run: `43377044568`. Tests use local SQLite and test-only signing keys; they are not live Firebase/Firestore/D1 integration tests.
+
+
+### Versioned data encryption primitive
+
+`src/data-crypto.ts` provides AES-256-GCM helpers for sensitive record values. It expects:
+
+- `DATA_ENCRYPTION_KEYS_JSON`: a JSON object mapping integer key versions to base64-encoded 32-byte keys, for example a shape like `{"1":"BASE64_KEY_MATERIAL"}` (placeholder only; never commit real key material).
+- `DATA_ENCRYPTION_ACTIVE_VERSION`: the key version used for new encryption. Keep prior versions in the key ring until all ciphertext using them has been rotated.
+
+Encryption binds AAD to the verified UID, profile index, resource, and record key. The primitive is not yet connected to credential/media-server routes, and no key secret is configured. Do not store secrets in D1 until integration and end-to-end tests are complete.
+
+- `npm run test:crypto` — 5 AES-GCM/key-rotation tests.
