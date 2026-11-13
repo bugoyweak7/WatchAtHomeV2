@@ -448,3 +448,34 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Added 8 local SQLite storage tests and an HTTP/Firebase ownership test covering all three resources.
 - Final GitHub Actions run 43382547116 passed TypeScript compilation and all 61 Worker tests (0 failures), including 11 HTTP/auth tests and 8 add-on/plugin/collection storage tests: https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43382547116.
 - Verification is local/mock CI only. D1 remains draft-only and unprovisioned; no mobile adapters, UI, player, Firebase/Cloudflare resources, secrets, production data, or deployments changed.
+
+
+## 2026-11-13 — Staged Firebase Auth implementation (GO)
+
+### Source changes
+- Added `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/FirebaseAuthGateway.kt`.
+  - Uses the existing GitLive Firebase Auth 2.8.0 dependency.
+  - Initializes the default Firebase app if the platform has not already initialized it; Android Google Services configuration and iOS GoogleService-Info.plist are already present in the repository.
+  - Implements email/password create/sign-in, auth-state observation, sign-out and forced-refresh ID-token retrieval.
+- Added `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/FirebaseAuthSessionManager.kt`.
+  - Exposes a staged `FirebaseAuthRepository`.
+  - Maps Firebase accounts to the existing shared `AuthState` model.
+  - Rejects and signs out anonymous Firebase sessions.
+  - Does not clear existing local account data.
+- Added `composeApp/src/commonTest/kotlin/com/nuvio/app/core/auth/FirebaseAuthSessionManagerTest.kt` with six fake-gateway tests.
+- Added `.github/workflows/watchathome-firebase-auth-check.yml` to compile the Android Play Store debug app when the staged auth source or related build files change.
+
+### Current safety state
+- The new repository is intentionally not wired into `AuthScreen`; the existing `AuthRepository` and active Supabase sign-in behavior remain unchanged.
+- This avoids switching the app to Firebase while profile, library, watched history, watch progress, collections, membership, device-link, Watch Party and account deletion still depend on Supabase.
+- No Firebase-to-Worker account-bootstrap request was added. The Worker bootstrap route currently requires D1, but the Wrangler configuration has no D1 binding and the draft schema has not been applied.
+- No anonymous/local-UUID path was removed from the active UI in this staged step; that removal belongs to the coordinated provider cutover after dependent APIs are ready.
+
+### Commits and verification
+- `FirebaseAuthGateway.kt`: `300b4381b1d56a8b7929265aae0e42acff45cfea`
+- `FirebaseAuthSessionManager.kt`: `1a8d8d9a16b16a6c7861f5b3ff8044478990d1f3`
+- `FirebaseAuthSessionManagerTest.kt`: `ae672a57c6283b9faa53570dc74350dd50411356`
+- Android compile workflow: `afccedb4cb2d3503259cc5a9b4fc84c15ffca88e`
+- GitHub Actions run `43387942928` was observed in progress. No successful build or test result is claimed until the run completes.
+- The six common tests have been added but have not yet been run by CI.
+- No production Firebase/Cloudflare setting, Firestore rule, D1 database/binding, secret, deployment, Supabase data or user data was changed.
