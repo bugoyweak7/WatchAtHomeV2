@@ -170,3 +170,18 @@ Firestore rules must deny client writes to premium/trial/role fields and premium
 - Account deletion covers all owned data and Firebase Auth identity, is retryable/idempotent, and never deletes shared/other-user data.
 - Android/iOS builds and automated integration tests pass.
 - Production data backup/export, rollback, and cutover plan are approved.
+
+
+## 9. Supabase ownership clarification (user-confirmed)
+
+The user confirmed they do not own or have a Supabase account for this integration. Treat Supabase as the legacy/default backend inherited from the upstream Nuvio source, not as a user-managed Supabase project. Do not block the project on the user creating a Supabase account or supplying credentials they do not have.
+
+Implications:
+- The app source already contains the Supabase client configuration and calls, so the replacement can be reverse-engineered from the client contracts, serializers, sync adapters, and feature behavior.
+- The absence of an owner Supabase account means we cannot inspect or administer the upstream project's dashboard, SQL schema, RLS policies, logs, backups, or Edge Function source through the user's account.
+- Do not claim that exact server-side behavior or existing remote user data can be exported from source code alone.
+- Build the replacement backend from verified client request/response models and explicit product requirements; record any server behavior that cannot be inferred as an open compatibility question and test against the running legacy service only if the existing app's configured endpoint remains reachable and access is permitted.
+- Existing user data migration is a separate issue from backend code migration. If the legacy service is reachable by a signed-in user, investigate a client-side, per-user export/import bridge using that user's own existing session and only data their existing authorization allows them to read. Never use a shared anon key as authorization to read other users' data, bypass RLS, or scrape the upstream database.
+- If a user cannot authenticate to the old service or the old service is unavailable, do not promise automatic transfer of remote data. Preserve local data and provide an explicit export/import or fresh-account path after assessing the available data.
+
+Updated next step: continue source-first reverse engineering of the legacy Supabase contracts inside the two approved repositories, inventory the data models and operations, then design a migration bridge and D1 schema. An upstream Supabase account is not a prerequisite for this source-level work.
