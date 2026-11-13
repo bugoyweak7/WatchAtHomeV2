@@ -164,3 +164,25 @@ Implement the Worker-side replacement contract for the existing LibrarySyncAdapt
 - The app's LibraryRepository.syncAdapter still points to SupabaseLibrarySyncAdapter; no mobile adapter cutover occurred.
 - D1 schema remains draft-only; no live database, binding, secret, deployment, or production data was changed.
 - Before cutover, implement and test the Worker HTTP client adapter, confirm cursor/snapshot behavior under concurrent multi-device mutations, add event-retention cleanup, and verify against live D1.
+
+
+## 2026-11-13 — D1 watch-progress snapshot and delta API
+
+### Objective
+Implement the Worker-side replacement contract for the existing ProgressSyncAdapter while leaving active Supabase sync unchanged.
+
+### Source changes
+- Added premium-worker/src/watch-progress-sync-api.ts.
+- Added profile-scoped snapshot, cursor, delta, batch upsert and delete-tombstone operations using the existing watch_progress and sync_events draft tables.
+- Preserved the legacy wire fields and stable progress_key identity, including season/episode pairing validation and p_origin_client_id event metadata.
+- Added authenticated Worker routes for snapshot, push, cursor, delta and delete.
+
+### Tests and verification
+- Added SQLite tests for snapshot filters, cursor progression, event payloads, upsert/delete behavior, duplicate/malformed identities, negative values and bounded batch size.
+- Added HTTP tests for Firebase token authentication, profile ownership, snapshot and delta retrieval.
+- Final Worker CI run 43411656192 passed TypeScript compilation and 73 tests across 10 suites with 0 failures.
+
+### Scope and limitations
+- SupabaseProgressSyncAdapter remains the active mobile implementation.
+- No D1 database/binding, production Worker deployment, Firebase production settings or user data were changed.
+- Before client cutover, compare all fields and ordering with the existing Supabase RPC implementation, implement Worker HTTP adapter, validate timestamp pagination edge cases and concurrent updates, and add sync-event retention cleanup.
