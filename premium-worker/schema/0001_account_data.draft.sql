@@ -230,6 +230,16 @@ CREATE TABLE IF NOT EXISTS sync_events (
     REFERENCES profiles(user_id, profile_index) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS api_rate_limits (
+  owner_key TEXT NOT NULL,
+  route_key TEXT NOT NULL,
+  client_key TEXT NOT NULL,
+  window_started_at INTEGER NOT NULL,
+  request_count INTEGER NOT NULL CHECK (request_count >= 0),
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (owner_key, route_key, client_key)
+);
+
 CREATE TABLE IF NOT EXISTS idempotency_keys (
   user_id TEXT NOT NULL,
   route_key TEXT NOT NULL,
