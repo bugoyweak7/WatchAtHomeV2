@@ -393,3 +393,17 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 
 
 - Verification note for this checkpoint: GitHub reports no CI status on the PIN-store test commit yet. The new tests have been committed but are not marked as passing until a workflow run executes. Do not treat this checkpoint as CI-verified.
+
+
+## 2026-11-13 — Authenticated PIN and encrypted profile API routes implemented
+
+- Added authenticated Worker routes for profile PIN set, verify, and clear; provider credential save/load; and media-server save/list.
+- Every route derives UID from the verified Firebase password-provider ID token and checks active account plus D1 profile ownership before accessing data.
+- PIN set and clear require Firebase `auth_time` within the previous 5 minutes. PIN verification uses the persisted five-failure/15-minute lockout.
+- Added D1-backed fixed-window request throttling by account/profile and hashed Cloudflare client IP. Added the `api_rate_limits` table to the local D1 schema draft and two dedicated rate-limit tests.
+- Provider credential JSON and media-server access tokens use the existing AES-256-GCM key-versioned encryption helpers. Media-server metadata remains separate and rejects secret-like field names.
+- Added route-level HTTP tests for reauthentication, owner/profile isolation, lockout, encrypted-at-rest storage, and owner-only retrieval. Added the rate-limit test command to Worker CI.
+- CI run **43380260084** passed TypeScript compilation and **45 tests, 0 failures**: 9 schema, 6 account/device, 9 Worker HTTP/auth, 5 AES-GCM, 4 credential-store, 4 PIN-verifier, 6 PIN-store, and 2 rate-limit tests.
+- An earlier run failed due to a TypeScript helper-interface mismatch; this was corrected. The next run exposed test fixtures missing active account rows for the wrong-owner cases; the fixtures were corrected and the final run passed.
+- Remaining gates: add rate-limit row retention/cleanup; verify all legacy serializer details and mutation/delete semantics; add live D1 integration tests after approved provisioning; configure PIN/encryption key rings as Worker secrets only after separate approval; do not switch mobile adapters until API parity is verified.
+- D1 remains a draft, no D1 resource/binding or secrets were created, and no mobile source, Firebase settings, production data, or deployment was changed.
