@@ -564,7 +564,7 @@ export default {
       if (request.method === "GET" && url.pathname === "/v1/devices") {
         return await listDevices(env, user);
       }
-      const revokeDeviceMatch = /^\\/v1\\/devices\\/([^/]+)$/.exec(url.pathname);
+      const revokeDeviceMatch = /^\/v1\/devices\/([^/]+)$/.exec(url.pathname);
       if (request.method === "DELETE" && revokeDeviceMatch) {
         return await revokeDevice(request, env, user, decodeURIComponent(revokeDeviceMatch[1]));
       }
