@@ -390,3 +390,6 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Expanded `premium-worker/test/pin-store.test.mjs` to cover create/replace, old-PIN rejection, lockout reset on replacement, and owner/profile-scoped clearing.
 - These are D1 storage helpers only. No HTTP route is exposed yet. The future route must require recent Firebase reauthentication for set/clear, verify profile ownership through the composite foreign key, apply request-level throttling, and return generic PIN errors.
 - No D1 database/binding, PIN pepper secret, encryption secret, Firebase setting, production credential, mobile adapter, user data, or deployment was changed.
+
+
+- Verification note for this checkpoint: GitHub reports no CI status on the PIN-store test commit yet. The new tests have been committed but are not marked as passing until a workflow run executes. Do not treat this checkpoint as CI-verified.
