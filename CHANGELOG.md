@@ -104,3 +104,9 @@ Entries are append-only. Do not rewrite or remove earlier records.
 ## 2026-11-13 — Firebase Auth CI passed
 - [Firebase Auth workflow run 43400761852](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43400761852) passed the focused `FirebaseAuthSessionManagerTest` suite and Android Play Store debug app compilation.
 - No production Firebase configuration or active Supabase auth flow was changed.
+
+
+## 2026-11-13 — Device registry revocation route
+- Added owner-scoped `DELETE /v1/devices/:installationId` with active-account validation, rate limiting and idempotent registry revocation.
+- Added SQLite unit and Worker HTTP tests. Corrected initial route/validator escaping issues; final CI run `43402508386` pending.
+- This is registry deactivation only, not Firebase token revocation or remote logout.
