@@ -534,3 +534,8 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 ## 2026-11-13 — Home catalog API verification passed
 - Verified by Worker CI `43401962345`: TypeScript passed; 65 tests passed, 0 failed.
 - Source implementation only. No D1 resource/binding/schema deployment, Worker deployment, or mobile adapter cutover has occurred.
+
+
+## 2026-11-13 — Firebase Auth source verification
+- Verified: focused Firebase Auth session-manager tests passed in CI; Android Play Store debug app compilation passed in workflow `43400761852`.
+- Not yet configured/verified: live Firebase Console settings, production sign-in, auth UI integration, Cloudflare D1 provisioning, and mobile API adapter migration.
