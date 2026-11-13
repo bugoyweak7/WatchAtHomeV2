@@ -245,3 +245,16 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - The earlier schema-export dependency is superseded. Continue from verified client source and product requirements; mark unknown legacy server semantics explicitly rather than inventing parity.
 - Authorized next design stage: prepare a source-derived D1 schema draft and local Worker tests only. This does not authorize production D1 creation, Firebase/Cloudflare account changes, data migration, or deployment.
 - Remote legacy data transfer remains conditional on an existing valid user session and verified service reachability; no shared-key bypass or cross-user export.
+
+
+## 2026-11-13 — D1 schema draft and API route matrix created
+
+- Added `premium-worker/schema/0001_account_data.draft.sql` with 18 source-derived tables and 9 indexes for user-owned account/profile data, sync history, credentials, device registration/linking, idempotency, and retryable account deletion.
+- The SQL file is explicitly a draft outside the active Wrangler migrations directory. No D1 binding was added and no Cloudflare database was created or modified.
+- Validated the schema locally with SQLite: 18 application tables and 9 indexes created; orphan profile references, invalid JSON, duplicate profile add-on keys, and incomplete encrypted media-server token tuples were rejected; account deletion cascades owned rows and retains the deletion-job tombstone; foreign-key check passed.
+- Removed a redundant `PRAGMA foreign_keys = ON` statement from the draft after checking current Cloudflare D1 documentation: D1 enforces foreign keys by default and query/migration transactions cannot toggle this setting. <https://developers.cloudflare.com/d1/sql-api/foreign-keys/>
+- Added `docs/FIREBASE_CLOUDFLARE_API_ROUTE_MATRIX.md` covering account/device lifecycle, profiles/PINs, settings, add-ons/plugins, library/watch sync, membership, protected assets, Watch Party, Firestore boundaries, and verification gates.
+- The route matrix is a proposed contract only; no routes are implemented yet.
+- Member asset catalogue metadata placement remains open. Premium/admin/trial/entitlements and shared add-on catalogue remain Firestore; Watch Party realtime remains Durable Objects; image bytes remain R2.
+- No Worker runtime, mobile app code, D1 resource, Firebase setting, production data, or deployment was changed.
+- Next: review the schema and route matrix against the Admin App premium-code mismatch and membership source-of-truth, then add local Worker contract tests without changing production bindings or switching mobile adapters.
