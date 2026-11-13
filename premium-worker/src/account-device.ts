@@ -113,6 +113,25 @@ export async function registerDevice(
   return { registered: true, installationId: input.installationId };
 }
 
+export async function revokeDevice(
+  db: AccountD1Database,
+  uid: string,
+  installationId: string,
+  now = Date.now(),
+): Promise<{ revoked: boolean }> {
+  await ensureActiveAccount(db, uid);
+  const normalized = installationId.trim();
+  if (!normalized || normalized.length > 128 || /[\\s/]/.test(normalized)) {
+    throw new AccountApiError(400, "Invalid installation ID.");
+  }
+  const result = await db.prepare(`
+    UPDATE registered_devices
+    SET revoked_at = ?3
+    WHERE user_id = ?1 AND installation_id = ?2 AND revoked_at IS NULL
+  `).bind(uid, normalized, now).run();
+  return { revoked: result.meta.changes > 0 };
+}
+
 export async function listDevices(
   db: AccountD1Database,
   uid: string,
