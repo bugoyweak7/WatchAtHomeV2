@@ -168,3 +168,5 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Supabase remains the active/default path. No automatic fallback after a failed Cloudflare request is introduced, avoiding silent split-brain writes if the flag is intentionally enabled later.
 - This change does not provision D1, deploy a Worker, switch authentication, or migrate production data.
 - Android CI verification is pending after the previous run was cancelled by a subsequent push.
+
+- Fresh Android CI run 43416885505 was triggered by the final adapter/config source commit and is currently queued; do not mark the mobile wiring build-verified until this run completes successfully.
