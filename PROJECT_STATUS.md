@@ -179,3 +179,9 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Added data-access and Worker HTTP tests for idempotence, owner isolation, hidden revoked inventory, and unrelated account preservation.
 - Initial CI runs exposed two implementation/test issues: an over-escaped route regex and an over-escaped whitespace validator. Both were corrected. Latest verification run `43402508386` queued; do not mark passed until completed.
 - Important limitation: this only revokes the device inventory record. It does not revoke Firebase refresh tokens or remotely sign out a running app; no such claim is made.
+
+
+## 2026-11-13 — Device registry revoke route verified
+- Worker CI run `43402508386` passed TypeScript and all 67 tests across 10 suites (0 failures).
+- The data-access suite now has 7 passing tests and the HTTP/auth suite has 12 passing tests, including owner-scoped device DELETE behavior.
+- The endpoint only updates the D1 device registry and hides revoked rows; it does not invalidate Firebase refresh tokens or remotely log out the device.
