@@ -124,6 +124,57 @@ export async function putPlugins(db: AccountD1Database, uid: string, profileInde
   return replaceSelections(db, uid, profileIndex, "plugins", parseRows(body.plugins ?? body.p_plugins, "plugins"));
 }
 
+export async function getHomeCatalogSettings(
+  db: AccountD1Database,
+  uid: string,
+  profileIndex: number,
+  platform: string,
+) {
+  if (!/^[a-z0-9_-]{1,40}$/.test(platform)) {
+    throw new AccountApiError(400, "Invalid home catalog platform.");
+  }
+  const row = await db.prepare(`
+    SELECT settings_json, updated_at FROM home_catalog_settings
+    WHERE user_id = ?1 AND profile_index = ?2 AND platform = ?3
+  `).bind(uid, profileIndex, platform).first<{ settings_json: string; updated_at: number }>();
+  if (!row) return [];
+  return [{
+    profile_id: profileIndex,
+    platform,
+    settings_json: JSON.parse(row.settings_json),
+    updated_at: new Date(Number(row.updated_at)).toISOString(),
+  }];
+}
+
+export async function putHomeCatalogSettings(
+  db: AccountD1Database,
+  uid: string,
+  profileIndex: number,
+  platform: string,
+  request: Request,
+  now = Date.now(),
+): Promise<{ saved: true }> {
+  if (!/^[a-z0-9_-]{1,40}$/.test(platform)) {
+    throw new AccountApiError(400, "Invalid home catalog platform.");
+  }
+  const body = await readBoundedJson(request, MAX_SYNC_BODY_BYTES);
+  const settings = body.settings_json ?? body.settingsJson ?? body.p_settings_json;
+  if (!settings || typeof settings !== "object" || Array.isArray(settings)) {
+    throw new AccountApiError(400, "settings_json must be a JSON object.");
+  }
+  rejectSensitiveJsonKeys(settings, "Home catalog settings");
+  const encoded = JSON.stringify(settings);
+  await db.prepare(`
+    INSERT INTO home_catalog_settings (user_id, profile_index, platform, settings_json, version, updated_at)
+    VALUES (?1, ?2, ?3, ?4, 1, ?5)
+    ON CONFLICT(user_id, profile_index, platform) DO UPDATE SET
+      settings_json = excluded.settings_json,
+      version = home_catalog_settings.version + 1,
+      updated_at = excluded.updated_at
+  `).bind(uid, profileIndex, platform, encoded, now).run();
+  return { saved: true };
+}
+
 export async function getCollections(db: AccountD1Database, uid: string, profileIndex: number) {
   const row = await db.prepare(`
     SELECT collections_json, updated_at FROM collections
