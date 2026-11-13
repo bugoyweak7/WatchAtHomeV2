@@ -98,3 +98,10 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 - [Worker CI run 43401302072](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401302072) completed successfully: TypeScript compilation passed and 63 tests passed with 0 failures.
 - Includes nested sensitive-key rejection tests for profile settings and collections, while retaining safe unknown-field compatibility.
 - Verification uses local SQLite and mocked Worker/Firebase auth; no live D1/Cloudflare/Firebase integration or deployment was performed.
+
+
+## 2026-11-13 — Home catalog settings API
+- Added `GET/PUT /v1/profiles/:profileIndex/home-catalog?platform=home_catalog_shared` with verified UID ownership, profile ownership, rate limiting, bounded JSON, versioned writes and sensitive-field rejection.
+- Added SQLite tests for JSON round-trip, profile/user/platform isolation, empty replacement, malformed/oversized payloads and nested secret rejection.
+- CI runs: module addition `43401753132` passed; route wiring `43401792563` and final test addition `43401818613` were pending at the time of this entry.
+- No app client migration, live D1, Cloudflare secrets or production deployment.
