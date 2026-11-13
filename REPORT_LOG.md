@@ -134,3 +134,10 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 - [Worker CI run 43402508386](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43402508386) completed successfully: TypeScript passed and 67 tests passed across 10 suites with zero failures.
 - Includes the new data-access and Worker HTTP tests for owner-scoped, idempotent device registry revocation.
 - Scope remains registry inventory only, not remote logout/session invalidation. No production D1 or Worker deployment.
+
+
+## 2026-11-13 — Device registry revocation implementation and CI
+- Added `DELETE /v1/devices/:installationId`; verified Firebase UID controls ownership, active account is required, route is rate-limited, revoked records are hidden from active device inventory, and repeated/cross-owner requests do not revoke another user's installation.
+- Added account-device module and HTTP authentication regression tests.
+- [Worker CI run 43402508386](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43402508386) passed TypeScript and 67 tests across 10 suites, 0 failures.
+- Local/mock validation only; no live D1 or Worker deployment.
