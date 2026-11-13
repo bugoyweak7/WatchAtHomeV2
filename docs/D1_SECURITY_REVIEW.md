@@ -116,3 +116,10 @@ The Worker now includes `src/credential-store.ts`:
 - CI run `43377725695` passed four credential-store tests, five crypto tests, five HTTP/auth tests, six account/device mock tests, nine schema tests, and TypeScript compilation (29 tests total, 0 failures).
 
 This closes part of the earlier storage-layer gap, not production readiness: no API route calls this repository yet, no key ring is configured, D1 is not provisioned, and real D1/Firestore/Firebase integration is untested. Keep the secret-storage gate closed until API authorization, secret provisioning, rotation operations, and live D1 tests are completed.
+
+
+## Implementation update — peppered PIN verifier primitive added
+
+Added `src/pin-verifier.ts` with a versioned HMAC-SHA256 keyed verifier, server-held pepper ring, per-record 16-byte salt, UID/profile-bound message, constant-time digest comparison, and old-pepper verification during rotation. The D1 draft now constrains the stored digest to 32 bytes and salt to 16 bytes. CI run `43377933824` passed four PIN tests and all 33 tests overall.
+
+This is not a complete PIN feature: no verification route or atomic D1 lockout/attempt-count workflow is implemented. The verifier must not be exposed until persisted lockout, request throttling, account/profile ownership checks, and recovery/re-auth rules are implemented and tested. Because PINs may have low entropy, server-side throttling remains mandatory even with a pepper.
