@@ -396,3 +396,11 @@ The following profile-scoped routes are implemented and locally/mock verified; t
 - Repository selection is opt-in only (`CLOUDFLARE_SYNC_ENABLED`) and falls back to the existing Supabase adapter when disabled or when the Worker URL is not HTTPS.
 - Snapshot page size is clamped to the Worker maximum of 500 even though the existing repository requests 900. Mutation requests are byte-bounded and batched.
 - The Firebase token provider is staged. Active Supabase authentication remains unchanged, so do not enable the flag yet.
+
+
+### Watched-items identity and delete-key compatibility follow-up — 2026-11-13
+
+- Tightened watched-item storage identity to include `content_type`, preserving the same content ID when it represents different media types.
+- The legacy delete request intentionally carries only `content_id`, `season`, and `episode`; the Worker now resolves all matching active content-type variants and appends a separate tombstone for each exact stored item.
+- Added a SQLite regression test covering same-ID movie/series rows and the legacy delete-key behavior.
+- Worker CI rerun is pending. This change remains source-only and does not affect live data or deployments.
