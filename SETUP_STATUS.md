@@ -567,3 +567,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Tests added to profile-sync-api.test.mjs and http-auth.test.mjs. CI run 43405997252 passed TypeScript and 70 tests across 10 suites, 0 failures.
 - Still pending: mobile LibrarySyncAdapter implementation/wiring, real D1 provisioning and integration, sync-event retention cleanup, production Worker deployment, and full multi-device/offline parity validation.
 - Active Supabase library sync is unchanged.
+
+
+## 2026-11-13 — Watch-progress Worker API implementation and verification
+
+- Source added: premium-worker/src/watch-progress-sync-api.ts.
+- Implemented GET snapshot, PUT batch upsert, GET cursor, GET delta and POST delete routes under /v1/profiles/:profileIndex/watch-progress.
+- Uses the existing draft watch_progress and sync_events tables; schema remains unapplied.
+- Enforces verified Firebase UID, active account, owned profile, route rate limiting, bounded JSON, max 500 rows, stable progress key validation, nonnegative numeric fields, and duplicate-key rejection.
+- Test suites extended for local SQLite and authenticated HTTP behavior. Final CI run 43411656192 passed TypeScript and 73 tests across 10 suites, 0 failures.
+- Pending: mobile adapter implementation, legacy RPC parity review, multi-device conflict testing, timestamp pagination tie handling, sync-event retention and live D1 integration.
+- Existing SupabaseProgressSyncAdapter remains unchanged and active.
