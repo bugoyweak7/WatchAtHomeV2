@@ -257,3 +257,60 @@ Account deletion invokes Supabase Edge Function `delete-account` before local se
 ## Additional evidence limitation
 
 The above confirms client parameters and expected response shapes, not upstream implementation details. PIN hashing, credential encryption at rest, membership entitlement source-of-truth, profile deletion cascade, device-code entropy/expiry/replay protection, and account-deletion cascade remain unverified until server-side definitions or authorized behavior tests are available.
+
+
+## 2026-11-13 — Remaining sync, plugin, device-registration, and realtime audit
+
+### Plugins
+
+Source: `composeApp/src/fullCommonMain/kotlin/com/nuvio/app/features/plugins/PluginRepository.kt`
+
+- Pull reads the PostgREST `plugins` table, filters by `profile_id`, and orders by `sort_order`.
+- Push uses RPC `sync_push_plugins` with `p_profile_id` and a serialized plugin-repository list, plus sync-origin client metadata.
+- The client stores repository manifest URLs and scraper state locally; it fetches manifest/scraper code from those repository URLs and caches scraper code locally. Do not assume scraper source code is stored in the Supabase row.
+- The inspected Android Play Store and iOS App Store platform actuals are no-op/unavailable implementations for plugin repository operations; the full implementation is in `fullCommonMain`. Preserve current platform gating rather than assuming every target supports plugins.
+
+### Home catalogue settings
+
+Source: `features/home/HomeCatalogSettingsSyncService.kt`
+
+Verified RPCs:
+- `sync_pull_home_catalog_settings` with `p_profile_id` and `p_platform`.
+- `sync_push_home_catalog_settings` with `p_profile_id`, `p_platform`, `p_settings_json`, and sync-origin metadata.
+
+The payload includes catalogue ordering/enabled state/custom titles and collection entries. The client merges remote and local JSON keys and preserves local defaults for absent fields. The server replacement must retain platform scoping and merge/unknown-field behavior.
+
+### Media-server credentials and metadata
+
+Sources: `features/servers/ServerRepository.kt`, `features/servers/ServerSync.kt`, and `core/sync/MediaServerSync.kt`.
+
+- Sync uses `sync_pull_media_servers` and `sync_push_media_servers`; pull sends `p_profile_id`, while push sends `p_profile_id`, `p_servers`, and sync-origin metadata.
+- The serialized `SyncedServer` model includes a `token` field alongside provider/server/user identifiers, address, username, library selection, and settings. The repository separately stores local credentials under a credential reference, but the sync snapshot resolves those credentials into the serialized token field.
+- Treat this as a high-sensitivity secret: replacement storage must encrypt tokens at rest, never log them, enforce Firebase UID/profile ownership, and use a narrowly scoped API. The legacy source does not reveal whether upstream storage encrypts these values.
+
+### Device registration
+
+Source: `core/auth/DeviceSessionRegistration.kt`
+
+- Authenticated non-anonymous clients call RPC `register_current_device`.
+- Parameters: `p_installation_id`, `p_client_name`, `p_client_version`, `p_platform`, and `p_device_name`.
+- Registration is throttled locally by an interval unless forced. The replacement should use a stable installation identifier, derive UID from the Firebase token, and define device revocation/retention behavior.
+
+### Watch Party realtime transport details
+
+Source: `features/party/PartyChannel.kt` and `features/party/PartyRepository.kt`.
+
+- The client opens a private Supabase Realtime channel named `watch-party:<partyId>`.
+- Broadcast acknowledgements and own-broadcast delivery are disabled. Presence uses the party member ID as its key.
+- The subscribed event set is `state`, `state_request`, `status`, `control`, `member_joined`, `member_left`, `ended`, `media`, `stream`, and `chat`. The companion event set is `chat`, `media`, `member_left`, and `ended`.
+- The client tracks presence, broadcasts JSON payloads, monitors subscription state, and removes the channel on close. Durable Objects must preserve private-room membership checks, presence join/leave semantics, event fan-out, reconnect behavior, and the existing payload/event contract.
+
+### Add-on and plugin storage distinction reaffirmed
+
+- User-installed add-ons are read from the profile-filtered `addons` table and pushed through `sync_push_addons`.
+- Plugin repositories are read from the profile-filtered `plugins` table and pushed through `sync_push_plugins`.
+- Both are separate from the shared admin-managed Firestore `addons/{addonId}` catalogue. The migration must not collapse these three concepts into one collection.
+
+### Remaining uncertainty
+
+These are verified client calls and serialized fields only. The upstream SQL schema, RLS policies, trigger behavior, secrets-at-rest controls, device registration lifecycle, and Realtime authorization remain unknown. No upstream account/dashboard access was used or assumed.
