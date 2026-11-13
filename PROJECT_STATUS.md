@@ -122,3 +122,9 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Corrected the gateway to use the already-initialized `Firebase.auth` instance and return `getIdToken(forceRefresh)` directly. Change committed as `6cf909beab6bcf7301614f6cfc9d6784e2116d60`.
 - A new Android compile workflow is expected from this source change; no successful build is claimed until that run completes.
 - Active Supabase auth remains unchanged; no Cloudflare/Firebase production resources or data were changed.
+
+
+## 2026-11-13 — Firebase Auth test automation added
+- Updated `.github/workflows/watchathome-firebase-auth-check.yml` to run `:composeApp:testAndroidHostTest` before the Android Play Store debug compilation.
+- CI run `43399716638` is currently in progress; the unit-test outcome and subsequent app compilation are not yet verified.
+- No production Firebase, Supabase, Cloudflare, D1, secrets, or deployment settings were changed. Active app authentication remains Supabase.
