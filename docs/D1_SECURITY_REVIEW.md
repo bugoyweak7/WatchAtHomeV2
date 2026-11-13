@@ -137,3 +137,14 @@ CI run `43378244632` passed four PIN-store tests and all 37 tests. The helper is
 The PIN storage layer now supports setting/replacing and clearing a profile PIN in addition to verification/lockout. Replacement generates a new per-record salt and verifier and resets failed-attempt state; clearing targets only the exact UID/profile composite key. Tests cover replacement, invalidation of the old PIN, lockout reset, and cross-profile/cross-user isolation.
 
 These helpers do not establish authorization by themselves. The HTTP layer must require a recently reauthenticated Firebase session for set/clear, validate the requested profile against the authenticated UID, apply request-level rate limits, and avoid distinguishing missing PINs from incorrect PINs. No PIN route is enabled and no secret or D1 resource is configured.
+
+
+## Implementation update — authenticated profile API and request throttling
+
+The Worker now has source-level authenticated routes for PIN set/verify/clear, provider credential save/load, and media-server save/list. All check the active account and exact UID/profile pair in D1. PIN set/clear require a Firebase password-provider ID token with `auth_time` no older than five minutes. PIN verification is protected by persisted per-profile lockout (five failures, 15 minutes) plus D1 fixed-window account/profile and hashed-IP rate limits.
+
+The D1 draft includes `api_rate_limits`. Its rows currently have no automatic expiry/cleanup job; retention and cleanup must be implemented before production operation. The current limits apply to these new profile routes, not every pre-existing premium/trial Worker endpoint.
+
+Provider credential JSON and media-server access tokens are encrypted with the existing versioned AES-256-GCM helper. The routes fail closed if the respective key-ring secrets are absent. The API returns decrypted secrets only to the authenticated owner because the client must restore its own credentials; never log request or response bodies.
+
+CI run 43380260084 passed TypeScript compilation and 45 local/mock tests. These are not live Cloudflare D1, Firebase, or Firestore integration tests. The D1 schema remains a draft; no database/binding or secrets are configured. Keep mobile migration and production enablement blocked pending legacy serializer parity, cleanup/retention, live D1 validation, key provisioning, and a separately approved deployment.
