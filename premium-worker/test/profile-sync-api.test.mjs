@@ -7,6 +7,7 @@ import {
 } from "../src/profile-sync-api.ts";
 import { deleteLibraryItems, getLibraryDelta, getLibraryDeltaCursor, getLibrarySnapshot, parseLibraryPageParams, pushLibraryItems } from "../src/library-sync-api.ts";
 import { deleteProgress, getProgressCursor, getProgressDelta, getProgressSnapshot, pushProgress } from "../src/watch-progress-sync-api.ts";
+import { deleteWatchedItems, getWatchedDelta, getWatchedDeltaCursor, getWatchedSnapshot, pushWatchedItems } from "../src/watched-items-sync-api.ts";
 
 const schema = readFileSync(new URL("../schema/0001_account_data.draft.sql", import.meta.url), "utf8");
 
@@ -290,5 +291,39 @@ test("watch progress rejects malformed identities, duplicate keys, negative valu
   await assert.rejects(() => pushProgress(db, "progress-validation", 1, req({ entries: [{ ...valid, season: 1 }] })), /Season and episode must both be set/);
   await assert.rejects(() => pushProgress(db, "progress-validation", 1, req({ entries: Array.from({ length: 501 }, (_, i) => ({ ...valid, content_id: String(i), progress_key: String(i) })) })), /no more than 500/);
   await assert.rejects(() => deleteProgress(db, "progress-validation", 1, req({ keys: ["same", "same"] })), /Duplicate progress key/);
+  db.close();
+});
+
+
+test("watched-items snapshot, delta, upsert and tombstone preserve sync contract and profile ownership", async () => {
+  const db = createDb(); db.seed("watched-owner-a"); db.seed("watched-owner-b");
+  const items = [
+    { content_id: "movie-1", content_type: "movie", title: "Film One", season: null, episode: null, watched_at: 1700000000000 },
+    { content_id: "series-1", content_type: "series", title: "Series One", season: 2, episode: 3, watched_at: 1700000001000 },
+  ];
+  assert.equal(await getWatchedDeltaCursor(db, "watched-owner-a", 1), 0);
+  assert.deepEqual(await pushWatchedItems(db, "watched-owner-a", 1, req({ p_items: items, p_origin_client_id: "test-client" }), 5000), { saved: 2 });
+  assert.equal((await getWatchedSnapshot(db, "watched-owner-a", 1, 10, 0)).length, 2);
+  assert.equal((await getWatchedSnapshot(db, "watched-owner-b", 1, 10, 0)).length, 0);
+  assert.equal(await getWatchedDeltaCursor(db, "watched-owner-a", 1), 2);
+  const delta = await getWatchedDelta(db, "watched-owner-a", 1, 0, 10);
+  assert.equal(delta.length, 2);
+  assert.equal(delta[1].title, "Series One");
+  assert.equal(delta[1].season, 2);
+  assert.deepEqual(await deleteWatchedItems(db, "watched-owner-a", 1, req({ p_keys: [{ content_id: "series-1", season: 2, episode: 3 }] }), 6000), { deleted: 1 });
+  const afterDelete = await getWatchedDelta(db, "watched-owner-a", 1, 2, 10);
+  assert.equal(afterDelete.length, 1);
+  assert.equal(afterDelete[0].operation, "delete");
+  assert.equal(afterDelete[0].content_id, "series-1");
+  assert.equal((await getWatchedSnapshot(db, "watched-owner-a", 1, 10, 0)).length, 1);
+  db.close();
+});
+
+test("watched-items validation rejects partial episode keys, duplicate keys and oversized batches", async () => {
+  const db = createDb(); db.seed("watched-validation");
+  const valid = { content_id: "item", content_type: "series", title: "Item", season: 1, episode: 2, watched_at: 100 };
+  await assert.rejects(() => pushWatchedItems(db, "watched-validation", 1, req({ items: [{ ...valid, episode: null }] })), /both be set or both be null/);
+  await assert.rejects(() => pushWatchedItems(db, "watched-validation", 1, req({ items: [valid, valid] })), /Duplicate watched item key/);
+  await assert.rejects(() => pushWatchedItems(db, "watched-validation", 1, req({ items: Array.from({ length: 501 }, (_, i) => ({ ...valid, content_id: String(i), season: null, episode: null })) })), /no more than 500/);
   db.close();
 });
