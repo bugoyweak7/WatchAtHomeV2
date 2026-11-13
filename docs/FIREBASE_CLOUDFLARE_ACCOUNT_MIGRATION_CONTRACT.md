@@ -185,3 +185,39 @@ Implications:
 - If a user cannot authenticate to the old service or the old service is unavailable, do not promise automatic transfer of remote data. Preserve local data and provide an explicit export/import or fresh-account path after assessing the available data.
 
 Updated next step: continue source-first reverse engineering of the legacy Supabase contracts inside the two approved repositories, inventory the data models and operations, then design a migration bridge and D1 schema. An upstream Supabase account is not a prerequisite for this source-level work.
+
+
+## 9. Source-audit addendum — additional verified contracts (2026-11-13)
+
+This addendum supplements the feature inventory above. These are client-visible contracts confirmed from the current User App branch; they do not establish the upstream SQL/RLS implementation.
+
+### Additional endpoints and storage operations
+
+| Feature | Verified legacy operation | Required replacement behavior |
+|---|---|---|
+| Plugin repositories | Read profile-filtered `plugins` table ordered by `sort_order`; push through `sync_push_plugins` | Preserve profile scope, repository URL ordering, and local scraper-code cache semantics |
+| Home catalogue settings | `sync_pull_home_catalog_settings`, `sync_push_home_catalog_settings` with profile and platform keys | Preserve platform-specific blobs, local/remote JSON merge, catalogue order, enabled state, custom titles, and collection entries |
+| Media servers | `sync_pull_media_servers`, `sync_push_media_servers` | Preserve server/library metadata and profile merge behavior; treat serialized server tokens as secrets |
+| Device registration | `register_current_device` with installation ID, client name/version, platform, and device name | Derive UID from verified Firebase token; support device listing/revocation and retention |
+| Watch Party realtime | Private channel `watch-party:<partyId>`, member-keyed presence, broadcast events | Durable Object room authorization, presence, fan-out, reconnect behavior, and compatible event payloads |
+
+### Credential-handling requirement
+
+The current `SyncedServer` serialization includes a `token` field. The replacement must not store plaintext server tokens in D1 or logs. Use authenticated encryption with key material held outside D1, define rotation/versioning, and ensure API responses reveal credentials only to the owning Firebase UID/profile when required. The same no-secret-logging and strict ownership rules apply to provider credentials.
+
+### Separate catalogue concepts
+
+Keep these three concepts separate:
+1. Shared admin-managed add-on catalogue in Firestore `addons/{addonId}`.
+2. User-installed add-ons in the legacy profile-filtered `addons` table and `sync_push_addons`.
+3. Plugin repositories in the profile-filtered `plugins` table and `sync_push_plugins`.
+
+Do not merge them into one D1 table or assume that shared catalogue publication equals a user's installed add-on selection.
+
+### Watch Party event contract
+
+The full client broadcast set is `state`, `state_request`, `status`, `control`, `member_joined`, `member_left`, `ended`, `media`, `stream`, and `chat`. Presence key is the party member ID. The channel is private; broadcast acknowledgements and own-broadcast delivery are disabled. Any replacement must preserve server-side membership checks and private-room isolation rather than trusting client-supplied party/member IDs.
+
+### Platform limitation
+
+The inspected Android Play Store and iOS App Store plugin repository implementations are intentionally unavailable/no-op. The full plugin implementation is under `fullCommonMain`; keep current platform gating unless product requirements are explicitly changed.
