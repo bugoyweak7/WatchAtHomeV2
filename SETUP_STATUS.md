@@ -407,3 +407,6 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - An earlier run failed due to a TypeScript helper-interface mismatch; this was corrected. The next run exposed test fixtures missing active account rows for the wrong-owner cases; the fixtures were corrected and the final run passed.
 - Remaining gates: add rate-limit row retention/cleanup; verify all legacy serializer details and mutation/delete semantics; add live D1 integration tests after approved provisioning; configure PIN/encryption key rings as Worker secrets only after separate approval; do not switch mobile adapters until API parity is verified.
 - D1 remains a draft, no D1 resource/binding or secrets were created, and no mobile source, Firebase settings, production data, or deployment was changed.
+
+
+- Follow-up type-safety refinement: PIN routes and encrypted-credential routes now use separate environment-secret type guards, so each route only asserts the key-ring configuration it actually requires. Final CI verification for this small refinement is running separately.
