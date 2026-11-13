@@ -59,8 +59,15 @@ async function verifyUser(request: Request, env: Env): Promise<VerifiedUser> {
     issuer: `https://securetoken.google.com/${env.FIREBASE_PROJECT_ID}`,
     audience: env.FIREBASE_PROJECT_ID,
   });
-  if (typeof payload.sub !== "string" || !payload.sub || typeof payload.auth_time !== "number" || payload.auth_time > Math.floor(Date.now() / 1000) + 60) {
-    throw new HttpError(401, "Invalid Firebase user token.");
+  const firebaseClaims = payload.firebase as Record<string, unknown> | undefined;
+  if (
+    typeof payload.sub !== "string" ||
+    !payload.sub ||
+    typeof payload.auth_time !== "number" ||
+    payload.auth_time > Math.floor(Date.now() / 1000) + 60 ||
+    firebaseClaims?.sign_in_provider !== "password"
+  ) {
+    throw new HttpError(401, "A registered email/password account is required.");
   }
   return { uid: payload.sub, email: typeof payload.email === "string" ? payload.email : undefined };
 }
@@ -284,6 +291,20 @@ async function redeemCode(request: Request, env: Env, user: VerifiedUser): Promi
         fields: {
           ...userFields,
           premium: { booleanValue: true },
+          membershipTier: { stringValue: "SUPPORTER_PLUS" },
+          entitlements: {
+            arrayValue: {
+              values: [
+                "GOLD_THEME",
+                "JADE_THEME",
+                "ROSE_GOLD_THEME",
+                "ARCTIC_BLUE_THEME",
+                "GRAPHITE_THEME",
+                "PROFILE_BACKGROUNDS",
+                "PROFILE_AVATARS",
+              ].map((value) => ({ stringValue: value })),
+            },
+          },
           premiumExpiresAt: { timestampValue: new Date(expiresAt).toISOString() },
           premiumUpdatedAt: { timestampValue: new Date(now).toISOString() },
         },
@@ -313,7 +334,19 @@ async function premiumStatus(env: Env, user: VerifiedUser): Promise<Response> {
   const fields = fieldsOf(doc);
   const expiresAt = timestampField(fields, "premiumExpiresAt");
   const active = boolField(fields, "premium") && expiresAt > Date.now();
-  return response({ premium: active, expiresAt: active ? new Date(expiresAt).toISOString() : null });
+  const tier = active ? stringField(fields, "membershipTier") : "";
+  const entitlementValues = fields.entitlements?.arrayValue?.values;
+  const entitlements = active && Array.isArray(entitlementValues)
+    ? entitlementValues
+        .map((value: Record<string, any>) => value?.stringValue)
+        .filter((value: unknown): value is string => typeof value === "string")
+    : [];
+  return response({
+    premium: active,
+    tier: active && tier === "SUPPORTER_PLUS" ? tier : null,
+    entitlements,
+    expiresAt: active ? new Date(expiresAt).toISOString() : null,
+  });
 }
 
 export default {
