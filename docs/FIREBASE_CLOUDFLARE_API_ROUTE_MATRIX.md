@@ -151,3 +151,10 @@ Before any mobile adapter switch:
 7. Run Worker tests and Android/iOS builds before switching one adapter at a time.
 8. Keep the draft SQL unapplied until a separate D1 resource/binding review and explicit deployment approval.
 
+
+
+## 11. Membership source-of-truth gap — unresolved
+
+The legacy member-access RPC returns a small tier/entitlement pair, while the legacy membership-overview RPC returns billing-provider, subscription, verified/supporter and grant/lifetime fields. The current Worker only calculates premium-code/trial access from Firestore `users/{uid}` and does not implement the full overview model.
+
+Do not infer a subscription or supporter grant from a premium-code activation. Before implementing these routes, define the authoritative membership record and a trusted update source (verified provider webhook or admin grant workflow). Until then, `GET /v1/membership/overview` must return an explicit unavailable/not-configured result rather than invented values. Client writes to membership, premium, trial, billing or grant fields remain forbidden.
