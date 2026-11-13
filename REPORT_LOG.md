@@ -78,3 +78,10 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 - Commit: `4629adb63172064bf29c546e178cf8f2c0f57f1b`.
 - CI: [run 43399716638](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43399716638) was in progress when recorded; results remain pending.
 - Scope guard: active Supabase authentication and app UI were not changed; no production cloud resources or credentials were touched.
+
+
+## 2026-11-13 — Isolated Firebase Auth tests in CI
+- Initial CI run [43399716638](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43399716638) ran 2,052 Android host tests and failed only on two unrelated existing tests: `AndroidDownloadLifecycleTest` and `WatchProgressIdentityTest`.
+- Adjusted `.github/workflows/watchathome-firebase-auth-check.yml` to filter execution to `com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest`.
+- Commit: `9a89838d131cf1427e2ea5816db276ce9ce739ef`. Focused run has not yet been verified.
+- No app authentication/UI, Supabase, Firebase production configuration, or Cloudflare resources changed.
