@@ -333,3 +333,12 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - Renamed the new adapter's private model to `CloudflareWatchedDeleteKey`; no public interface or wire JSON field changed.
 - A fresh Android CI run was triggered by the fix. Its result is pending; do not mark the mobile adapter verified until it completes.
 - The Worker watched-items implementation and content-type identity regression tests have passed their Worker CI runs.
+
+
+## 2026-11-13 — Profile adapter implementation and verification plan
+
+- Source scan confirmed Worker profile metadata endpoints already exist for listing, upserting, and deleting profiles, with D1 ownership checks and rate limits.
+- Implemented a separate mobile HTTP adapter using the Worker endpoint shapes and Firebase ID-token bearer authentication. It enforces HTTPS, validates profile index/count constraints, and bounds response size.
+- Added focused unit tests and CI workflow coverage. These tests verify client request construction; they do not prove live Firebase, Worker, or D1 connectivity.
+- The existing app `ProfileRepository` still uses Supabase RPCs. No repository routing or login behavior was changed because `AuthRepository` is still Supabase-backed.
+- CI status for the earlier Android run `43421702839` remained pending when checked. A later workflow run must verify the new profile adapter tests and Android build.
