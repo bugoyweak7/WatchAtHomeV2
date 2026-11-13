@@ -359,3 +359,39 @@ test("add-on, plugin and collection HTTP sync routes enforce Firebase profile ow
 after(() => {
   globalThis.fetch = originalFetch;
 });
+
+
+test("device DELETE revokes only the authenticated owner's registry entry", async () => {
+  const db = createD1();
+  db.seedAccount("device-owner-a");
+  db.seedAccount("device-owner-b");
+  const env = { ...envWithoutD1, DB: db };
+  const tokenA = await idToken("device-owner-a");
+  const tokenB = await idToken("device-owner-b");
+
+  for (const [token, installationId] of [[tokenA, "tv-a"], [tokenB, "tv-b"]]) {
+    const created = await worker.fetch(request("/v1/devices", "POST", token, {
+      installationId,
+      clientName: "WatchAtHome",
+      clientVersion: "2.0",
+      platform: "android_tv",
+      deviceName: installationId,
+    }), env);
+    assert.equal(created.status, 200);
+  }
+
+  const revoked = await worker.fetch(request("/v1/devices/tv-a", "DELETE", tokenA), env);
+  assert.equal(revoked.status, 200);
+  assert.deepEqual(await revoked.json(), { revoked: true });
+
+  const ownerList = await worker.fetch(request("/v1/devices", "GET", tokenA), env);
+  assert.deepEqual((await ownerList.json()).devices, []);
+
+  const otherList = await worker.fetch(request("/v1/devices", "GET", tokenB), env);
+  assert.equal((await otherList.json()).devices.length, 1);
+
+  const wrongOwner = await worker.fetch(request("/v1/devices/tv-b", "DELETE", tokenA), env);
+  assert.equal(wrongOwner.status, 200);
+  assert.deepEqual(await wrongOwner.json(), { revoked: false });
+  db.close();
+});
