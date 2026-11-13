@@ -134,3 +134,11 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - CI run `43399716638` executed 2,052 Android host tests; 2 unrelated existing tests failed (`AndroidDownloadLifecycleTest` and `WatchProgressIdentityTest`). The staged Firebase Auth test class was not among the reported failures.
 - Updated the Firebase Auth workflow to filter the test task to `com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest`, preventing unrelated project test failures from blocking this focused check.
 - New workflow commit: `9a89838d131cf1427e2ea5816db276ce9ce739ef`. Awaiting its CI result; do not mark the suite passed until verified.
+
+
+## 2026-11-13 — Generic JSON secret-field guard
+- Added `premium-worker/src/json-security.ts` to recursively reject secret-bearing keys in generic JSON payloads while preserving unknown non-sensitive fields.
+- Applied the guard to profile-settings and collection writes. Sensitive keys include passwords, secrets, tokens, credentials, API keys, authorization/bearer fields, PIN values/hashes, and the known AnimeSkip client ID credential.
+- Added regression tests proving nested credential fields are rejected and non-sensitive future settings fields still round-trip.
+- Worker CI runs `43401267225`, `43401273786`, `43401294134`, and `43401302072` were triggered by sequential commits; final result for the latest commit is pending.
+- No D1 binding/schema deployment, secrets, production data, app adapter switch, or Supabase change was made.
