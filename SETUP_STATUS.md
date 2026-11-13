@@ -500,3 +500,9 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Added `./gradlew :composeApp:testAndroidHostTest -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace` to the Firebase Auth workflow.
 - Run `43399716638` is in progress. Wait for CI evidence before marking the six tests as passed.
 - No local setup, Firebase Console configuration, Cloudflare resource, secret, or production deployment was performed.
+
+
+## 2026-11-13 — Test filtering adjustment
+- Broad host test execution exposed two unrelated failures in existing tests (`AndroidDownloadLifecycleTest`, `WatchProgressIdentityTest`), after 2,052 tests ran.
+- Firebase Auth CI now filters to `com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest` so the staged auth tests can be validated independently.
+- Focused workflow commit: `9a89838d131cf1427e2ea5816db276ce9ce739ef`. Await CI result.
