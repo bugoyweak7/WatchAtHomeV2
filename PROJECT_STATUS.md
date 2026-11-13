@@ -237,3 +237,13 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Added MockEngine tests for bearer token/route, snapshot field mapping, HTTP error handling, and missing-token behavior. Android CI run 43413914695 was started; final result pending at this entry.
 - Safety: `LibraryRepository.syncAdapter` remains `SupabaseLibrarySyncAdapter`. No active auth switch, live D1, Worker deployment, production data, or Supabase removal occurred.
 - Remaining before mobile cutover: verify CI, complete parity and delta-merge tests, configure the real Worker URL only after endpoint confirmation, and test against a provisioned D1-backed Worker.
+
+
+## 2026-11-13 — Watch-progress mobile adapter staged; snapshot paging hardened
+
+- Added `CloudflareProgressSyncAdapter.kt` as a separate implementation of the existing `ProgressSyncAdapter` contract: snapshot pull, delta cursor/read, upsert, and delete tombstones.
+- Snapshot reads use deterministic `last_watched_at, progress_key` ordering with bounded offset pages. The Worker snapshot route now accepts validated `offset` while preserving the existing `sinceLastWatched` filter.
+- Added a Worker regression assertion for offset paging. Worker CI run 43414785430 passed TypeScript and all Worker tests (result: success).
+- Added four MockEngine tests for Firebase Bearer auth, snapshot field mapping, delta delete mapping, and missing-token behavior. Android CI run 43414877340 pending.
+- Active `WatchProgressRepository.syncAdapter` remains `SupabaseProgressSyncAdapter`; no auth switch, production Worker URL, live D1, deployment, or production data changes.
+- Before cutover: complete Android CI, add mutation payload/route tests, verify merge behavior and timestamp/filter semantics against production-safe fixtures, and test live D1-backed Worker.
