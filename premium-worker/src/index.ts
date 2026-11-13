@@ -565,9 +565,11 @@ async function watchProgressSyncRoute(request: Request, env: Env, user: Verified
     const limit = Number(url.searchParams.get("limit") ?? 500);
     const sinceRaw = url.searchParams.get("sinceLastWatched");
     const since = sinceRaw == null ? null : Number(sinceRaw);
+    const offset = Number(url.searchParams.get("offset") ?? 0);
     if (!Number.isSafeInteger(limit) || limit < 1 || limit > 500) throw new AccountApiError(400, "Invalid progress page limit.");
     if (since != null && (!Number.isSafeInteger(since) || since < 0)) throw new AccountApiError(400, "Invalid progress timestamp cursor.");
-    return response(await getProgressSnapshot(db, user.uid, index, since, limit));
+    if (!Number.isSafeInteger(offset) || offset < 0 || offset > 1_000_000) throw new AccountApiError(400, "Invalid progress page offset.");
+    return response(await getProgressSnapshot(db, user.uid, index, since, limit, offset));
   }
   if (action === "cursor" && request.method === "GET") return response(await getProgressCursor(db, user.uid, index));
   if (action === "delta" && request.method === "GET") {
