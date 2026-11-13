@@ -381,3 +381,12 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Latest CI run `43378244632` passed TypeScript and all 37 tests: 9 schema, 6 account/device D1 mock, 5 Worker HTTP/auth, 5 AES-GCM, 4 credential-store, 4 PIN-verifier, and 4 PIN-lockout tests. Zero failures.
 - Important: PIN store/verifier are not yet connected to an authenticated HTTP route. Before enabling them, add request-level throttling beyond the per-profile lockout, recent reauthentication for PIN reset, generic client responses, and full route authorization tests.
 - No D1 database/binding, pepper secret, encryption secret, Firebase setting, production credential, mobile adapter, user data, or deployment was changed.
+
+
+## 2026-11-13 — Profile PIN lifecycle storage operations added
+
+- Extended `premium-worker/src/pin-store.ts` with `setProfilePin` and `clearProfilePin`.
+- Setting/replacing a PIN creates a fresh salted, pepper-versioned verifier and atomically resets prior failed-attempt/lockout state through an upsert. Clearing deletes only the authenticated owner's selected profile credential.
+- Expanded `premium-worker/test/pin-store.test.mjs` to cover create/replace, old-PIN rejection, lockout reset on replacement, and owner/profile-scoped clearing.
+- These are D1 storage helpers only. No HTTP route is exposed yet. The future route must require recent Firebase reauthentication for set/clear, verify profile ownership through the composite foreign key, apply request-level throttling, and return generic PIN errors.
+- No D1 database/binding, PIN pepper secret, encryption secret, Firebase setting, production credential, mobile adapter, user data, or deployment was changed.
