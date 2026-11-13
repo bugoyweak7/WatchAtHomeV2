@@ -99,3 +99,10 @@ Latest CI run `43377725695`: TypeScript passed; 29 tests passed across schema, a
 - `npm run test:pin-store` — 4 SQLite-backed tests for persisted profile PIN failed-attempt tracking and lockout. The store helper is not yet connected to a PIN HTTP route.
 
 Latest passing CI run `43378244632`: TypeScript passed and 37 tests passed across schema, account/device, HTTP/auth, encryption, credential storage, PIN verifier, and PIN lockout.
+
+
+### Profile PIN lifecycle storage helpers
+
+`src/pin-store.ts` now also exposes `setProfilePin` and `clearProfilePin`. Replacing a PIN generates a fresh salt/verifier and resets lockout counters; clearing is scoped to the UID/profile pair. The caller must enforce recent Firebase reauthentication before either mutation. These remain storage helpers only: no HTTP PIN route or pepper secret is configured.
+
+The PIN store test suite now covers create/replace, old-PIN invalidation, lockout reset, and owner/profile isolation.
