@@ -87,3 +87,10 @@ Encryption binds AAD to the verified UID, profile index, resource, and record ke
 - `npm run test:credentials` — 4 SQLite-backed encrypted credential repository tests.
 
 Latest CI run `43377725695`: TypeScript passed; 29 tests passed across schema, account/device, HTTP/auth, crypto, and credential storage.
+
+
+### Profile PIN verifier primitive
+
+`src/pin-verifier.ts` provides a peppered, versioned HMAC-SHA256 verifier with per-record salt and UID/profile binding. It stores a digest, not the PIN. Configure `PIN_PEPPER_KEYS_JSON` as a version-to-base64-key object (each pepper at least 32 bytes) and `PIN_PEPPER_ACTIVE_VERSION` only through Cloudflare secrets/variables after the route and lockout design is approved. No PIN route or persisted lockout workflow is enabled yet.
+
+- `npm run test:pin` — 4 profile PIN verifier and pepper-rotation tests.
