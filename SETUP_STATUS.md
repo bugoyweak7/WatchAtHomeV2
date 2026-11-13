@@ -625,3 +625,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Firebase gateway/session manager are staged but not connected to `AuthScreen` or `AppGate`; do not switch the active auth provider yet.
 - Android CI run 43416885505 remains in progress at the latest check: Firebase/Auth + adapter host tests running; Play Store debug compilation pending. No successful build is claimed.
 - No application source or production configuration changed during this audit; Supabase remains active and Cloudflare sync remains disabled by default.
+
+
+## 2026-11-13 — Firebase/Cloudflare backend implementation audit and Android CI result
+
+- Rechecked GitHub Actions run `43416885505`: all steps completed successfully, including `Run Firebase Auth session manager unit tests` and `Compile Android Play Store debug app`. This verifies the current branch compiles and the focused unit tests pass; it does not verify live Firebase, D1, or deployed Worker integration.
+- Scanned the in-repository `premium-worker` implementation. Its `verifyUser` currently accepts Firebase ID tokens only when the Firebase sign-in provider is `password`; it validates Firebase project issuer/audience and derives ownership from the verified token subject.
+- Worker routes already include account bootstrap, device registration/list/revocation, profile operations, profile add-ons/plugins/collections, library sync, watch-progress sync, PIN operations, and premium/trial endpoints. These are Firebase-authenticated Worker APIs, not a migration bridge for the active Supabase session.
+- The Worker does not currently expose the proposed device-link session start/poll/approve/exchange flow. The existing app still depends on Supabase RPCs and `tv-logins-exchange` for TV pairing. A Firebase custom-token device-link flow would require explicit one-time session binding and a narrowly scoped verifier change; do not broadly allow `sign_in_provider=custom`.
+- The account schema file remains explicitly draft-only; `wrangler.toml` has no D1 binding. Account bootstrap and device routes therefore are not proof of a live D1 deployment. Keep `CLOUDFLARE_SYNC_ENABLED=false`.
+- The active app repository tree contains no Supabase SQL migrations, RLS policy definitions, or Edge Function source needed to reproduce the legacy authorization and data contracts. Obtain an authorized Supabase schema/function export before designing identity mapping or production data migration.
+- No application source, Firebase Console, Cloudflare resource, secret, D1 database, production data, or deployment was changed in this audit. Supabase remains the active auth and backend path.
