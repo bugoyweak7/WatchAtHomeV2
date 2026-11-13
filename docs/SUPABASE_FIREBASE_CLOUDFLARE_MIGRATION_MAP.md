@@ -250,3 +250,9 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Added validated deterministic offset paging to Worker snapshot reads; Worker CI run 43414785430 passed.
 - Android MockEngine tests are included in run 43414877340 (pending).
 - Supabase remains active in `WatchProgressRepository`; no live D1 or Worker deployment.
+
+
+## 2026-11-13 — Follow-up progress adapter verification
+
+- Worker authenticated offset paging test passed in run 43415195896.
+- Added mobile mutation route tests. Android run 43414877340 was cancelled by a subsequent push; replacement run 43415270909 queued. Supabase remains active.
