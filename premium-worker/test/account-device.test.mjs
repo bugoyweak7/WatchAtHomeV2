@@ -8,6 +8,7 @@ import {
   listDevices,
   parseDeviceRegistration,
   registerDevice,
+  revokeDevice,
   requireAccountDb,
 } from "../src/account-device.ts";
 
@@ -145,5 +146,25 @@ test("device request ignores caller-supplied user IDs because ownership is an ex
   await registerDevice(db, "verified_uid", { ...deviceInput, userId: "attacker_uid" }, 4000);
   assert.equal((await listDevices(db, "verified_uid")).devices.length, 1);
   assert.equal((await listDevices(db, "attacker_uid")).devices.length, 0);
+  db.close();
+});
+
+
+test("device revocation is owner-scoped, idempotent, and hides revoked inventory", async () => {
+  const db = createD1Mock();
+  db.seedAccount("uid_a");
+  db.seedAccount("uid_b");
+  await registerDevice(db, "uid_a", deviceInput, 1000);
+  await registerDevice(db, "uid_b", { ...deviceInput, installationId: "install-b" }, 1000);
+
+  assert.deepEqual(await revokeDevice(db, "uid_a", "install-001", 2000), { revoked: true });
+  assert.deepEqual(await revokeDevice(db, "uid_a", "install-001", 3000), { revoked: false });
+  assert.deepEqual(await revokeDevice(db, "uid_a", "install-b", 4000), { revoked: false });
+  assert.deepEqual((await listDevices(db, "uid_a")).devices, []);
+  assert.equal((await listDevices(db, "uid_b")).devices.length, 1);
+  await assert.rejects(
+    () => revokeDevice(db, "uid_a", "bad id", 5000),
+    (error) => error instanceof AccountApiError && error.status === 400,
+  );
   db.close();
 });
