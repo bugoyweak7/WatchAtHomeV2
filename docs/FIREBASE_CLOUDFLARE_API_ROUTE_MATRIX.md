@@ -272,3 +272,8 @@ GitHub Actions run 43382547116 passed TypeScript and all 61 Worker tests (0 fail
 
 ### Home catalog route test follow-up — 2026-11-13
 - Initial test run found a duplicate-account fixture error in the profile-isolation test, not a TypeScript/route compilation error. Fixture corrected; follow-up CI run `43401962345` queued.
+
+
+### Home catalog route verification — 2026-11-13
+- Worker CI run `43401962345` passed TypeScript and all 65 tests (0 failures), including the home catalog endpoint tests.
+- Source implementation is verified against local SQLite/mocked D1. Deployment and mobile adapter migration remain pending.
