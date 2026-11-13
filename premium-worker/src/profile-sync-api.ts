@@ -1,4 +1,5 @@
 import { AccountApiError, readBoundedJson, type AccountD1Database } from "./account-device";
+import { rejectSensitiveJsonKeys } from "./json-security";
 
 const MAX_SYNC_BODY_BYTES = 256 * 1024;
 const MAX_SYNC_ROWS = 200;
@@ -142,6 +143,7 @@ export async function putCollections(db: AccountD1Database, uid: string, profile
   if (!Array.isArray(collections)) {
     throw new AccountApiError(400, "collections_json must be a JSON array.");
   }
+  rejectSensitiveJsonKeys(collections, "Collections");
   const encoded = JSON.stringify(collections);
   await db.prepare(`
     INSERT INTO collections (user_id, profile_index, collections_json, version, updated_at)
