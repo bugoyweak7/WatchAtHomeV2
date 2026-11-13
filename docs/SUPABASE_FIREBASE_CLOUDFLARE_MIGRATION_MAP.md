@@ -173,3 +173,9 @@ This route snapshot is based on repository source inspection, not live deploymen
 - The Firebase Auth CI workflow now includes `:composeApp:testAndroidHostTest` to execute the staged `commonTest` Firebase Auth session-manager suite on the Android host test target.
 - The workflow run `43399716638` is pending verification. Do not treat the suite as passed until GitHub Actions reports success.
 - This is test automation only; Firebase Auth remains staged and is not connected to the active sign-in UI. Supabase remains the active auth provider.
+
+
+## 2026-11-13 — Focused Firebase Auth test execution
+- The first Android host-test run reported 2,052 tests with two failures in unrelated existing suites (`AndroidDownloadLifecycleTest`, `WatchProgressIdentityTest`). No Firebase Auth session-manager test appeared in the failure list.
+- CI was narrowed to `com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest` to provide a focused signal for the staged Firebase Auth implementation.
+- Focused test run is pending. This does not change the staged status of Firebase Auth or the active Supabase auth integration.
