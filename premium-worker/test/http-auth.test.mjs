@@ -186,6 +186,7 @@ test("PIN routes require owned profiles and recent authentication for set and cl
   const staleClear = await worker.fetch(request("/v1/profiles/1/pin?action=clear", "POST", stale), env);
   assert.equal(staleClear.status, 401);
 
+  db.seedAccount("another-owner");
   const wrongOwner = await idToken("another-owner");
   const denied = await worker.fetch(request("/v1/profiles/1/pin?action=verify", "POST", wrongOwner, { pin: "2468" }), env);
   assert.equal(denied.status, 404);
@@ -227,6 +228,7 @@ test("provider credentials are encrypted, owner-scoped, and require configured k
   const get = await worker.fetch(new Request("https://worker.test/v1/profiles/1/provider-credentials?provider=tmdb", { headers: { authorization: "Bearer " + token } }), env);
   assert.equal(get.status, 200);
   assert.deepEqual((await get.json()).credential, { apiKey: "private-value" });
+  db.seedAccount("credential-other");
   const other = await idToken("credential-other");
   const denied = await worker.fetch(new Request("https://worker.test/v1/profiles/1/provider-credentials?provider=tmdb", { headers: { authorization: "Bearer " + other } }), env);
   assert.equal(denied.status, 404);
