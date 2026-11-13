@@ -462,6 +462,10 @@ test("watch progress HTTP routes authenticate and isolate profile data", async (
   assert.equal(snapshot.status, 200);
   assert.equal((await snapshot.json())[0].progress_key, entry.progress_key);
 
+  const offsetSnapshot = await worker.fetch(request("/v1/profiles/1/watch-progress?limit=10&offset=1", "GET", token), env);
+  assert.equal(offsetSnapshot.status, 200);
+  assert.deepEqual(await offsetSnapshot.json(), []);
+
   const cursorResponse = await worker.fetch(request("/v1/profiles/1/watch-progress/cursor", "GET", token), env);
   assert.equal(cursorResponse.status, 200);
   const cursor = await cursorResponse.json();
