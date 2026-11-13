@@ -179,3 +179,81 @@ Remote data migration is a separate question. Only investigate an authorized exp
 ## Change record
 
 Documentation only. No application source, Worker runtime, SQL migration, Firebase configuration, Cloudflare resource, production data, or deployment was changed by this audit.
+
+
+## Additional source contracts verified in the continuation
+
+### Profile settings blob
+
+Source: `core/sync/ProfileSettingsSync.kt`
+
+Verified RPCs:
+- `sync_pull_profile_settings_blob`
+- `sync_push_profile_settings_blob`
+
+Parameters include `p_profile_id`, `p_platform`, `p_settings_json`, and sync-origin metadata. The client reads/writes a single profile settings JSON blob and compares signatures before applying it. Its payload includes theme settings, poster/card style settings, custom poster settings, card-depth settings, player settings, stream-badge settings, debrid settings, TMDB settings, MDBList settings, metadata-screen settings, collection mobile settings, continue-watching settings, Trakt settings/comments, and episode-release notification settings. Preserve unknown JSON keys and avoid overwriting a remote blob with an incomplete local snapshot.
+
+### Provider credentials
+
+Source: `core/sync/ProviderCredentialSync.kt`
+
+Verified RPCs:
+- `sync_pull_provider_credentials`
+- `sync_push_provider_credentials`
+
+Push parameters include `p_profile_id`, `p_credentials` (array entries with `provider` and `credential_json`), and sync-origin metadata. The credential snapshot aggregates debrid provider API keys and credentials/settings from TMDB, MDBList, and player-related provider configuration. These are sensitive account/profile data. The replacement must define encryption in transit and at rest, strict UID/profile ownership, no logging of credential payloads, and least-privilege access. The inspected client adapter serializes credential JSON; it does not establish the upstream server's at-rest encryption behavior.
+
+### Media-server metadata
+
+Source: `core/sync/MediaServerSync.kt`
+
+Verified RPCs:
+- `sync_pull_media_servers`
+- `sync_push_media_servers`
+
+Pull sends `p_profile_id` and decodes `servers_json`; push sends `p_profile_id`, `p_servers`, and sync-origin metadata. The repository merges synced server metadata with local state. Inspect the complete `SyncedServer` model and its secret fields before deciding what may be synchronized or stored server-side.
+
+### Membership access
+
+Sources:
+- `features/membership/MemberAccessRemoteDataSource.kt`
+- `features/membership/MembershipOverviewRemoteDataSource.kt`
+
+Verified RPCs:
+- `get_my_member_access`
+- `get_my_membership_overview`
+
+The access response exposes a tier and entitlement list. The overview response includes status/tier, verification/supporter timestamps, provider connection, subscription presence/status/access, billing provider, membership level, current period end, cancellation-at-period-end, monthly amount/currency, and active/lifetime grant metadata. These RPCs are user-context reads in the client; replacement must derive identity from the Firebase token and must not accept a client-selected UID as the authority for membership.
+
+### Profile PINs and profile locks
+
+Source: `features/profiles/ProfileRepository.kt`
+
+Additional verified RPCs:
+- `sync_delete_profile_data` with `p_profile_id` and sync-origin metadata.
+- `verify_profile_pin` with `p_profile_id` and `p_pin`; response includes an `unlocked` result.
+- `set_profile_pin` with `p_profile_id`, `p_pin`, and optional `p_current_pin`.
+- `clear_profile_pin` with `p_profile_id` and optional `p_current_pin`.
+- `clear_profile_pin_with_account_password` with `p_account_password` and `p_profile_id`.
+- `sync_pull_profile_locks`.
+
+Do not store raw profile PINs or implement PIN verification as a client-only check. The replacement needs server-side PIN hashing/verification, throttling/lockout policy, account-password reauthentication where required, and tests for profile ownership and recovery behavior. Exact legacy hash format and server-side policy remain unknown from client source.
+
+### Device-link and account deletion
+
+Sources:
+- `core/auth/DeviceLinkAuthRepository.kt`
+- `core/auth/AuthRepository.kt`
+
+Device-link client contract:
+- `start_device_login_session` receives `p_device_nonce`, `p_redirect_base_url`, `p_device_name`, and `p_device_type`.
+- Start response contains `device_code`, `user_code`, `verification_uri_complete`, and `poll_interval_seconds`.
+- `poll_tv_login_session` receives `p_code` and `p_device_nonce`; client handles pending/approved/expired states.
+- Approved sessions call Edge Function `tv-logins-exchange` with `code` and `device_nonce`; response contains Supabase access/refresh tokens, expiry, token type, and optionally user details. The client imports this Supabase session.
+- Polling is bounded (up to 120 attempts) with 2–10 second interval and a limit on consecutive failures.
+
+Account deletion invokes Supabase Edge Function `delete-account` before local session sign-out/cleanup. The replacement must define an authenticated, server-side deletion lifecycle and must not simply delete the Firebase Auth identity while leaving D1/Firestore/user-owned data behind. Device pairing requires a Firebase-compatible, one-time exchange and explicit user approval; it is not equivalent to copying the old Supabase token exchange.
+
+## Additional evidence limitation
+
+The above confirms client parameters and expected response shapes, not upstream implementation details. PIN hashing, credential encryption at rest, membership entitlement source-of-truth, profile deletion cascade, device-code entropy/expiry/replay protection, and account-deletion cascade remain unverified until server-side definitions or authorized behavior tests are available.
