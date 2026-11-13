@@ -237,3 +237,11 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - Added an authenticated Worker HTTP test for the offset snapshot query; run 43415195896 passed.
 - Added client test coverage for progress PUT and POST route/methods.
 - Android run 43414877340 was cancelled by the subsequent test commit; latest replacement run 43415270909 is queued. Mobile adapter verification remains pending.
+
+### Guarded mobile sync adapter wiring — 2026-11-13
+
+- Added generated CloudflareWorkerConfig.SYNC_ENABLED, sourced from CLOUDFLARE_SYNC_ENABLED and defaulting to false.
+- LibraryRepository.syncAdapter and WatchProgressRepository.syncAdapter now select the Cloudflare implementations only when the explicit flag is true and CLOUDFLARE_WORKER_BASE_URL begins with HTTPS.
+- With the default build configuration, both repositories continue using their existing Supabase adapters.
+- The Cloudflare selection path requires an authenticated Firebase user and a provisioned/deployed D1-backed Worker. Those prerequisites are not yet verified; do not enable the flag in production yet.
+- Previous Android workflow 43415270909 was cancelled before app compilation; its focused Firebase Auth test step passed. Fresh CI verification is pending.
