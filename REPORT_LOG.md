@@ -141,3 +141,26 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 - Added account-device module and HTTP authentication regression tests.
 - [Worker CI run 43402508386](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43402508386) passed TypeScript and 67 tests across 10 suites, 0 failures.
 - Local/mock validation only; no live D1 or Worker deployment.
+
+
+## 2026-11-13 — D1 library snapshot and delta API
+
+### Objective
+Implement the Worker-side replacement contract for the existing LibrarySyncAdapter without switching the app away from Supabase.
+
+### Source changes
+- Added premium-worker/src/library-sync-api.ts.
+- Added profile-scoped snapshot pagination and a library-specific delta cursor/event stream using library_items and sync_events.
+- Added item upsert and delete-by-key operations. Deletes are represented as tombstones and emit delete events; repeated deletes do not create duplicate events.
+- Preserved p_origin_client_id on sync events and the exact fields emitted by LibraryItem.toSyncItem().
+- Added authenticated Worker dispatch for snapshot, push, cursor, delta, and delete operations.
+
+### Tests and verification
+- Added SQLite tests for snapshot paging, cursor progression, upsert/delete event payloads, validation, duplicate keys, and bounded batch size.
+- Added Worker HTTP tests for authenticated writes/reads and cross-account profile denial.
+- CI run 43405997252 passed TypeScript compilation and all 70 tests across 10 suites (0 failures).
+
+### Scope and limitations
+- The app's LibraryRepository.syncAdapter still points to SupabaseLibrarySyncAdapter; no mobile adapter cutover occurred.
+- D1 schema remains draft-only; no live database, binding, secret, deployment, or production data was changed.
+- Before cutover, implement and test the Worker HTTP client adapter, confirm cursor/snapshot behavior under concurrent multi-device mutations, add event-retention cleanup, and verify against live D1.
