@@ -720,3 +720,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Re-scanned `premium-worker/wrangler.toml`: Worker name is `watchathome-premium-api`, `workers_dev = true`, and Firebase project variable is `watchathome-admin`. The Admin build configuration contains the supplied base URL `https://watchathome-premium-api.adminenzoreviewer.workers.dev`.
 - Live endpoint verification could not be completed from this environment. Therefore no HTTP 404, live deployment, Cloudflare secret, or service health claim is recorded. A mismatch between the live workers.dev hostname/deployment and the configured URL remains possible.
 - No Worker deployment, Cloudflare secret/binding changes, Firebase changes, or production data changes were performed. Next deployment verification requires an authenticated Cloudflare deployment context with the existing `FIREBASE_SERVICE_ACCOUNT_JSON` secret available.
+
+
+## 2026-11-13 — Admin device test: Premium Worker returns HTTP 404
+
+- User installed the Admin APK and confirmed Firebase Admin login succeeds.
+- On the Premium screen, the app displayed `Premium service request failed (HTTP 404)` before any premium code was created. The user did not generate codes; no premium-code Firestore writes were initiated by this test.
+- Re-scanned the approved branch source: `premium-worker/src/index.ts` contains unauthenticated `GET /health` before authentication and authenticated `POST /v1/admin/premium-codes`; `premium-worker/wrangler.toml` declares Worker name `watchathome-premium-api` and `workers_dev = true`.
+- Re-scanned Admin `PremiumApiClient.kt`: it constructs `POST ${PREMIUM_API_BASE_URL}/v1/admin/premium-codes`; the Admin build configuration sets the base URL to `https://watchathome-premium-api.adminenzoreviewer.workers.dev`. Source path and configured request path are consistent.
+- This is now a user-observed HTTP 404 from the installed app. The exact responder is not yet identified. Most likely investigation areas are live Worker deployment/version, workers.dev account subdomain/hostname, and whether the deployed script is attached to the expected endpoint. Do not change the Admin route or Worker API contract without evidence.
+- Live `/health` could not be independently fetched from this environment (web and shell network resolution unavailable); therefore no independent live endpoint response is claimed.
+- No Worker deployment, Cloudflare dashboard setting/secret change, Firebase change, Firestore mutation, or premium-code creation was performed. Next: inspect the Cloudflare Worker deployment and its exact workers.dev URL, confirm `/health`, then retest the Admin APK.
