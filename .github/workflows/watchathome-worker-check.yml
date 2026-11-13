@@ -44,3 +44,5 @@ jobs:
         run: npm run test:http
       - name: AES-GCM encryption and key-rotation tests
         run: npm run test:crypto
+      - name: Encrypted provider and media-server storage tests
+        run: npm run test:credentials
