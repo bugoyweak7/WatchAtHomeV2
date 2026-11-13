@@ -221,3 +221,16 @@ The full client broadcast set is `state`, `state_request`, `status`, `control`, 
 ### Platform limitation
 
 The inspected Android Play Store and iOS App Store plugin repository implementations are intentionally unavailable/no-op. The full plugin implementation is under `fullCommonMain`; keep current platform gating unless product requirements are explicitly changed.
+
+
+## 10. Source-audit addendum — protected profile assets (2026-11-13)
+
+The current User App also depends on Supabase Storage for membership assets:
+
+| Feature | Legacy metadata/API | Storage bucket | Required replacement |
+|---|---|---|---|
+| Standard avatars | `get_avatar_catalog` | Standard avatar URL handling is separate from member bucket | Preserve catalogue ordering and URL compatibility |
+| Member avatars | `get_member_profile_avatar_catalog` | `membership-profile-avatars` | R2 object migration, authenticated download, membership entitlement check, one-day share URL behavior |
+| Member profile backgrounds | `get_member_profile_background_catalog` | `membership-profile-backgrounds` | R2 object migration, authenticated download, landscape/portrait paths, asset-version cache, portrait fallback |
+
+Do not expose member-only assets publicly. Use Worker authorization and short-lived signed R2 URLs or an authenticated streaming proxy. Keep metadata in the database and binary objects in R2. Preserve local cache behavior and version-based invalidation. Legacy bucket policies and object ACLs are unknown because the user does not own the upstream Supabase project.
