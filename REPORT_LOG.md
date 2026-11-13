@@ -128,3 +128,9 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 - Added SQLite data-access test and Worker HTTP test for cross-account isolation.
 - Initial CI failures revealed an over-escaped route matcher and whitespace regex; both corrected. [Final run 43402508386](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43402508386) pending.
 - Scope is registry inventory only; Firebase refresh-token revocation/remote logout is not implemented.
+
+
+## 2026-11-13 — Device registry revoke route verification
+- [Worker CI run 43402508386](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43402508386) completed successfully: TypeScript passed and 67 tests passed across 10 suites with zero failures.
+- Includes the new data-access and Worker HTTP tests for owner-scoped, idempotent device registry revocation.
+- Scope remains registry inventory only, not remote logout/session invalidation. No production D1 or Worker deployment.
