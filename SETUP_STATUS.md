@@ -597,3 +597,7 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Worker snapshot route now accepts a validated offset for deterministic paging. Worker CI run 43414785430 passed.
 - Added four MockEngine tests; Android CI run 43414877340 pending.
 - `WatchProgressRepository` remains on Supabase. No production Worker URL, D1 resource/binding, secret, deployment or production data changed.
+
+
+- Added authenticated HTTP regression coverage for progress snapshot offset; Worker CI run 43415195896 passed.
+- Latest Android test run 43415270909 is queued; prior run 43414877340 was cancelled by a subsequent push.
