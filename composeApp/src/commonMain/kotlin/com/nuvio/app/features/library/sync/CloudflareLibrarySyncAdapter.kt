@@ -23,8 +23,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
- * Staged Worker-backed library sync. LibraryRepository deliberately continues to
- * use SupabaseLibrarySyncAdapter until Firebase and production Worker/D1 are ready.
+ * Worker-backed library sync. LibraryRepository selects this adapter only when
+ * CLOUDFLARE_SYNC_ENABLED is explicitly true and an HTTPS Worker URL is configured.
+ * Keep the flag disabled until Firebase auth and production Worker/D1 are verified.
  */
 internal class CloudflareLibrarySyncHttpAdapter(
     private val baseUrl: String,
