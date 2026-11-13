@@ -194,3 +194,8 @@ The following handlers are now present in `premium-worker/src/index.ts`:
 - Verified: public health route; missing token rejected; anonymous provider rejected; account/device routes return 503 while D1 is absent; authenticated device registration and owner-scoped listing use the UID from the verified token, not a request-body UID.
 - Latest CI run `43377044568`: TypeScript passed; 9 schema tests passed; 6 SQLite-backed D1 data-access tests passed; 5 HTTP/auth tests passed (20 total, 0 failures).
 - These tests use test keys and SQLite mocks. They do not replace live Firebase, Firestore, or Cloudflare D1 integration tests.
+
+
+## 15. Security review gate before D1 provisioning
+
+Detailed findings are recorded in `docs/D1_SECURITY_REVIEW.md`. Do not apply the current schema draft or enable D1 routes until provider/media-server encryption, PIN KDF/lockout, device-link nonce/replay/redirect controls, UID/profile ownership checks, deletion orchestration, sync/idempotency retention, rate limits, and generic JSON secret exclusion are addressed. Confirm `FIREBASE_WEB_API_KEY` runtime configuration before account bootstrap is enabled.
