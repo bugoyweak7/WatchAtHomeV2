@@ -210,3 +210,8 @@ This route snapshot is based on repository source inspection, not live deploymen
 ## 2026-11-13 — Firebase Auth stage verification complete
 - CI workflow `43400761852` passed the focused `FirebaseAuthSessionManagerTest` suite and Android Play Store debug compilation.
 - Staged Firebase Auth implementation is unit-tested and compiles. Active app auth still uses Supabase; production Firebase configuration, live auth, and app wiring remain separate pending stages.
+
+
+## 2026-11-13 — Device registry revoke route staged
+- Added owner-scoped `DELETE /v1/devices/:installationId` with rate limiting and idempotent `revoked_at` update; active device listing omits revoked rows.
+- Added data-access and actual Worker HTTP test coverage. This is only an inventory state change, not session/refresh-token revocation. Final CI run `43402508386` pending.
