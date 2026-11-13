@@ -98,3 +98,10 @@ The draft is a reasonable structural starting point, but it is **not ready to ap
 3. Complete deletion, retention, rate-limit, and device-link contracts.
 4. Obtain explicit approval to create the D1 database, add its binding, and apply the reviewed migration.
 5. Run a live D1 smoke test with test-only data before enabling app adapters.
+
+
+## Implementation update — AES-GCM primitive available, integration still blocked
+
+The Worker now contains `premium-worker/src/data-crypto.ts`, a versioned AES-256-GCM primitive. It uses a fresh 12-byte nonce, 128-bit tag, and authenticated additional data bound to Firebase UID, profile index, resource, and record key. New encryption uses the active key version; decryption can retain older key versions during rotation.
+
+CI run `43377463012` passed 5 encryption tests covering round-trip, cross-user/profile/record substitution rejection, ciphertext tampering, key rotation, and invalid/missing keys. This reduces the cryptographic implementation gap but does not close it: the primitive is not yet integrated into credential/media-server routes, key-ring secrets are not configured, D1 columns are still draft-only, and no secret data has been stored. Keep the critical gate open until integration and route-level tests pass.
