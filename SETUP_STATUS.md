@@ -601,3 +601,13 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 
 - Added authenticated HTTP regression coverage for progress snapshot offset; Worker CI run 43415195896 passed.
 - Latest Android test run 43415270909 is queued; prior run 43414877340 was cancelled by a subsequent push.
+
+## 2026-11-13 — Library and watch-progress adapters wired behind an opt-in gate
+
+- Added generated runtime configuration CloudflareWorkerConfig.SYNC_ENABLED, controlled by CLOUDFLARE_SYNC_ENABLED from local.properties or the build environment. The default is false.
+- Wired LibraryRepository.syncAdapter to select CloudflareLibrarySyncAdapter only when the opt-in flag is true and the Worker base URL is HTTPS; otherwise it retains SupabaseLibrarySyncAdapter.
+- Wired WatchProgressRepository.syncAdapter with the same guarded selection; Supabase remains the default.
+- This is a safe integration seam, not a production cutover. Keep CLOUDFLARE_SYNC_ENABLED false until Firebase mobile auth is active, D1 is provisioned and migrated, the Worker is deployed with required bindings/secrets, and live integration/parity tests pass.
+- No player, catalogue UI, subtitle, add-on, auth provider, local user data, Firebase Console setting, Cloudflare resource, secret, or production deployment was changed.
+- Android CI run 43415270909 was cancelled before the Android compilation step completed; the Firebase Auth unit-test step passed. A fresh workflow run is required for the new wiring/config changes.
+- Next: verify the fresh Android host tests and Play Store debug compilation; then complete D1-backed live integration and feature parity before enabling the flag.
