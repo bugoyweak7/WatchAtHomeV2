@@ -6,7 +6,9 @@ on:
       - setup/firebase-cloudflare-zero-cost
     paths:
       - "composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/FirebaseAuth*.kt"
+      - "composeApp/src/commonMain/kotlin/com/nuvio/app/features/library/sync/CloudflareLibrarySyncAdapter.kt"
       - "composeApp/src/commonTest/kotlin/com/nuvio/app/core/auth/FirebaseAuthSessionManagerTest.kt"
+      - "composeApp/src/commonTest/kotlin/com/nuvio/app/features/library/sync/CloudflareLibrarySyncAdapterTest.kt"
       - "composeApp/build.gradle.kts"
       - "gradle/libs.versions.toml"
       - ".github/workflows/watchathome-firebase-auth-check.yml"
@@ -49,7 +51,7 @@ jobs:
         run: touch local.properties
 
       - name: Run Firebase Auth session manager unit tests
-        run: ./gradlew :composeApp:testAndroidHostTest --tests 'com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest' -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace
+        run: ./gradlew :composeApp:testAndroidHostTest --tests 'com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest' --tests 'com.nuvio.app.features.library.sync.CloudflareLibrarySyncAdapterTest' -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace
 
       - name: Compile Android Play Store debug app
         run: ./gradlew :androidApp:assemblePlaystoreDebug -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace
