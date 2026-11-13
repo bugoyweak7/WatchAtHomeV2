@@ -529,3 +529,8 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 ## 2026-11-13 — Home catalog CI fixture correction
 - The first route/test CI run failed because its test fixture inserted the same account twice; the implementation compiled and the other test passed.
 - Fixture corrected. Run `43401962345` is queued for final verification. No production resources were touched.
+
+
+## 2026-11-13 — Home catalog API verification passed
+- Verified by Worker CI `43401962345`: TypeScript passed; 65 tests passed, 0 failed.
+- Source implementation only. No D1 resource/binding/schema deployment, Worker deployment, or mobile adapter cutover has occurred.
