@@ -429,3 +429,49 @@ test("library HTTP routes authenticate and enforce profile ownership across snap
   assert.equal(denied.status, 404);
   db.close();
 });
+
+
+test("watch progress HTTP routes authenticate and isolate profile data", async () => {
+  const db = createD1();
+  db.seedAccount("progress-http-owner");
+  db.seedAccount("progress-http-other");
+  db.seedProfile("progress-http-owner", 1);
+  const env = { ...envWithoutD1, DB: db };
+  const token = await idToken("progress-http-owner");
+  const otherToken = await idToken("progress-http-other");
+  const entry = {
+    content_id: "show-http",
+    content_type: "series",
+    video_id: "episode-http",
+    season: 2,
+    episode: 4,
+    position: 45000,
+    duration: 180000,
+    last_watched: 1700000000000,
+    progress_key: "show-http_s2e4",
+  };
+
+  const pushed = await worker.fetch(request("/v1/profiles/1/watch-progress", "PUT", token, {
+    p_entries: [entry],
+    p_origin_client_id: "nuvio-mobile-http",
+  }), env);
+  assert.equal(pushed.status, 200);
+  assert.deepEqual(await pushed.json(), { saved: 1 });
+
+  const snapshot = await worker.fetch(request("/v1/profiles/1/watch-progress?limit=10", "GET", token), env);
+  assert.equal(snapshot.status, 200);
+  assert.equal((await snapshot.json())[0].progress_key, entry.progress_key);
+
+  const cursorResponse = await worker.fetch(request("/v1/profiles/1/watch-progress/cursor", "GET", token), env);
+  assert.equal(cursorResponse.status, 200);
+  const cursor = await cursorResponse.json();
+  assert.equal(cursor, 1);
+
+  const delta = await worker.fetch(request("/v1/profiles/1/watch-progress/delta?since=0&limit=10", "GET", token), env);
+  assert.equal(delta.status, 200);
+  assert.equal((await delta.json())[0].operation, "upsert");
+
+  const denied = await worker.fetch(request("/v1/profiles/1/watch-progress", "GET", otherToken), env);
+  assert.equal(denied.status, 404);
+  db.close();
+});
