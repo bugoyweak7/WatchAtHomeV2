@@ -357,3 +357,10 @@ This is a primitive only. Provider credentials and media-server tokens are not y
 Added `premium-worker/src/credential-store.ts` for encrypted provider credentials and media-server tokens. Provider credential JSON is encrypted using the versioned AES-GCM primitive; media-server tokens are stored separately from metadata, and secret-like metadata fields are rejected. The D1 draft now checks 12-byte AES-GCM nonces and ciphertext of at least 16 bytes.
 
 CI run `43377725695` passed 29 tests (9 schema, 6 account/device, 5 HTTP/auth, 5 crypto, 4 credential storage) plus TypeScript compilation. The repository functions are not yet connected to HTTP routes; no key ring is configured, no D1 is provisioned, and no real user secret is stored.
+
+
+## 21. Profile PIN verifier checkpoint (2026-11-13)
+
+Added `premium-worker/src/pin-verifier.ts` using a versioned HMAC-SHA256 pepper key ring, per-record random salt, UID/profile binding, constant-time digest comparison, and pepper rotation support. The draft schema constrains PIN hash/salt dimensions. CI run `43377933824` passed all 33 tests, including 4 PIN verifier tests.
+
+No PIN HTTP route or atomic D1 failed-attempt/lockout workflow exists yet. Do not enable PIN verification until lockout, rate limits, recovery/re-authentication, and owner/profile authorization are integrated and tested.
