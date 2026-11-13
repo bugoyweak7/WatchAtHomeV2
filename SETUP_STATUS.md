@@ -177,3 +177,15 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - GitHub code search returned no results for broad Supabase queries on its indexed branch; targeted reads of known files were used instead. This does not establish that no other Supabase call sites exist.
 - No application source, Worker runtime, SQL migration, Firebase settings, Cloudflare resource, production data, or deployment was changed.
 - Next: continue auditing remaining source contracts (profile PIN/locks, profile settings, provider credentials, plugins, home catalog settings, media servers, membership, device registration/linking, account deletion), then reconcile the contract and design/test the first local-only D1 migration before any mobile adapter switch.
+
+
+## 2026-11-13 — Legacy sync, membership, and security-sensitive contract audit
+
+- Extended the source compatibility audit with verified profile-settings blob, provider-credential, media-server, membership, profile PIN/lock, device-link, and account-deletion client contracts.
+- Confirmed profile settings sync uses `sync_pull_profile_settings_blob` / `sync_push_profile_settings_blob` and serializes multiple settings domains into a profile-scoped JSON blob.
+- Confirmed provider credential sync uses `sync_pull_provider_credentials` / `sync_push_provider_credentials` with per-provider `credential_json` payloads. These values are sensitive; replacement encryption-at-rest and no-secret-logging requirements are now explicit. The upstream encryption behavior remains unknown.
+- Confirmed media-server sync uses `sync_pull_media_servers` / `sync_push_media_servers` with `servers_json` and profile-scoped payloads.
+- Confirmed membership client reads use `get_my_member_access` and `get_my_membership_overview`; response models include tier/entitlements, subscription and billing metadata, and grant/lifetime metadata.
+- Confirmed profile PIN/lock RPCs: `verify_profile_pin`, `set_profile_pin`, `clear_profile_pin`, `clear_profile_pin_with_account_password`, `sync_pull_profile_locks`, and profile data deletion via `sync_delete_profile_data`. Legacy PIN hashing and server policy are not visible in client code.
+- Confirmed device-link start/poll/exchange contract and account deletion Edge Function call. Firebase migration needs a new one-time Firebase-compatible exchange and a complete server-side deletion lifecycle.
+- No application code, Worker runtime, SQL migration, Firebase settings, Cloudflare resource, production data, or deployment was changed.
