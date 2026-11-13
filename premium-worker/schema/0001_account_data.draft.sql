@@ -68,6 +68,8 @@ CREATE TABLE IF NOT EXISTS profile_plugins (
   user_id TEXT NOT NULL,
   profile_index INTEGER NOT NULL,
   manifest_url TEXT NOT NULL,
+  name TEXT NOT NULL DEFAULT '',
+  enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
   sort_order INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL,
   PRIMARY KEY (user_id, profile_index, manifest_url),
