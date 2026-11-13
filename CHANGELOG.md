@@ -67,3 +67,9 @@ Entries are append-only. Do not rewrite or remove earlier records.
 ## 2026-11-13
 - CI: added the Android host-test task for the staged Firebase Auth session manager tests before the existing Play Store debug build. Commit: `4629adb63172064bf29c546e178cf8f2c0f57f1b`.
 - Verification: GitHub Actions run `43399716638` was still running at documentation update time; no test/build success is claimed yet.
+
+
+## 2026-11-13 — Focused Firebase Auth test run
+- The initial broad Android host-test task completed 2,052 tests with two unrelated failures: `AndroidDownloadLifecycleTest` and `WatchProgressIdentityTest`.
+- Updated CI to run only `com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest` using Gradle's `--tests` filter. This isolates the six staged Firebase Auth tests from unrelated host-test failures.
+- Commit: `9a89838d131cf1427e2ea5816db276ce9ce739ef`; focused CI result pending.
