@@ -148,3 +148,11 @@ The D1 draft includes `api_rate_limits`. Its rows currently have no automatic ex
 Provider credential JSON and media-server access tokens are encrypted with the existing versioned AES-256-GCM helper. The routes fail closed if the respective key-ring secrets are absent. The API returns decrypted secrets only to the authenticated owner because the client must restore its own credentials; never log request or response bodies.
 
 CI run 43380260084 passed TypeScript compilation and 45 local/mock tests. These are not live Cloudflare D1, Firebase, or Firestore integration tests. The D1 schema remains a draft; no database/binding or secrets are configured. Keep mobile migration and production enablement blocked pending legacy serializer parity, cleanup/retention, live D1 validation, key provisioning, and a separately approved deployment.
+
+
+## 2026-11-13 — Generic JSON secret-field enforcement
+- Added `src/json-security.ts` and applied recursive sensitive-key rejection to profile-settings and collection writes before generic JSON is persisted.
+- The guard rejects password/passwd, secret, token, credential, API-key, access-key, authorization/bearer, PIN-related, and known AnimeSkip client-ID keys. Non-sensitive unknown fields remain intact.
+- Regression tests cover nested `debrid_real_debrid_api_key` and `access_token` rejection plus safe future settings preservation.
+- This closes part of finding 5 for the guarded settings/collections routes only. Continue auditing all generic JSON paths and do not consider D1 production-ready until CI, route-level coverage, schema review, retention, and live D1 validation gates pass.
+- Latest Worker CI run `43401302072` pending verification.
