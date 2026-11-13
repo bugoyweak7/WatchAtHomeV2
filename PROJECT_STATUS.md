@@ -262,3 +262,5 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Default behavior remains on Supabase, so no account/data cutover occurs from this commit.
 - Do not enable until Firebase auth is active in the mobile app, production D1 schema is applied, Worker deployment/bindings/secrets are verified, and live integration/parity tests pass.
 - No production resources, data, credentials, or deployments changed. Android CI must be rerun because run 43415270909 was cancelled before the APK compile step.
+
+- Fresh Android CI run 43416885505 was triggered by the final adapter/config source commit and is currently queued; do not mark the mobile wiring build-verified until this run completes successfully.
