@@ -256,3 +256,10 @@ This route snapshot is based on repository source inspection, not live deploymen
 
 - Worker authenticated offset paging test passed in run 43415195896.
 - Added mobile mutation route tests. Android run 43414877340 was cancelled by a subsequent push; replacement run 43415270909 queued. Supabase remains active.
+
+## 2026-11-13 — Library and watch-progress adapter wiring gate
+
+- Both staged Cloudflare sync adapters are now selectable from their repository adapters through generated CloudflareWorkerConfig.SYNC_ENABLED.
+- The flag is controlled by CLOUDFLARE_SYNC_ENABLED and defaults to false. HTTPS URL validation is also required for Cloudflare selection.
+- Supabase remains the default active adapter. This does not constitute production cutover or verified live sync.
+- Activation remains blocked on Firebase mobile auth integration, D1 provisioning/migration, deployed Worker bindings/secrets, and live compatibility/conflict tests.
