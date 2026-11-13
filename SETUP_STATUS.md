@@ -494,3 +494,9 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Verified GitLive Firebase SDK 2.8.0 tagged source: `FirebaseUser.getIdToken(forceRefresh)` returns `String?`; the Android Firebase SDK auto-initializes its default app through FirebaseInitProvider when Google Services configuration is present. The iOS app already configures Firebase at startup.
 - Updated `FirebaseAuthGateway.kt` accordingly in commit `6cf909beab6bcf7301614f6cfc9d6784e2116d60`.
 - The next workflow run must confirm whether the correction compiles. The six common tests are still not confirmed as executed.
+
+
+## 2026-11-13 — CI test step
+- Added `./gradlew :composeApp:testAndroidHostTest -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace` to the Firebase Auth workflow.
+- Run `43399716638` is in progress. Wait for CI evidence before marking the six tests as passed.
+- No local setup, Firebase Console configuration, Cloudflare resource, secret, or production deployment was performed.
