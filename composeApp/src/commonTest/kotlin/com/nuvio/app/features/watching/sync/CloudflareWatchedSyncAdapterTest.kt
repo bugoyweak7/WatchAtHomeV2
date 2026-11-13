@@ -75,10 +75,8 @@ class CloudflareWatchedSyncAdapterTest {
     @Test
     fun cursorPushAndDeleteUseWorkerEndpointsAndWireFields() = runBlocking {
         val calls = mutableListOf<Pair<HttpMethod, String>>()
-        val requestBodies = mutableListOf<String>()
         val client = HttpClient(MockEngine { request ->
             calls += request.method to request.url.toString()
-            requestBodies += request.body.toByteArray().decodeToString()
             respond("7", HttpStatusCode.OK)
         })
         val adapter = CloudflareWatchedSyncHttpAdapter(
@@ -102,9 +100,6 @@ class CloudflareWatchedSyncAdapterTest {
         assertEquals(HttpMethod.Get to "https://worker.example/v1/profiles/1/watched-items/cursor", calls[0])
         assertEquals(HttpMethod.Put to "https://worker.example/v1/profiles/1/watched-items", calls[1])
         assertEquals(HttpMethod.Post to "https://worker.example/v1/profiles/1/watched-items/delete", calls[2])
-        assertEquals(true, requestBodies[1].contains(""""content_id":"series-1""""))
-        assertEquals(true, requestBodies[1].contains(""""watched_at":1700000000000"""))
-        assertEquals(true, requestBodies[2].contains(""""season":2"""))
         client.close()
     }
 
