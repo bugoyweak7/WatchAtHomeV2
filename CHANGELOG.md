@@ -37,3 +37,15 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Identified missing Worker route implementations for account deletion, device-link custom-token exchange, library/watch-progress/watched sync, full membership parity, and Watch Party realtime.
 - Confirmed no client cutover or Supabase removal is safe yet; legacy adapters and local data must remain until replacement parity and tests pass.
 - Documentation-only inventory; no app code, cloud resources, secrets, rules, data, or deployments changed.
+
+
+## 2026-11-13 — Staged Firebase email/password auth foundation
+
+- Added a multiplatform GitLive Firebase Auth gateway for email/password account creation, sign-in, auth-state observation, sign-out, and fresh ID-token retrieval.
+- Added a separate staged Firebase auth session manager/repository; anonymous Firebase sessions are rejected.
+- Added six common unit tests using a fake auth gateway.
+- Added an Android Play Store debug compile workflow for changes to the staged Firebase auth layer.
+- Kept the active Supabase AuthRepository and AuthScreen unchanged. No active provider cutover was made because Supabase-backed profile/data sync, device-link and account-deletion paths are not yet migrated.
+- Account bootstrap is not connected from the app; the Worker route currently requires a D1 binding that is not configured.
+- GitHub Actions run `43387942928` started; Android compilation result pending at the time of this entry.
+- No live Firebase settings, Firestore rules, Cloudflare resources, D1 binding/database, secrets, deployments, or production data changed.
