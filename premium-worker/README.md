@@ -61,3 +61,8 @@ These routes require an active D1 account row. They currently return HTTP 503 be
 - `npm run test:worker` — 6 SQLite-backed mocked D1 account/device data-access tests.
 
 Latest verified GitHub Actions run: `43376689122` (TypeScript passed; 9 schema tests and 6 mocked D1 tests passed). This does not establish live Cloudflare D1, Firebase, or HTTP/JWT integration.
+
+
+- `npm run test:http` — 5 Worker HTTP/Firebase-token tests using a generated test key and mocked JWKS.
+
+The CI suite currently runs 20 tests in total (9 schema, 6 mocked D1 data-access, 5 Worker HTTP/auth). Latest passing run: `43377044568`. Tests use local SQLite and test-only signing keys; they are not live Firebase/Firestore/D1 integration tests.
