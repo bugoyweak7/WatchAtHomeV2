@@ -260,3 +260,33 @@ This section clarifies and supersedes any earlier wording that made an upstream 
 - Remote data transfer remains conditional on the user's existing app session and actual service reachability. Do not attempt privileged export or bypass legacy authorization.
 - The first D1 migration must include explicit ownership constraints, profile scoping, indexes, delta/event cursors, tombstones, encrypted secret storage, retention/cleanup policy, and idempotent deletion semantics. Its shape must be tested locally before mobile adapter changes.
 - No production Cloudflare resource, Firebase setting, production data, or deployment is authorized by this evidence decision.
+
+
+## 13. Source-derived D1 schema draft and local SQLite validation (2026-11-13)
+
+Added `premium-worker/schema/0001_account_data.draft.sql`. It is a draft file only; it is not registered as an active Wrangler migration, no D1 binding was added, and it has not been applied to any Cloudflare database.
+
+The draft currently defines 18 tables and 9 indexes:
+- Account lifecycle and profile ownership.
+- Profile settings and separate PIN verifier material.
+- Profile-installed add-ons and plugin repositories.
+- Library items, watch progress, watched items, and deletion timestamps.
+- Collections and platform-scoped home catalogue settings as JSON blobs to preserve unknown fields.
+- Provider credentials and media-server tokens as ciphertext/nonce/key-version fields.
+- Registered devices and hashed device-link challenge/code/nonce fields.
+- Per-user/profile/resource sync event history and idempotency records.
+- Retryable account deletion jobs retained separately from account-row cascades.
+
+Local SQLite validation passed:
+- All 18 application tables and 9 indexes created.
+- Orphan profile references rejected.
+- Invalid JSON payloads rejected.
+- Duplicate profile add-on keys rejected.
+- Partially populated encrypted media-server token fields rejected.
+- Sync event cursor produced an ordered event ID.
+- Account deletion cascaded owned rows while retaining the minimal deletion-job tombstone.
+- Foreign-key check returned no violations.
+
+This is structural validation only. It does not prove Cloudflare D1 deployment behavior, production query performance, API correctness, upstream schema parity, encryption implementation, or migration safety. The Worker API route matrix is documented separately in `docs/FIREBASE_CLOUDFLARE_API_ROUTE_MATRIX.md`.
+
+Important exclusions: premium/admin/trial/entitlement records and the shared add-on catalogue remain Firestore; Watch Party realtime state remains Durable Objects; image binaries remain R2; member asset catalogue metadata placement is still undecided. Do not apply this draft until the API implementation, D1 resource configuration, rollback/backup plan, and separate deployment approval are complete.
