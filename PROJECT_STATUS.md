@@ -148,3 +148,10 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Worker CI run `43401302072` passed TypeScript compilation and all 63 tests across schema, account/device, HTTP/auth, crypto, credentials, PIN, rate limiting, profile/settings, and profile-sync suites.
 - The new nested-secret rejection tests passed; safe unknown settings fields continue to round-trip.
 - This is local SQLite/mock Worker verification only. No live D1, Firebase, Firestore, or Cloudflare deployment integration was tested.
+
+
+## 2026-11-13 — Home catalog settings API implementation
+- Added D1-backed `GET/PUT /v1/profiles/:profileIndex/home-catalog?platform=home_catalog_shared` in the Worker. The route verifies the Firebase caller, requires an owned active profile, rate-limits access, validates bounded JSON, rejects nested sensitive keys, and stores a versioned settings blob in the existing `home_catalog_settings` table.
+- Added SQLite-backed tests for full JSON round-trip (including future fields), per-user/profile/platform isolation, empty snapshot replacement, malformed payloads, invalid platform, body size limit, and nested secret rejection.
+- Worker CI runs `43401753132` passed the API module addition before route wiring; route wiring run `43401792563` and final test run `43401818613` were queued/in progress at documentation time. Verify the final run before marking this endpoint passed.
+- Existing mobile `HomeCatalogSettingsSyncService` remains on Supabase. No mobile adapter switch or production D1 deployment was made.
