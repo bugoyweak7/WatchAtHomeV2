@@ -77,7 +77,7 @@ internal class CloudflareLibrarySyncHttpAdapter(
 
     override suspend fun pushItems(profileId: Int, items: Collection<LibraryItem>) {
         requireProfile(profileId)
-        sendBatches(items.toList()) { batch ->
+        sendBatches(profileId, "/library", HttpMethod.Put, items.toList()) { batch ->
             json.encodeToString(
                 LibraryPushRequest(
                     items = batch.map(LibraryItem::toSyncItem),
@@ -89,7 +89,7 @@ internal class CloudflareLibrarySyncHttpAdapter(
 
     override suspend fun deleteItems(profileId: Int, keys: Collection<LibrarySyncKey>) {
         requireProfile(profileId)
-        sendBatches(keys.toList()) { batch ->
+        sendBatches(profileId, "/library/delete", HttpMethod.Post, keys.toList()) { batch ->
             json.encodeToString(
                 LibraryDeleteRequest(
                     keys = batch,
@@ -99,14 +99,14 @@ internal class CloudflareLibrarySyncHttpAdapter(
         }
     }
 
-    private suspend fun <T> sendBatches(values: List<T>, encode: (List<T>) -> String) {
+    private suspend fun <T> sendBatches(\n        profileId: Int,\n        suffix: String,\n        method: HttpMethod,\n        values: List<T>,\n        encode: (List<T>) -> String,\n    ) {
         var batch = mutableListOf<T>()
         for (value in values) {
             val candidate = batch + value
             val encoded = encode(candidate)
             if (encoded.encodeToByteArray().size > MAX_REQUEST_BODY_BYTES) {
                 if (batch.isEmpty()) throw IOException("A library sync item exceeds the request size limit.")
-                execute(HttpMethod.Put, currentMutationPath, encode(batch))
+                execute(method, profilePath(profileId) + suffix, encode(batch))
                 batch = mutableListOf(value)
                 if (encode(batch).encodeToByteArray().size > MAX_REQUEST_BODY_BYTES) {
                     throw IOException("A library sync item exceeds the request size limit.")
@@ -115,7 +115,7 @@ internal class CloudflareLibrarySyncHttpAdapter(
                 batch = candidate.toMutableList()
             }
         }
-        if (batch.isNotEmpty()) execute(HttpMethod.Put, currentMutationPath, encode(batch))
+        if (batch.isNotEmpty()) execute(method, profilePath(profileId) + suffix, encode(batch))
     }
 
     // The endpoint is set for each operation so the batching helper can remain generic.
@@ -155,15 +155,6 @@ internal class CloudflareLibrarySyncHttpAdapter(
 
     private fun requireProfile(profileId: Int) {
         require(profileId in 1..100) { "Invalid profile ID." }
-    }
-
-    private suspend fun sendMutation(
-        profileId: Int,
-        method: HttpMethod,
-        suffix: String,
-        body: String,
-    ) {
-        execute(method, profilePath(profileId) + suffix, body)
     }
 
     companion object {
