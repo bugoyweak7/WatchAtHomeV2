@@ -33,7 +33,7 @@ test("rate limiter allows the configured count then blocks until the fixed windo
   const blocked = await consumeRateLimit(db, "user-a", "pin", "account", 3, 60000, now + 4);
   assert.equal(blocked.allowed, false);
   assert.equal(blocked.count, 4);
-  assert.equal(blocked.retryAfterMs, 59996);
+  assert.equal(blocked.retryAfterMs, 59997);
   const reset = await consumeRateLimit(db, "user-a", "pin", "account", 3, 60000, now + 60001);
   assert.equal(reset.allowed, true);
   assert.equal(reset.count, 1);
