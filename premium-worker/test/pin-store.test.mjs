@@ -39,7 +39,7 @@ function createD1() {
       return statement;
     },
     seed(uid, profileIndex = 1) {
-      sqlite.prepare("INSERT INTO accounts(user_id, status, created_at, updated_at) VALUES(?, 'active', 1, 1)").run(uid);
+      sqlite.prepare("INSERT OR IGNORE INTO accounts(user_id, status, created_at, updated_at) VALUES(?, 'active', 1, 1)").run(uid);
       sqlite.prepare(`INSERT INTO profiles(user_id, profile_index, profile_id, payload_json, created_at, updated_at)
         VALUES(?, ?, ?, '{}', 1, 1)`).run(uid, profileIndex, `profile-${uid}-${profileIndex}`);
     },
@@ -92,7 +92,9 @@ test("PIN cannot be verified during lockout and a valid PIN clears lockout after
   const afterExpiry = start + PIN_MAX_FAILED_ATTEMPTS + PIN_LOCKOUT_DURATION_MS + 10;
   const success = await verifyProfilePinWithLockout(db, env, "uid-pin", 1, "2468", afterExpiry);
   assert.deepEqual(success, { verified: true, locked: false, retryAfterMs: 0 });
-  assert.deepEqual(db.state("uid-pin", 1), { failedAttempts: 0, lockedUntil: null });
+  const cleared = db.state("uid-pin", 1);
+  assert.equal(cleared.failedAttempts, 0);
+  assert.equal(cleared.lockedUntil, null);
   db.close();
 });
 
