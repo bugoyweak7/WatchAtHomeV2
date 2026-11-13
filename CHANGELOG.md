@@ -120,3 +120,13 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added `DELETE /v1/devices/:installationId` with Firebase UID ownership, active-account validation, input validation, rate limiting, soft revocation and idempotent behavior.
 - Added direct and authenticated HTTP regression tests for owner isolation and revoked inventory.
 - [Worker CI run 43402508386](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43402508386) passed TypeScript and 67 tests with zero failures.
+
+
+## 2026-11-13 — Library sync Worker API
+
+- Added D1-backed library snapshot pagination, cursor lookup, ordered delta reads, item upserts, and delete tombstones.
+- Added authenticated profile routes for /library, /library/cursor, /library/delta, and /library/delete; UID and profile ownership come from verified Firebase auth and D1.
+- Preserved the app's existing serialized library fields and p_origin_client_id event metadata.
+- Added SQLite and HTTP regression coverage for paging, delta events, delete behavior, validation, authentication, and profile isolation.
+- Worker CI run 43405997252 passed TypeScript and 70 tests across 10 suites (0 failures).
+- Mobile remains on Supabase; no live D1 or Worker deployment.
