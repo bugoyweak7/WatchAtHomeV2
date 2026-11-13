@@ -34,7 +34,7 @@ function response(body: unknown, status = 200): Response {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
       "access-control-allow-origin": "*",
-      "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
+      "access-control-allow-methods": "GET,POST,OPTIONS",
       "access-control-allow-headers": "authorization,content-type",
     },
   });
@@ -507,17 +507,6 @@ async function listDevices(env: Env, user: VerifiedUser): Promise<Response> {
   return response({ devices: result.results });
 }
 
-async function revokeDevice(request: Request, env: Env, user: VerifiedUser, installationId: string): Promise<Response> {
-  const db = requireD1(env);
-  await ensureActiveAccount(db, user.uid);
-  const result = await db.prepare(`
-    UPDATE registered_devices SET revoked_at = ?1
-    WHERE user_id = ?2 AND installation_id = ?3 AND revoked_at IS NULL
-  `).bind(Date.now(), user.uid, installationId).run();
-  if (result.meta.changes === 0) throw new HttpError(404, "Active device not found.");
-  return response({ revoked: true });
-}
-
 async function premiumStatus(env: Env, user: VerifiedUser): Promise<Response> {
   const doc = await readDocument(env, `users/${user.uid}`);
   const fields = fieldsOf(doc);
@@ -563,10 +552,6 @@ export default {
       }
       if (request.method === "GET" && url.pathname === "/v1/devices") {
         return await listDevices(env, user);
-      }
-      const revokeDeviceMatch = /^\/v1\/devices\/([^/]+)$/.exec(url.pathname);
-      if (request.method === "DELETE" && revokeDeviceMatch) {
-        return await revokeDevice(request, env, user, decodeURIComponent(revokeDeviceMatch[1]));
       }
       if (request.method === "POST" && url.pathname === "/v1/admin/premium-codes") {
         return await createCodes(request, env, user);
