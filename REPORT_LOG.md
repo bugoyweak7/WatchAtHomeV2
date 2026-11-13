@@ -110,3 +110,9 @@ Begin Firebase Authentication work without breaking active Supabase-backed appli
 ## 2026-11-13 — Home catalog CI test fixture correction
 - Worker CI [run 43401818613](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401818613) failed in the new round-trip test fixture due to duplicate account seeding for the second profile; TypeScript and other test suites passed.
 - Fixed the fixture by inserting the second profile row under the already-seeded account. Verification run [43401962345](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401962345) queued.
+
+
+## 2026-11-13 — Home catalog API verification
+- [Worker CI run 43401962345](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401962345) succeeded: TypeScript compilation passed and 65 tests passed across 10 suites with zero failures.
+- New home catalog endpoint and its 11 tests are included in the passing profile sync suite.
+- Endpoint remains source-only; mobile home catalog sync remains on Supabase until all migration gates and deployment approvals are satisfied.
