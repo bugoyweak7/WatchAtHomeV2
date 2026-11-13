@@ -348,3 +348,11 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Renamed the new adapter's private model to `CloudflareWatchedDeleteKey`; no public interface or wire JSON field changed.
 - A fresh Android CI run was triggered by the fix. Its result is pending; do not mark the mobile adapter verified until it completes.
 - The Worker watched-items implementation and content-type identity regression tests have passed their Worker CI runs.
+
+
+## 2026-11-13 — Profile metadata client staging
+
+- Worker profile metadata routes were verified in source: `GET /v1/profiles`, `PUT /v1/profiles`, and `DELETE /v1/profiles/{index}`.
+- Added a Kotlin Cloudflare profile adapter that maps the existing `NuvioProfile` and `ProfilePushPayload` models to those routes and uses Firebase ID-token authentication.
+- The adapter is intentionally staged and not selected by `ProfileRepository`. Active profile sync still calls Supabase RPCs. Switching it now would mix Supabase-authenticated app sessions with Firebase-token Worker authorization and could strand account data.
+- Unit tests and CI coverage were added. Live Worker/D1 integration remains unverified.
