@@ -374,3 +374,14 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Admin source request path, configured Worker base URL, Worker source route, and Wrangler Worker name have been rechecked and are internally consistent.
 - Premium code generation remains blocked pending confirmation of the deployed Cloudflare Worker hostname/version and successful unauthenticated `/health` response.
 - No code was generated; no Cloudflare deployment/settings/secrets or Firebase/Firestore production data were changed.
+
+
+## 2026-11-13 — Live Worker health route test returned application-level Not found
+
+- User opened `https://watchathome-premium-api.adminenzoreviewer.workers.dev/health` from the Cloudflare Worker Overview URL.
+- Observed response: `{ "success": false, "message": "Not found." }`.
+- This differs from the approved branch source `premium-worker/src/index.ts`, which handles `GET /health` before authentication and returns `{ ok: true, service: "watchathome-premium-api" }`.
+- Cloudflare Overview screenshot confirms the Worker URL exists, shows 29 invocations in the last 24 hours and 0 dashboard errors, and indicates a deployment approximately 11 hours earlier. These metrics do not prove route parity.
+- Evidence now confirms that the live response does not match the health contract in the approved source. Likely causes include an older/different Worker deployment or a route/entrypoint mismatch; exact cause remains unverified.
+- Next diagnostic: inspect the Worker Deployments tab and identify the active deployment version/time and its source commit/build. Do not deploy or alter routes/secrets until this comparison is complete.
+- No Admin/User App source changes, Cloudflare deployment/settings/secrets changes, Firebase changes, Firestore mutations, or premium-code generation occurred.
