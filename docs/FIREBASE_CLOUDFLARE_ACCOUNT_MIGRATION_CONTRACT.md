@@ -336,3 +336,10 @@ No mobile client was switched, no D1 database was provisioned, no production res
 - Tests confirm missing tokens and anonymous sign-in providers are rejected; D1-dependent account/device routes fail closed with 503 when no D1 binding exists; device registration/listing remain scoped to the verified UID.
 - CI run `43377044568` passed TypeScript compilation and 20 tests across schema, mocked D1 data access, and Worker HTTP/auth behavior.
 - The test suite does not call the real Firebase project, Firestore, or Cloudflare D1. Production enablement still requires schema review and approved D1 provisioning.
+
+
+## 18. D1 security review checkpoint (2026-11-13)
+
+See `docs/D1_SECURITY_REVIEW.md` for the detailed findings. The draft is not ready for production application: provider/media-server AEAD encryption and key management are not implemented; the profile PIN KDF/lockout design is unresolved; device-link, account deletion, retention, rate limiting, and generic JSON secret-exclusion controls require further work. `FIREBASE_WEB_API_KEY` must also be confirmed in Worker runtime configuration before account bootstrap is enabled.
+
+No D1 resource/binding was created and no schema was applied. Explicit approval is required before provisioning D1. Keep D1-dependent routes disabled (503) until the reviewed schema and binding are ready.
