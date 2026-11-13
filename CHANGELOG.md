@@ -157,3 +157,6 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added deterministic offset pagination for the Worker progress snapshot route, retaining the existing timestamp filter.
 - Added MockEngine regression tests and included them in Android CI. Run 43414877340 pending.
 - Supabase remains the active WatchProgressRepository adapter.
+
+
+- Follow-up verification: authenticated Worker offset paging test passed in run 43415195896. Android run 43414877340 was cancelled by a later push; replacement run 43415270909 is queued for the latest mobile adapter tests.
