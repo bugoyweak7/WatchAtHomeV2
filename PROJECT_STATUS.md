@@ -160,3 +160,9 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 ## 2026-11-13 — Home catalog test fixture correction
 - First full Worker run `43401818613` passed TypeScript and all preceding suites but exposed a fixture setup error in the new home-catalog round-trip test: the test attempted to seed the same account row twice while adding a second profile. The implementation itself compiled; the second malformed-payload test passed.
 - Corrected the fixture to create the second profile under the existing account. New CI run `43401962345` is queued; wait for its result before marking the home-catalog test suite verified.
+
+
+## 2026-11-13 — Home catalog API verified
+- Follow-up Worker CI run `43401962345` completed successfully. TypeScript compilation passed and all 65 tests across 10 suites passed (0 failures).
+- The home-catalog suite now passes 11 tests, including the new round-trip/profile-platform isolation test and malformed/oversized/sensitive payload rejection.
+- `GET/PUT /v1/profiles/:profileIndex/home-catalog?platform=home_catalog_shared` is source-implemented and locally/mock verified. It is not deployed; the app remains on Supabase for this sync resource.
