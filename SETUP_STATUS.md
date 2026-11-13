@@ -278,3 +278,16 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Result: 7 tests passed, 0 failed. Coverage includes table/index counts, owner foreign keys, JSON validation, per-profile add-on uniqueness, encrypted media-server token tuple constraints, account deletion cascade/tombstone retention, and increasing sync event IDs.
 - This is a local SQLite structural test suite, not a Cloudflare D1 integration test or Worker API test. No Worker runtime endpoint was changed and no D1 database was created or migrated.
 - Next: implement Worker route handlers and route-level tests incrementally, starting with account bootstrap/device registration, while keeping current mobile Supabase adapters untouched.
+
+
+## 2026-11-13 — First Worker account/device API implementation
+
+- Added source handlers in `premium-worker/src/index.ts` for `POST /v1/account/bootstrap`, `POST /v1/devices`, and `GET /v1/devices`.
+- Account bootstrap requires the existing verified Firebase email/password ID token, checks Firebase account creation time, creates the D1 account row with create-only conflict handling, rejects inactive/deleted account state, then calls the existing immutable Firestore trial initializer.
+- Device registration validates an 8 KB maximum JSON body and bounded required metadata. Ownership is derived from the verified Firebase UID, never from request JSON.
+- Device listing filters by the verified UID and returns at most 100 non-revoked registry entries.
+- Added local SQL contract test cases for idempotent account creation and device registration/owner-scoped listing. These new cases have been committed but have not yet been executed; the previously recorded seven schema tests remain the only verified passing test run.
+- Corrected the device route matcher during source review. Deliberately did not expose device revocation because the current authentication layer is not installation-bound and does not invalidate Firebase refresh tokens; a metadata flag alone must not be represented as remote sign-out.
+- Added optional `DB?: D1Database` typing only. No D1 binding was added to `wrangler.toml`; new account/device endpoints return HTTP 503 until D1 provisioning and schema application are separately reviewed and approved.
+- No active D1 migration, Firebase/Cloudflare account setting, mobile adapter, existing premium endpoint, production data, or deployment was changed.
+- Next: obtain a real local checkout or CI runner for Worker TypeScript compilation and all schema tests; then add mocked D1 route tests before any D1 binding is introduced.
