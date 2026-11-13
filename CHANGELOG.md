@@ -110,3 +110,7 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added owner-scoped `DELETE /v1/devices/:installationId` with active-account validation, rate limiting and idempotent registry revocation.
 - Added SQLite unit and Worker HTTP tests. Corrected initial route/validator escaping issues; final CI run `43402508386` pending.
 - This is registry deactivation only, not Firebase token revocation or remote logout.
+
+
+## 2026-11-13 — Device registry revoke route CI passed
+- [Worker CI run 43402508386](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43402508386) passed TypeScript and 67 tests across 10 suites with 0 failures, including device revocation unit and Worker HTTP tests.
