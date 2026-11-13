@@ -45,14 +45,17 @@ function createD1() {
     seedAccount(uid) {
       sqlite.prepare("INSERT INTO accounts(user_id, status, created_at, updated_at) VALUES(?, 'active', 100, 100)").run(uid);
     },
+    seedProfile(uid, index = 1) {
+      sqlite.prepare("INSERT INTO profiles(user_id, profile_index, profile_id, payload_json, created_at, updated_at) VALUES(?, ?, ?, '{}', 100, 100)").run(uid, index, "profile-" + uid + "-" + index);
+    },
     close() { sqlite.close(); },
   };
 }
 
-async function idToken(uid, provider = "password") {
+async function idToken(uid, provider = "password", authTime = Math.floor(Date.now() / 1000)) {
   const now = Math.floor(Date.now() / 1000);
   return new SignJWT({
-    auth_time: now,
+    auth_time: authTime,
     firebase: { sign_in_provider: provider },
     email: `${uid}@example.test`,
   })
@@ -146,6 +149,112 @@ test("authenticated device endpoints use verified UID and return only the owner'
   const otherBody = await otherResponse.json();
   assert.equal(otherResponse.status, 200);
   assert.deepEqual(otherBody.devices, []);
+  db.close();
+});
+
+
+const pinPepper = base64(crypto.getRandomValues(new Uint8Array(32)));
+const dataKey = base64(crypto.getRandomValues(new Uint8Array(32)));
+const secureEnv = () => ({
+  ...envWithoutD1,
+  PIN_PEPPER_KEYS_JSON: JSON.stringify({ 1: pinPepper }),
+  PIN_PEPPER_ACTIVE_VERSION: "1",
+  DATA_ENCRYPTION_KEYS_JSON: JSON.stringify({ 1: dataKey }),
+  DATA_ENCRYPTION_ACTIVE_VERSION: "1",
+});
+function base64(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+test("PIN routes require owned profiles and recent authentication for set and clear", async () => {
+  const db = createD1();
+  db.seedAccount("pin-owner");
+  db.seedProfile("pin-owner", 1);
+  const env = { ...secureEnv(), DB: db };
+  const fresh = await idToken("pin-owner");
+  const setResponse = await worker.fetch(request("/v1/profiles/1/pin?action=set", "POST", fresh, { pin: "2468" }), env);
+  assert.equal(setResponse.status, 200);
+  const verify = await worker.fetch(request("/v1/profiles/1/pin?action=verify", "POST", fresh, { pin: "2468" }), env);
+  assert.equal(verify.status, 200);
+  assert.equal((await verify.json()).verified, true);
+
+  const stale = await idToken("pin-owner", "password", Math.floor(Date.now() / 1000) - 301);
+  const staleSet = await worker.fetch(request("/v1/profiles/1/pin?action=set", "POST", stale, { pin: "8642" }), env);
+  assert.equal(staleSet.status, 401);
+  const staleClear = await worker.fetch(request("/v1/profiles/1/pin?action=clear", "POST", stale), env);
+  assert.equal(staleClear.status, 401);
+
+  const wrongOwner = await idToken("another-owner");
+  const denied = await worker.fetch(request("/v1/profiles/1/pin?action=verify", "POST", wrongOwner, { pin: "2468" }), env);
+  assert.equal(denied.status, 404);
+  db.close();
+});
+
+test("PIN route applies persisted lockout and request-level throttling", async () => {
+  const db = createD1();
+  db.seedAccount("pin-lock-owner");
+  db.seedProfile("pin-lock-owner", 1);
+  const env = { ...secureEnv(), DB: db };
+  const token = await idToken("pin-lock-owner");
+  const setResponse = await worker.fetch(request("/v1/profiles/1/pin?action=set", "POST", token, { pin: "1357" }), env);
+  assert.equal(setResponse.status, 200);
+  let result;
+  for (let i = 0; i < 5; i++) {
+    result = await worker.fetch(request("/v1/profiles/1/pin?action=verify", "POST", token, { pin: "0000" }), env);
+  }
+  assert.equal(result.status, 200);
+  const body = await result.json();
+  assert.equal(body.verified, false);
+  assert.equal(body.locked, true);
+  db.close();
+});
+
+test("provider credentials are encrypted, owner-scoped, and require configured key material", async () => {
+  const db = createD1();
+  db.seedAccount("credential-owner");
+  db.seedProfile("credential-owner", 1);
+  const env = { ...secureEnv(), DB: db };
+  const token = await idToken("credential-owner");
+  const put = await worker.fetch(request("/v1/profiles/1/provider-credentials", "PUT", token, {
+    provider: "tmdb",
+    credential: { apiKey: "private-value" },
+  }), env);
+  assert.equal(put.status, 200);
+  const raw = db.prepare("SELECT ciphertext FROM provider_credentials WHERE user_id = ?1").bind("credential-owner").first();
+  assert.ok(raw);
+  const get = await worker.fetch(new Request("https://worker.test/v1/profiles/1/provider-credentials?provider=tmdb", { headers: { authorization: "Bearer " + token } }), env);
+  assert.equal(get.status, 200);
+  assert.deepEqual((await get.json()).credential, { apiKey: "private-value" });
+  const other = await idToken("credential-other");
+  const denied = await worker.fetch(new Request("https://worker.test/v1/profiles/1/provider-credentials?provider=tmdb", { headers: { authorization: "Bearer " + other } }), env);
+  assert.equal(denied.status, 404);
+  db.close();
+});
+
+test("media-server access tokens are encrypted and restored only to the owning profile", async () => {
+  const db = createD1();
+  db.seedAccount("media-owner");
+  db.seedProfile("media-owner", 1);
+  const env = { ...secureEnv(), DB: db };
+  const token = await idToken("media-owner");
+  const put = await worker.fetch(request("/v1/profiles/1/media-servers", "PUT", token, {
+    serverKey: "jellyfin-main",
+    providerId: "jellyfin",
+    remoteServerId: "server-1",
+    remoteUserId: "user-1",
+    metadata: { name: "Home Server", url: "https://media.example.test" },
+    accessToken: "sensitive-token",
+  }), env);
+  assert.equal(put.status, 200);
+  const raw = db.prepare("SELECT token_ciphertext FROM media_servers WHERE user_id = ?1").bind("media-owner").first();
+  assert.ok(raw);
+  const get = await worker.fetch(request("/v1/profiles/1/media-servers", "GET", token), env);
+  assert.equal(get.status, 200);
+  const body = await get.json();
+  assert.equal(body.servers[0].accessToken, "sensitive-token");
+  assert.equal(body.servers[0].metadata.name, "Home Server");
   db.close();
 });
 
