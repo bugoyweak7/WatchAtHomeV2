@@ -48,3 +48,5 @@ jobs:
         run: npm run test:credentials
       - name: Pepper-protected profile PIN verifier tests
         run: npm run test:pin
+      - name: Persisted profile PIN lockout tests
+        run: npm run test:pin-store
