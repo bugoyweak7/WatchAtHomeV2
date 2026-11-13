@@ -2,8 +2,6 @@
 -- Source-derived from the approved User App client contracts.
 -- Not applied to Cloudflare D1. Review and test locally before binding/deployment.
 -- Ownership is always enforced by the Worker from a verified Firebase UID.
-PRAGMA foreign_keys = ON;
-
 CREATE TABLE IF NOT EXISTS accounts (
   user_id TEXT PRIMARY KEY NOT NULL,
   status TEXT NOT NULL DEFAULT 'active'
@@ -176,7 +174,7 @@ CREATE TABLE IF NOT EXISTS media_servers (
   CHECK (
     (token_ciphertext IS NULL AND token_nonce IS NULL AND token_key_version IS NULL)
     OR
-    (token_ciphertext IS NOT NULL AND token_nonce IS NOT NULL AND token_key_version > 0)
+    (token_ciphertext IS NOT NULL AND token_nonce IS NOT NULL AND token_key_version IS NOT NULL AND token_key_version > 0)
   ),
   FOREIGN KEY (user_id, profile_index)
     REFERENCES profiles(user_id, profile_index) ON DELETE CASCADE
