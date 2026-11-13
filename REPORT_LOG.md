@@ -378,3 +378,14 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - Source audit confirms Admin calls `POST /v1/admin/premium-codes`; the current Worker source defines that exact method/path after Firebase token verification. Admin base URL and Wrangler Worker name are consistent in repository configuration.
 - Root cause is not yet proven. Deployment mismatch, incorrect workers.dev account subdomain, or stale/different deployed script remain candidates. Do not label any one as confirmed.
 - Live health request was blocked by environment DNS/network resolution. No live deployment or production mutation was performed.
+
+
+## 2026-11-13 — Live Worker health route test returned application-level Not found
+
+- User opened `https://watchathome-premium-api.adminenzoreviewer.workers.dev/health` from the Cloudflare Worker Overview URL.
+- Observed response: `{ "success": false, "message": "Not found." }`.
+- This differs from the approved branch source `premium-worker/src/index.ts`, which handles `GET /health` before authentication and returns `{ ok: true, service: "watchathome-premium-api" }`.
+- Cloudflare Overview screenshot confirms the Worker URL exists, shows 29 invocations in the last 24 hours and 0 dashboard errors, and indicates a deployment approximately 11 hours earlier. These metrics do not prove route parity.
+- Evidence now confirms that the live response does not match the health contract in the approved source. Likely causes include an older/different Worker deployment or a route/entrypoint mismatch; exact cause remains unverified.
+- Next diagnostic: inspect the Worker Deployments tab and identify the active deployment version/time and its source commit/build. Do not deploy or alter routes/secrets until this comparison is complete.
+- No Admin/User App source changes, Cloudflare deployment/settings/secrets changes, Firebase changes, Firestore mutations, or premium-code generation occurred.
