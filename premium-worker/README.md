@@ -44,3 +44,20 @@ After the Worker is deployed, set its HTTPS base URL when building the Admin app
 ```
 
 The Admin app now calls `POST /v1/admin/premium-codes` for code creation and reads the admin-only `premium_codes` collection for history. Do not put service-account credentials in the app.
+
+
+## Account and device bootstrap APIs (not yet enabled)
+
+- `POST /v1/account/bootstrap` — verifies Firebase account creation time, creates the D1 account row idempotently, then initializes the immutable 7-day trial in Firestore.
+- `POST /v1/devices` — registers or updates the current installation under the UID from the verified Firebase ID token. JSON fields: `installationId`, `clientName`, `clientVersion`, `platform`, `deviceName`.
+- `GET /v1/devices` — lists up to 100 active device registrations owned by the authenticated UID.
+
+These routes require an active D1 account row. They currently return HTTP 503 because `wrangler.toml` has no D1 binding. The D1 schema remains a draft and has not been applied. Device registry metadata is not a remote sign-out mechanism; no device revocation API is exposed.
+
+## Automated checks
+
+- `npm run check` — TypeScript compilation.
+- `npm run test:schema` — 9 local SQLite schema tests.
+- `npm run test:worker` — 6 SQLite-backed mocked D1 account/device data-access tests.
+
+Latest verified GitHub Actions run: `43376689122` (TypeScript passed; 9 schema tests and 6 mocked D1 tests passed). This does not establish live Cloudflare D1, Firebase, or HTTP/JWT integration.
