@@ -288,3 +288,9 @@ GitHub Actions run 43382547116 passed TypeScript and all 61 Worker tests (0 fail
 ### Device registry revoke route verification — 2026-11-13
 - CI `43402508386` passed TypeScript and 67 tests with zero failures, including authenticated HTTP tests proving a user cannot revoke another user's device row.
 - This is mocked/local verification; production D1/Worker deployment and Firebase session revocation remain unimplemented.
+
+
+### Device registry revocation — 2026-11-13
+- `DELETE /v1/devices/:installationId` implemented with Firebase-token-derived owner, active account validation, rate limiting, installation ID validation, and soft revocation.
+- Regression tests verify cross-user isolation, idempotence and active inventory filtering. Worker CI `43402508386` passed TypeScript and 67 tests with 0 failures.
+- Source-only; deployment and mobile client integration remain pending.
