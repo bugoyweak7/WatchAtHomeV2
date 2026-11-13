@@ -701,3 +701,12 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Added tests for remote settings decode, upload payload/route, and missing-token rejection; added the adapter and test to Android CI path filters and test execution.
 - The adapter is staged only. `ProfileSettingsSync` still calls Supabase RPCs; it is not wired or selected. Do not enable Cloudflare sync until Firebase is the active app session and live Worker/D1 is verified.
 - No live cloud resources, secrets, Firebase Console settings, or production data were changed.
+
+
+## 2026-11-13 — Admin premium-code Worker integration cross-repository update
+
+- Re-scanned the Admin App and Premium Worker source. Admin premium-code creation now calls the existing authenticated `POST /v1/admin/premium-codes` endpoint using a Firebase ID token; direct Admin-side creation of raw-ID Firestore documents was removed.
+- Worker-created code documents use SHA-256 IDs and preserve the `code`, `durationLabel`, `durationDays`, `durationMinutes`, `status`, and timestamp fields consumed by the Admin history screen. The existing Admin Firestore history query remains compatible with those hashed documents, subject to deployed Firestore rules.
+- Admin build configuration now accepts the non-secret `watchathome.premiumApiBaseUrl` Gradle property. No live Worker URL was present in repository configuration, so the app is not yet configured for a live call.
+- Admin build verification is pending: its current GitHub Actions workflow automatically targets `main`, not the approved setup branch. Do not treat this as production-ready until the branch build and authenticated API flow pass.
+- No Firebase/Cloudflare resources, secrets, production data, deployments, or account settings were changed.
