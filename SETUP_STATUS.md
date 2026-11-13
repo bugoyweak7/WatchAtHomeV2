@@ -189,3 +189,16 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Confirmed profile PIN/lock RPCs: `verify_profile_pin`, `set_profile_pin`, `clear_profile_pin`, `clear_profile_pin_with_account_password`, `sync_pull_profile_locks`, and profile data deletion via `sync_delete_profile_data`. Legacy PIN hashing and server policy are not visible in client code.
 - Confirmed device-link start/poll/exchange contract and account deletion Edge Function call. Firebase migration needs a new one-time Firebase-compatible exchange and a complete server-side deletion lifecycle.
 - No application code, Worker runtime, SQL migration, Firebase settings, Cloudflare resource, production data, or deployment was changed.
+
+
+## 2026-11-13 — Plugin, home-catalogue, device, media-server, and realtime audit
+
+- Re-read the actual User App source for plugin persistence, home-catalogue settings sync, device registration, media-server sync, and Watch Party channel transport.
+- Verified plugin storage reads profile-filtered `plugins` rows and pushes via `sync_push_plugins`; user-installed add-ons remain a separate profile-filtered `addons` table plus `sync_push_addons`. Both are distinct from the shared Firestore admin catalogue.
+- Verified home-catalogue sync RPCs `sync_pull_home_catalog_settings` and `sync_push_home_catalog_settings`, including platform scoping and JSON merge behavior.
+- Verified device registration RPC `register_current_device` and its installation/client/platform/device metadata parameters.
+- Confirmed media-server sync serializes `SyncedServer.token` into the sync payload. Treat this as a sensitive credential requiring encryption at rest, strict ownership, and no secret logging in the replacement.
+- Confirmed Watch Party uses private `watch-party:<partyId>` Realtime channels, member-keyed presence, and a defined broadcast event set. A REST-only replacement would not preserve current behavior; Durable Objects must cover presence, fan-out, reconnect and membership authorization.
+- Confirmed plugin repository operations are no-op/unavailable in the inspected Android Play Store and iOS App Store actuals; full implementation exists in `fullCommonMain`. Keep platform gating intact.
+- Appended full source paths and details to `docs/LEGACY_BACKEND_SOURCE_COMPATIBILITY_AUDIT.md`.
+- No application code, Worker runtime, SQL migration, Firebase/Cloudflare setting, production data, or deployment was changed.
