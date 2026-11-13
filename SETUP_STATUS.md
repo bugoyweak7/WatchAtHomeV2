@@ -114,3 +114,31 @@ This user app is NOT yet migrated to Firebase/Cloudflare. The Firebase Android b
 
 ### Next implementation gate
 Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoints and document the API contract before changing the User App authentication provider. Preserve the existing player, add-on, subtitle, catalogue, profile, and sync behavior throughout.
+
+
+## 2026-11-13 — Firebase authentication migration continuation (repository scope corrected)
+
+### Repository scope confirmed by user
+- The old repository name `WatchAtHomeV2-Firebase-Migration` is obsolete and must be ignored.
+- The active User App repository is `bugoyweak7/WatchAtHomeV2`.
+- The active Admin App repository is `bugoyweak7/WatchAtHomeAdmin`.
+- Continue using the existing working branch `setup/firebase-cloudflare-zero-cost` for this migration unless the user explicitly approves a different branch.
+
+### Additional actual-source findings
+- The User App repository contains an existing `premium-worker/` directory with `src/index.ts`, `wrangler.toml`, `package.json`, and `README.md`. This is the existing Worker implementation to assess/extend; do not create a duplicate Worker project.
+- The Worker currently implements health, admin premium-code creation, premium redemption/status, and trial initialization endpoints.
+- Its Firebase ID-token verification requires the Firebase password sign-in provider, rejecting anonymous and other provider tokens.
+- The Worker currently has no account registration lifecycle endpoint, device-pairing start/approve/poll/exchange endpoints, or account-deletion endpoint.
+- `wrangler.toml` currently declares only `FIREBASE_PROJECT_ID`; it has no D1 database binding, Durable Object binding, or other account/device-link storage binding.
+- No SQL migration/schema file for the account data model was found in the scanned User App repository tree. Existing app data adapters still rely on Supabase APIs/RPC/Realtime/Edge Functions.
+- The current device-link repository still uses Supabase PostgREST RPCs `start_device_login_session` and `poll_tv_login_session`, then the `tv-logins-exchange` Edge Function and imports a Supabase session.
+- Current account deletion still calls Supabase Edge Function `delete-account`; the existing Worker has no equivalent full data-deletion contract.
+
+### Safe implementation decision
+- Do not replace the mobile authentication provider yet. A Firebase-only login change without a working backend/data-access transition would break authenticated app features and device-link sign-in.
+- Do not add placeholder device-link or deletion routes: they require persistent pairing state, browser-side approval/authentication, one-time nonce binding, expiry/replay protection, and a complete inventory of user-owned data across D1/Firestore/R2/other services.
+- Do not configure or deploy Cloudflare resources, alter Firebase Console settings, or modify production data as part of this source-only step.
+- Next safe implementation gate: define the account/data ownership schema and backend contracts against the actual existing Worker and current Supabase-dependent app feature inventory; then implement and test D1 migrations and Worker endpoints before switching mobile auth.
+
+### Changes in this continuation
+- Documentation only. No application source, Worker runtime code, deployment, Firebase settings, Cloudflare resources, or production data were changed.
