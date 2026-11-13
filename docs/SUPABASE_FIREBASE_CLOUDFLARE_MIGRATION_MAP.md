@@ -267,3 +267,14 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Fresh Android CI run 43416885505 was triggered by the final adapter/config source commit and is currently queued; do not mark the mobile wiring build-verified until this run completes successfully.
 
 - CI follow-up: run 43416885505 has moved from queued to in progress. The focused Firebase/Auth + Cloudflare adapter host-test step is currently running; Android Play Store debug compilation is pending. No pass is claimed yet.
+
+
+## 2026-11-13 — Active mobile auth dependency audit
+
+- `AuthScreen` and `AppGate` still use Supabase-backed `AuthRepository`; staged `FirebaseAuthRepository` is not wired into the app lifecycle or login UI.
+- Profile identity operations remain Supabase RPC-backed: `sync_pull_profiles`, `sync_push_profiles`, `sync_delete_profile_data`, profile PIN operations, and `sync_pull_profile_locks`.
+- Device-link authentication remains coupled to Supabase RPCs `start_device_login_session` / `poll_tv_login_session`, Edge Function `tv-logins-exchange`, and Supabase session import. Device registration calls `register_current_device`.
+- Membership access and overview remain Supabase RPC-backed; account deletion still invokes `delete-account`.
+- Migration implication: Firebase ID tokens cannot simply replace Supabase access tokens for these existing RPCs/functions. Before app cutover, choose and implement a compatible backend identity bridge or migrate each protected API and its authorization/data-ownership rules. Preserve existing account IDs and user data; do not create parallel identities accidentally.
+- This was a read-only source audit. No code, Firebase Console, Worker/D1 resource, production data, or deployment changed. Cloudflare sync remains disabled by default.
+- Android CI run 43416885505 was still in progress at the latest check; host tests were running and Play Store debug compilation was pending.
