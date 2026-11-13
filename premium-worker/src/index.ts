@@ -3,7 +3,7 @@ import { saveProviderCredential, loadProviderCredential, saveMediaServer, loadMe
 import { setProfilePin, clearProfilePin, verifyProfilePinWithLockout } from "./pin-store";
 import { consumeRateLimit } from "./rate-limit";
 import { getAddons, getCollections, getHomeCatalogSettings, getPlugins, putAddons, putCollections, putHomeCatalogSettings, putPlugins } from "./profile-sync-api";
-import { deleteLibraryItems, getLibraryDelta, getLibrarySnapshot, parseLibraryPageParams, pushLibraryItems } from "./library-sync-api";
+import { deleteLibraryItems, getLibraryDelta, getLibraryDeltaCursor, getLibrarySnapshot, parseLibraryPageParams, pushLibraryItems } from "./library-sync-api";
 import {
   deleteProfile, getProfileSettings, listProfileLocks, listProfiles, putProfileSettings, upsertProfiles,
 } from "./profile-api";
@@ -555,7 +555,7 @@ async function homeCatalogSettingsRoute(
   return response({ error: "Method not allowed." }, 405);
 }
 
-async function librarySyncRoute(request: Request, env: Env, user: VerifiedUser, index: number, action: "snapshot" | "delta" | "push" | "delete"): Promise<Response> {
+async function librarySyncRoute(request: Request, env: Env, user: VerifiedUser, index: number, action: "snapshot" | "cursor" | "delta" | "push" | "delete"): Promise<Response> {
   const db = requireAccountDb(env);
   await requireOwnedProfile(db, user.uid, index);
   await applyRateLimits(request, db, user, "library-sync-" + action, index);
@@ -564,6 +564,7 @@ async function librarySyncRoute(request: Request, env: Env, user: VerifiedUser, 
     const page = parseLibraryPageParams(url, "snapshot");
     return response(await getLibrarySnapshot(db, user.uid, index, page.limit, page.offset));
   }
+  if (action === "cursor" && request.method === "GET") return response(await getLibraryDeltaCursor(db, user.uid, index));
   if (action === "delta" && request.method === "GET") {
     const page = parseLibraryPageParams(url, "delta");
     return response(await getLibraryDelta(db, user.uid, index, page.since, page.limit));
@@ -675,11 +676,11 @@ export default {
         const profileResponse = await profileApiRoute(request, env, user);
         if (profileResponse.status !== 404) return profileResponse;
       }
-      const libraryMatch = /^\\/v1\\/profiles\\/([1-9][0-9]*)\\/library(?:\\/(delta|delete))?$/.exec(url.pathname);
+      const libraryMatch = /^\\/v1\\/profiles\\/([1-9][0-9]*)\\/library(?:\\/(delta|delete|cursor))?$/.exec(url.pathname);
       if (libraryMatch) {
-        const action = libraryMatch[2] === "delta" ? "delta" : libraryMatch[2] === "delete" ? "delete" : request.method === "PUT" ? "push" : "snapshot";
+        const action = libraryMatch[2] === "delta" ? "delta" : libraryMatch[2] === "delete" ? "delete" : libraryMatch[2] === "cursor" ? "cursor" : request.method === "PUT" ? "push" : "snapshot";
         if (["GET", "PUT", "POST"].includes(request.method)) {
-          return await librarySyncRoute(request, env, user, Number(libraryMatch[1]), action as "snapshot" | "delta" | "push" | "delete");
+          return await librarySyncRoute(request, env, user, Number(libraryMatch[1]), action as "snapshot" | "cursor" | "delta" | "push" | "delete");
         }
       }
       const profileSyncMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/(addons|plugins|collections)$/.exec(url.pathname);
