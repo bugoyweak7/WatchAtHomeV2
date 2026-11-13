@@ -319,3 +319,12 @@ The Worker has no D1 binding in `wrangler.toml`, so these endpoints are intentio
 No device-revocation route is exposed: marking a registry row revoked would not invalidate Firebase ID/refresh tokens because the current request authentication is not installation-bound. A true revocation workflow must be designed and tested before advertising remote sign-out.
 
 No mobile client was switched, no D1 database was provisioned, no production resource was changed, and no deployment was performed.
+
+
+## 16. Account/device test checkpoint (2026-11-13)
+
+- The D1 access and device request-validation logic has been isolated in `premium-worker/src/account-device.ts`.
+- Added SQLite-backed D1 mock tests for missing/inactive accounts, missing binding, owner-scoped listing, registration idempotency, revoked installation reuse, invalid/oversized request data, and caller-supplied UID rejection.
+- GitHub Actions run `43376689122` passed: TypeScript compilation, 9 schema tests, and 6 mocked account/device tests.
+- The test scope does not include full HTTP route dispatch, Firebase JWT/JWKS verification, Firebase Identity Toolkit/Firestore integration, or a real D1 database.
+- Production enablement remains blocked until D1 is provisioned and the schema is reviewed/applied through an explicitly approved step.
