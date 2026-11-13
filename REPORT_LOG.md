@@ -186,3 +186,26 @@ Implement the Worker-side replacement contract for the existing ProgressSyncAdap
 - SupabaseProgressSyncAdapter remains the active mobile implementation.
 - No D1 database/binding, production Worker deployment, Firebase production settings or user data were changed.
 - Before client cutover, compare all fields and ordering with the existing Supabase RPC implementation, implement Worker HTTP adapter, validate timestamp pagination edge cases and concurrent updates, and add sync-event retention cleanup.
+
+
+## 2026-11-13 — Staged mobile Cloudflare library adapter
+
+### Objective
+Implement the mobile side of the Worker library sync contract while preserving the active Supabase path.
+
+### Source changes
+- Added `composeApp/src/commonMain/kotlin/com/nuvio/app/features/library/sync/CloudflareLibrarySyncAdapter.kt`.
+- Implements snapshot pagination, delta cursor/read, item upsert, and delete operations against the Worker routes.
+- Uses FirebaseAuthRepository fresh ID-token retrieval and the existing multiplatform Ktor client.
+- Enforces HTTPS Worker base URL, requires a Firebase token, caps response reads, and splits mutation batches by encoded request size.
+- Added optional `CLOUDFLARE_WORKER_BASE_URL` generated runtime config. No real URL was supplied or assumed.
+- Added four MockEngine tests and expanded the Android test workflow to include them.
+
+### Verification
+- Android workflow run 43413914695 started on the adapter/test commit; final result pending at the time of this entry.
+- Previous Worker-side route verification remains run 43405997252 (70 tests, 0 failures).
+
+### Scope and limitations
+- `LibraryRepository.syncAdapter` still points to `SupabaseLibrarySyncAdapter`.
+- No active auth cutover, production Worker URL, D1 provisioning/binding/schema application, deployment, or production data change.
+- Next gates: CI pass, verify delta/delete merge semantics against local sync-state behavior, test live D1-backed Worker once provisioned, and only then consider wiring behind an explicit rollout gate.
