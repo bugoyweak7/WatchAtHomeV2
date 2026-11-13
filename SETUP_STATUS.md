@@ -487,3 +487,10 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - This is a build-script compatibility correction discovered while validating the new work, not an auth-source compiler finding.
 - Second workflow run `43388218215` was queued from commit `4db2c6c59448e039c4cf36cad718f79a01bdafd9`; final result remains pending.
 - iOS setup was also source-verified: `GoogleService-Info.plist` is present, `iOSApp.swift` calls `FirebaseApp.configure()`, and the Xcode project links `FirebaseCore`, `FirebaseAuth`, and `FirebaseFirestore`.
+
+
+### Firebase Auth SDK API correction — 2026-11-13
+- Workflow run `43388218215` completed with failure. The exact Kotlin compiler errors were two unresolved Firebase app initialization references (`apps`, `initialize`) and an invalid `.token` property on the nullable ID-token string.
+- Verified GitLive Firebase SDK 2.8.0 tagged source: `FirebaseUser.getIdToken(forceRefresh)` returns `String?`; the Android Firebase SDK auto-initializes its default app through FirebaseInitProvider when Google Services configuration is present. The iOS app already configures Firebase at startup.
+- Updated `FirebaseAuthGateway.kt` accordingly in commit `6cf909beab6bcf7301614f6cfc9d6784e2116d60`.
+- The next workflow run must confirm whether the correction compiles. The six common tests are still not confirmed as executed.
