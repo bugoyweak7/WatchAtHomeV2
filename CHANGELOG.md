@@ -114,3 +114,9 @@ Entries are append-only. Do not rewrite or remove earlier records.
 
 ## 2026-11-13 — Device registry revoke route CI passed
 - [Worker CI run 43402508386](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43402508386) passed TypeScript and 67 tests across 10 suites with 0 failures, including device revocation unit and Worker HTTP tests.
+
+
+## 2026-11-13 — Device revocation endpoint
+- Added `DELETE /v1/devices/:installationId` with Firebase UID ownership, active-account validation, input validation, rate limiting, soft revocation and idempotent behavior.
+- Added direct and authenticated HTTP regression tests for owner isolation and revoked inventory.
+- [Worker CI run 43402508386](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43402508386) passed TypeScript and 67 tests with zero failures.
