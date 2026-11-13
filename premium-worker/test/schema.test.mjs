@@ -95,3 +95,49 @@ test("sync event IDs provide an increasing cursor per appended event", () => {
   assert.ok(ids[1] > ids[0]);
   db.close();
 });
+
+
+test("account bootstrap is idempotent and preserves the original registration time", () => {
+  const db = createDatabase();
+  const insert = db.prepare(`
+    INSERT INTO accounts (user_id, status, created_at, updated_at)
+    VALUES (?1, 'active', ?2, ?3)
+    ON CONFLICT(user_id) DO NOTHING
+  `);
+  insert.run("uid_bootstrap", 100, 100);
+  insert.run("uid_bootstrap", 200, 200);
+  const account = db.prepare("SELECT status, created_at FROM accounts WHERE user_id = ?1").get("uid_bootstrap");
+  assert.equal(account.status, "active");
+  assert.equal(account.created_at, 100);
+  db.close();
+});
+
+test("device registration is idempotent and device listing is owner-scoped", () => {
+  const db = createDatabase();
+  seedAccount(db, "uid_a");
+  seedAccount(db, "uid_b");
+  const upsert = db.prepare(`
+    INSERT INTO registered_devices (
+      user_id, installation_id, client_name, client_version, platform,
+      device_name, created_at, last_seen_at
+    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)
+    ON CONFLICT(user_id, installation_id) DO UPDATE SET
+      client_name = excluded.client_name,
+      client_version = excluded.client_version,
+      platform = excluded.platform,
+      device_name = excluded.device_name,
+      last_seen_at = excluded.last_seen_at
+    WHERE registered_devices.revoked_at IS NULL
+  `);
+  upsert.run("uid_a", "install-1", "WatchAtHome", "1.0", "android", "Phone", 100);
+  upsert.run("uid_a", "install-1", "WatchAtHome", "1.1", "android", "Updated Phone", 200);
+  upsert.run("uid_b", "install-1", "WatchAtHome", "1.0", "android", "Other User Phone", 100);
+  const rows = db.prepare(`
+    SELECT installation_id, device_name FROM registered_devices
+    WHERE user_id = ?1 AND revoked_at IS NULL ORDER BY last_seen_at DESC LIMIT 100
+  `).all("uid_a");
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].device_name, "Updated Phone");
+  assert.equal(db.prepare("SELECT count(*) AS n FROM registered_devices WHERE user_id='uid_b'").get().n, 1);
+  db.close();
+});
