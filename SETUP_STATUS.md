@@ -615,3 +615,13 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Fresh Android CI run 43416885505 was triggered by the final adapter/config source commit and is currently queued; do not mark the mobile wiring build-verified until this run completes successfully.
 
 - CI follow-up: run 43416885505 has moved from queued to in progress. The focused Firebase/Auth + Cloudflare adapter host-test step is currently running; Android Play Store debug compilation is pending. No pass is claimed yet.
+
+
+## 2026-11-13 — Firebase authentication dependency audit
+
+- Scanned the active mobile auth flow and related repositories on the approved branch. `AuthScreen` still calls `AuthRepository` for email registration/login, anonymous access, and device-link flows; `AppGate` initializes and observes `AuthRepository`.
+- `AuthRepository` remains Supabase-backed. `ProfileRepository` uses Supabase RPCs for profile pull/push/delete, PIN verification and management, and profile-lock sync. `DeviceLinkAuthRepository` uses Supabase RPCs and the `tv-logins-exchange` function; `DeviceSessionRegistration` calls `register_current_device`.
+- Membership access and membership overview also call Supabase RPCs. Account deletion invokes the Supabase `delete-account` function. These paths require explicit replacement or a compatible identity bridge before Firebase can become the sole active identity.
+- Firebase gateway/session manager are staged but not connected to `AuthScreen` or `AppGate`; do not switch the active auth provider yet.
+- Android CI run 43416885505 remains in progress at the latest check: Firebase/Auth + adapter host tests running; Play Store debug compilation pending. No successful build is claimed.
+- No application source or production configuration changed during this audit; Supabase remains active and Cloudflare sync remains disabled by default.
