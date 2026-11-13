@@ -130,3 +130,10 @@ This is not a complete PIN feature: no verification route or atomic D1 lockout/a
 Added `src/pin-store.ts` with persisted per-profile failed-attempt tracking. It rejects attempts while `locked_until` is active, increments failed attempts through an atomic D1 update, locks for 15 minutes after 5 failures, and clears the counter after a successful verification once the lock expires. The HMAC verifier and lockout are separate primitives so the route can apply both consistently.
 
 CI run `43378244632` passed four PIN-store tests and all 37 tests. The helper is not exposed through an HTTP route yet. Add account/IP-level rate limiting, recent Firebase reauthentication for PIN reset, generic error responses, and full route tests before enabling PIN APIs.
+
+
+## Implementation update — PIN set/clear storage operations
+
+The PIN storage layer now supports setting/replacing and clearing a profile PIN in addition to verification/lockout. Replacement generates a new per-record salt and verifier and resets failed-attempt state; clearing targets only the exact UID/profile composite key. Tests cover replacement, invalidation of the old PIN, lockout reset, and cross-profile/cross-user isolation.
+
+These helpers do not establish authorization by themselves. The HTTP layer must require a recently reauthenticated Firebase session for set/clear, validate the requested profile against the authenticated UID, apply request-level rate limits, and avoid distinguishing missing PINs from incorrect PINs. No PIN route is enabled and no secret or D1 resource is configured.
