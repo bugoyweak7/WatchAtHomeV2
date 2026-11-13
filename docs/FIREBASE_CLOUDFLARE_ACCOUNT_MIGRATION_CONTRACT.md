@@ -350,3 +350,10 @@ No D1 resource/binding was created and no schema was applied. Explicit approval 
 Added `premium-worker/src/data-crypto.ts` with AES-256-GCM, random 12-byte nonces, 128-bit authentication tags, UID/profile/resource/record-bound additional authenticated data, and versioned key-ring rotation support. CI run `43377463012` passed 5 crypto tests as part of 25 total tests.
 
 This is a primitive only. Provider credentials and media-server tokens are not yet wired through it, no encryption key-ring secret is configured, and no D1 data has been written. Do not treat this as completion of credential-at-rest protection until route integration, key provisioning, rotation/re-encryption workflow, and end-to-end tests are complete.
+
+
+## 20. Encrypted credential repository checkpoint (2026-11-13)
+
+Added `premium-worker/src/credential-store.ts` for encrypted provider credentials and media-server tokens. Provider credential JSON is encrypted using the versioned AES-GCM primitive; media-server tokens are stored separately from metadata, and secret-like metadata fields are rejected. The D1 draft now checks 12-byte AES-GCM nonces and ciphertext of at least 16 bytes.
+
+CI run `43377725695` passed 29 tests (9 schema, 6 account/device, 5 HTTP/auth, 5 crypto, 4 credential storage) plus TypeScript compilation. The repository functions are not yet connected to HTTP routes; no key ring is configured, no D1 is provisioned, and no real user secret is stored.
