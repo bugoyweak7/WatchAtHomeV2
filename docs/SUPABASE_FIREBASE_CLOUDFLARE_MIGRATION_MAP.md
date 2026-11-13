@@ -278,3 +278,13 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Migration implication: Firebase ID tokens cannot simply replace Supabase access tokens for these existing RPCs/functions. Before app cutover, choose and implement a compatible backend identity bridge or migrate each protected API and its authorization/data-ownership rules. Preserve existing account IDs and user data; do not create parallel identities accidentally.
 - This was a read-only source audit. No code, Firebase Console, Worker/D1 resource, production data, or deployment changed. Cloudflare sync remains disabled by default.
 - Android CI run 43416885505 was still in progress at the latest check; host tests were running and Play Store debug compilation was pending.
+
+
+## 2026-11-13 — Worker source audit and CI verification
+
+- Android CI run `43416885505` completed successfully: Firebase Auth session-manager unit tests and Android Play Store debug compilation passed.
+- The in-repository Worker verifies Firebase email/password ID tokens and contains partial account, device-registration, profile, PIN, library, watch-progress, premium, and trial APIs. Its current verifier explicitly requires the `password` sign-in provider.
+- The Worker router does not yet implement Firebase device-link session creation, polling, approval, or one-time exchange. Existing app TV pairing remains Supabase-backed.
+- The account D1 schema is draft-only; no D1 binding is configured. Source presence must not be treated as a deployed or live-tested service.
+- Supabase SQL migrations, RLS policies, and Edge Function source are absent from the scanned WatchAtHomeV2 repository. Obtain an authorized export before legacy UID mapping or data migration design.
+- Keep Supabase as the active provider and keep `CLOUDFLARE_SYNC_ENABLED` false. No production or app source changes were made in this read-only audit.
