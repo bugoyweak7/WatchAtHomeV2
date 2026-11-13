@@ -452,7 +452,7 @@ kotlin {
                 implementation(files("libs/nuvio-libass-release.aar"))
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.sentry.android)
-                implementation(platform(libs.firebase.bom))
+                implementation(project.dependencies.platform(libs.firebase.bom))
                 implementation(libs.firebase.auth)
                 implementation(libs.firebase.firestore)
                 implementation(libs.androidx.media3.exoplayer.hls)
