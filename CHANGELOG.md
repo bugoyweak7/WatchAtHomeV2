@@ -84,3 +84,9 @@ Entries are append-only. Do not rewrite or remove earlier records.
 
 ## 2026-11-13 — Generic JSON guard verification
 - GitHub Actions [run 43401302072](https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43401302072) passed TypeScript and 63 Worker tests (0 failures), including new profile-settings and collection secret-field rejection tests.
+
+
+## 2026-11-13 — Add home catalog settings Worker endpoint
+- Added profile-scoped GET/PUT endpoint for home catalog settings using existing D1 schema table and shared platform key.
+- Preserves full JSON/unknown fields, increments row version, enforces owner/profile scope and request limits, and rejects sensitive fields.
+- Added tests for round-trip, isolation, replacement, invalid payloads and secret rejection. Final Worker CI pending.
