@@ -292,19 +292,6 @@ async function redeemCode(request: Request, env: Env, user: VerifiedUser): Promi
           ...userFields,
           premium: { booleanValue: true },
           membershipTier: { stringValue: "SUPPORTER_PLUS" },
-          entitlements: {
-            arrayValue: {
-              values: [
-                "GOLD_THEME",
-                "JADE_THEME",
-                "ROSE_GOLD_THEME",
-                "ARCTIC_BLUE_THEME",
-                "GRAPHITE_THEME",
-                "PROFILE_BACKGROUNDS",
-                "PROFILE_AVATARS",
-              ].map((value) => ({ stringValue: value })),
-            },
-          },
           premiumExpiresAt: { timestampValue: new Date(expiresAt).toISOString() },
           premiumExpiresAtEpochMs: { integerValue: String(expiresAt) },
           premiumUpdatedAt: { timestampValue: new Date(now).toISOString() },
@@ -336,14 +323,12 @@ async function premiumStatus(env: Env, user: VerifiedUser): Promise<Response> {
   const expiresAt = timestampField(fields, "premiumExpiresAt");
   const active = boolField(fields, "premium") && expiresAt > Date.now();
   const tier = active ? stringField(fields, "membershipTier") : "";
-  const entitlementValues = fields.entitlements?.arrayValue?.values;
-  const entitlements = active && Array.isArray(entitlementValues)
-    ? entitlementValues
-        .map((value: Record<string, any>) => value?.stringValue)
-        .filter((value: unknown): value is string => typeof value === "string")
-    : [];
+  // Cosmetics are permanent for every verified registered account.
+  // Premium-code expiry controls full functionality, not cosmetic ownership.
+  const entitlements = ["GOLD_THEME","JADE_THEME","ROSE_GOLD_THEME","ARCTIC_BLUE_THEME","GRAPHITE_THEME","PROFILE_BACKGROUNDS","PROFILE_AVATARS"];
   return response({
     premium: active,
+    fullAccess: active,
     tier: active && tier === "SUPPORTER_PLUS" ? tier : null,
     entitlements,
     expiresAt: active ? new Date(expiresAt).toISOString() : null,
