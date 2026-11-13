@@ -339,3 +339,10 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Added tests and Android CI workflow coverage.
 - Current active app profile operations remain Supabase-backed; adapter is not wired into `ProfileRepository`.
 - Remaining blockers before cutover: Firebase must become the active app auth session, all Supabase-dependent profile/PIN/settings/device/account operations need replacements, and live Worker+D1 must be provisioned and tested. No cutover or live resource changes occurred.
+
+
+## 2026-11-13 — Profile settings migration progress
+
+- Added a staged Cloudflare profile-settings HTTP adapter with Firebase bearer auth and unknown-field-preserving JSON payload handling.
+- Added tests and CI workflow coverage. Active profile settings sync remains Supabase-backed and the adapter is not wired into the app.
+- No live D1/Worker provisioning, deployment, secrets, or production data migration occurred.
