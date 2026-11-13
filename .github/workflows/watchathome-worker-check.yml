@@ -50,3 +50,6 @@ jobs:
         run: npm run test:pin
       - name: Persisted profile PIN lockout tests
         run: npm run test:pin-store
+
+      - name: D1-backed API rate-limit tests
+        run: npm run test:rate-limit
