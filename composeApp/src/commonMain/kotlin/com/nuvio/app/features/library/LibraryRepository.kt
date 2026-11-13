@@ -3,7 +3,9 @@ package com.nuvio.app.features.library
 import co.touchlab.kermit.Logger
 import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.auth.AuthState
+import com.nuvio.app.core.network.CloudflareWorkerConfig
 import com.nuvio.app.core.tracking.ensureTrackingProvidersRegistered
+import com.nuvio.app.features.library.sync.CloudflareLibrarySyncAdapter
 import com.nuvio.app.features.library.sync.LibrarySyncAdapter
 import com.nuvio.app.features.library.sync.SupabaseLibrarySyncAdapter
 import com.nuvio.app.features.library.sync.consumeCursorPages
@@ -64,7 +66,14 @@ object LibraryRepository {
     private val nuvioSyncMutex = Mutex()
     private val persistenceLock = SynchronizedObject()
     private val lastPersistedRevisionByProfile = mutableMapOf<Int, Long>()
-    internal var syncAdapter: LibrarySyncAdapter = SupabaseLibrarySyncAdapter
+    internal var syncAdapter: LibrarySyncAdapter = if (
+        CloudflareWorkerConfig.SYNC_ENABLED &&
+        CloudflareWorkerConfig.BASE_URL.startsWith("https://", ignoreCase = true)
+    ) {
+        CloudflareLibrarySyncAdapter
+    } else {
+        SupabaseLibrarySyncAdapter
+    }
 
     init {
         ensureTrackingProvidersRegistered()
