@@ -18,13 +18,13 @@ import io.ktor.http.contentType
 import io.ktor.utils.io.errors.IOException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 /**
- * Staged Worker-backed library sync. This adapter is deliberately not selected by
- * LibraryRepository until Firebase auth and the production Worker/D1 setup are ready.
+ * Staged Worker-backed library sync. LibraryRepository deliberately continues to
+ * use SupabaseLibrarySyncAdapter until Firebase and production Worker/D1 are ready.
  */
 internal class CloudflareLibrarySyncHttpAdapter(
     private val baseUrl: String,
@@ -40,11 +40,11 @@ internal class CloudflareLibrarySyncHttpAdapter(
         requireProfile(profileId)
         require(pageSize in 1..500) { "Invalid library page size." }
         return collectOffsetPages(pageSize) { limit, offset ->
-            val rows = execute(
+            val body = execute(
                 HttpMethod.Get,
                 profilePath(profileId) + "/library?limit=$limit&offset=$offset",
             )
-            json.decodeFromString<List<LibrarySyncItem>>(rows).map(LibrarySyncItem::toLibraryItem)
+            json.decodeFromString<List<LibrarySyncItem>>(body).map(LibrarySyncItem::toLibraryItem)
         }
     }
 
@@ -62,11 +62,11 @@ internal class CloudflareLibrarySyncHttpAdapter(
     ): List<LibraryDeltaEvent> {
         requireProfile(profileId)
         require(sinceEventId >= 0 && limit in 1..500) { "Invalid library delta page." }
-        val rows = execute(
+        val body = execute(
             HttpMethod.Get,
             profilePath(profileId) + "/library/delta?since=$sinceEventId&limit=$limit",
         )
-        return json.decodeFromString<List<LibraryDeltaSyncItem>>(rows).map { event ->
+        return json.decodeFromString<List<LibraryDeltaSyncItem>>(body).map { event ->
             LibraryDeltaEvent(
                 eventId = event.eventId,
                 operation = event.operation,
@@ -77,7 +77,11 @@ internal class CloudflareLibrarySyncHttpAdapter(
 
     override suspend fun pushItems(profileId: Int, items: Collection<LibraryItem>) {
         requireProfile(profileId)
-        sendBatches(profileId, "/library", HttpMethod.Put, items.toList()) { batch ->
+        sendBatches(
+            path = profilePath(profileId) + "/library",
+            method = HttpMethod.Put,
+            values = items.toList(),
+        ) { batch ->
             json.encodeToString(
                 LibraryPushRequest(
                     items = batch.map(LibraryItem::toSyncItem),
@@ -89,7 +93,11 @@ internal class CloudflareLibrarySyncHttpAdapter(
 
     override suspend fun deleteItems(profileId: Int, keys: Collection<LibrarySyncKey>) {
         requireProfile(profileId)
-        sendBatches(profileId, "/library/delete", HttpMethod.Post, keys.toList()) { batch ->
+        sendBatches(
+            path = profilePath(profileId) + "/library/delete",
+            method = HttpMethod.Post,
+            values = keys.toList(),
+        ) { batch ->
             json.encodeToString(
                 LibraryDeleteRequest(
                     keys = batch,
@@ -99,14 +107,19 @@ internal class CloudflareLibrarySyncHttpAdapter(
         }
     }
 
-    private suspend fun <T> sendBatches(\n        profileId: Int,\n        suffix: String,\n        method: HttpMethod,\n        values: List<T>,\n        encode: (List<T>) -> String,\n    ) {
+    private suspend fun <T> sendBatches(
+        path: String,
+        method: HttpMethod,
+        values: List<T>,
+        encode: (List<T>) -> String,
+    ) {
         var batch = mutableListOf<T>()
         for (value in values) {
             val candidate = batch + value
-            val encoded = encode(candidate)
-            if (encoded.encodeToByteArray().size > MAX_REQUEST_BODY_BYTES) {
+            val encodedCandidate = encode(candidate)
+            if (encodedCandidate.encodeToByteArray().size > MAX_REQUEST_BODY_BYTES) {
                 if (batch.isEmpty()) throw IOException("A library sync item exceeds the request size limit.")
-                execute(method, profilePath(profileId) + suffix, encode(batch))
+                execute(method, path, encode(batch))
                 batch = mutableListOf(value)
                 if (encode(batch).encodeToByteArray().size > MAX_REQUEST_BODY_BYTES) {
                     throw IOException("A library sync item exceeds the request size limit.")
@@ -115,11 +128,8 @@ internal class CloudflareLibrarySyncHttpAdapter(
                 batch = candidate.toMutableList()
             }
         }
-        if (batch.isNotEmpty()) execute(method, profilePath(profileId) + suffix, encode(batch))
+        if (batch.isNotEmpty()) execute(method, path, encode(batch))
     }
-
-    // The endpoint is set for each operation so the batching helper can remain generic.
-    private var currentMutationPath: String = ""
 
     private suspend fun execute(
         method: HttpMethod,
@@ -173,7 +183,7 @@ private data class LibraryPushRequest(
 private data class LibraryDeleteRequest(
     val keys: List<LibrarySyncKey>,
     @SerialName("p_origin_client_id") val pOriginClientId: String,
-}
+)
 
 /** Production-configured staged adapter; not wired into LibraryRepository yet. */
 object CloudflareLibrarySyncAdapter : LibrarySyncAdapter by CloudflareLibrarySyncHttpAdapter(
