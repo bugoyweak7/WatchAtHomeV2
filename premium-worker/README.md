@@ -124,3 +124,10 @@ The draft schema now includes `api_rate_limits`; it is not yet an active Wrangle
 The Worker now contains owner-scoped profile CRUD and profile-settings sync routes. These routes return arrays compatible with the existing Kotlin profile/settings serializers, preserve unknown settings JSON fields, enforce the six-profile cap, and rely on the draft schema's profile foreign keys for dependent-row deletion. See docs/FIREBASE_CLOUDFLARE_API_ROUTE_MATRIX.md and SETUP_STATUS.md for route details and current verification status.
 
 These routes are source-only and remain disabled until a D1 database/schema/binding is separately approved and provisioned. No mobile adapter has been switched.
+
+
+## Add-ons, Plugins and Collections sync APIs
+
+The Worker now implements per-profile add-on and plugin repository snapshot sync plus collection-blob sync. Existing client-compatible row and blob response shapes are retained; unknown collection JSON fields are preserved. Plugin scraper code is not uploaded to D1; the app continues using repository URLs and its existing local code cache. See SETUP_STATUS.md and docs/FIREBASE_CLOUDFLARE_API_ROUTE_MATRIX.md for route details and CI evidence.
+
+The profile_plugins draft table now includes name and enabled fields. No D1 database has been created or bound, and no mobile adapter has been switched.
