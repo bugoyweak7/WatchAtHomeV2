@@ -550,3 +550,9 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 ## 2026-11-13 — Device registry revoke route verified
 - Verified by Worker CI `43402508386`: TypeScript passed; 67 tests passed, 0 failed.
 - This is local SQLite/mocked D1 validation only. No Cloudflare D1 production resource or Worker deployment exists; device inventory revocation does not revoke Firebase sessions.
+
+
+## 2026-11-13 — Device registry API source verified
+- Device registration and listing now have a companion owner-scoped soft-revocation endpoint in Worker source.
+- CI run `43402508386` passed TypeScript and 67 tests, 0 failures.
+- Still not provisioned/deployed: Cloudflare D1 database/binding, production Worker, Firebase production settings, and mobile device UI/API migration.
