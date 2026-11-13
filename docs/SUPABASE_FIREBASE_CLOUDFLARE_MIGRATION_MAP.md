@@ -225,3 +225,11 @@ This route snapshot is based on repository source inspection, not live deploymen
 ## 2026-11-13 — Device registry revocation route
 - Implemented `DELETE /v1/devices/:installationId` using the authenticated Firebase UID, active-account check, route rate limit and soft revoke in D1. Revoked installations are excluded from active device listings; repeated or cross-owner revocation requests do not modify another owner's row.
 - Worker CI `43402508386` passed TypeScript and 67 tests (0 failures), including authenticated HTTP coverage. The app-side device management flow is not migrated, and the route is not deployed to a live D1-backed Worker.
+
+
+## 2026-11-13 — Watch-progress route parity update
+
+- Worker source now includes D1-backed watch-progress snapshot, upsert, cursor, delta and delete-tombstone routes under /v1/profiles/:profileIndex/watch-progress.
+- The API preserves the existing ProgressSyncAdapter wire fields and stable progress_key identity. Authenticated HTTP and local SQLite tests pass.
+- Worker CI run 43411656192 passed TypeScript and 73 tests across 10 suites, 0 failures.
+- This closes the Worker-source route gap only. The app still uses SupabaseProgressSyncAdapter; mobile client migration, legacy ordering parity, timestamp pagination tie handling, retention cleanup, live D1 validation and deployment remain outstanding.
