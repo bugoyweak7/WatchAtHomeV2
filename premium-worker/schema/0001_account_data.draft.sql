@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS profile_settings (
 CREATE TABLE IF NOT EXISTS profile_pin_credentials (
   user_id TEXT NOT NULL,
   profile_index INTEGER NOT NULL,
-  pin_hash BLOB NOT NULL,
-  pin_salt BLOB NOT NULL,
+  pin_hash BLOB NOT NULL CHECK (length(pin_hash) = 32),
+  pin_salt BLOB NOT NULL CHECK (length(pin_salt) = 16),
   hash_algorithm TEXT NOT NULL,
   hash_parameters_json TEXT NOT NULL CHECK (json_valid(hash_parameters_json)),
   failed_attempts INTEGER NOT NULL DEFAULT 0 CHECK (failed_attempts >= 0),
