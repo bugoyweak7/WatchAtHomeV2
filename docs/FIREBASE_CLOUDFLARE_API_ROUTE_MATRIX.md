@@ -283,3 +283,8 @@ GitHub Actions run 43382547116 passed TypeScript and all 61 Worker tests (0 fail
 - `DELETE /v1/devices/:installationId` is implemented in Worker source with caller UID from the verified token, active-account check, rate limiting and owner-scoped idempotent revocation.
 - This marks the inventory record revoked and hides it from `GET /v1/devices`; it does not invalidate Firebase refresh tokens or remotely sign out an app session.
 - SQLite and HTTP tests added; final CI run `43402508386` pending.
+
+
+### Device registry revoke route verification — 2026-11-13
+- CI `43402508386` passed TypeScript and 67 tests with zero failures, including authenticated HTTP tests proving a user cannot revoke another user's device row.
+- This is mocked/local verification; production D1/Worker deployment and Firebase session revocation remain unimplemented.
