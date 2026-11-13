@@ -291,3 +291,13 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Added optional `DB?: D1Database` typing only. No D1 binding was added to `wrangler.toml`; new account/device endpoints return HTTP 503 until D1 provisioning and schema application are separately reviewed and approved.
 - No active D1 migration, Firebase/Cloudflare account setting, mobile adapter, existing premium endpoint, production data, or deployment was changed.
 - Next: obtain a real local checkout or CI runner for Worker TypeScript compilation and all schema tests; then add mocked D1 route tests before any D1 binding is introduced.
+
+
+## 2026-11-13 — Worker build verification workflow added
+
+- Local checkout was attempted for direct execution but the execution environment could not resolve GitHub, so no local TypeScript or Node test result is claimed.
+- Added `.github/workflows/watchathome-worker-check.yml` on the approved branch. It runs on relevant pushes/pull requests and manual dispatch, installs the Worker package dependencies using Node.js 22, runs `npm run check`, then runs `npm run test:schema`.
+- The workflow commit is `057042543d49aa1602dd379c71f74cf57996cb8a`.
+- The GitHub Actions workflow run could not yet be confirmed through the available repository connector. Therefore TypeScript compilation and the complete nine-test suite remain pending actual CI results.
+- No production deployment, D1 binding/database, Firebase setting, or app adapter was changed.
+- Next: inspect the CI run and resolve any actual compiler/test failures before writing mocked D1 route tests.
