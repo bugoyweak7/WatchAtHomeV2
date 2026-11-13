@@ -350,3 +350,12 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - Added GET decode and PUT payload tests, including preservation of an unknown future settings key and rejection before network access when no Firebase token is available.
 - Added the new adapter and test to the Android Play Store CI workflow.
 - This remains client-contract test coverage only. The active `ProfileSettingsSync` still uses Supabase RPCs and must not switch until Firebase authentication and the Worker/D1 deployment are verified end to end.
+
+
+## 2026-11-13 — Admin premium-code Worker integration cross-repository update
+
+- Re-scanned the Admin App and Premium Worker source. Admin premium-code creation now calls the existing authenticated `POST /v1/admin/premium-codes` endpoint using a Firebase ID token; direct Admin-side creation of raw-ID Firestore documents was removed.
+- Worker-created code documents use SHA-256 IDs and preserve the `code`, `durationLabel`, `durationDays`, `durationMinutes`, `status`, and timestamp fields consumed by the Admin history screen. The existing Admin Firestore history query remains compatible with those hashed documents, subject to deployed Firestore rules.
+- Admin build configuration now accepts the non-secret `watchathome.premiumApiBaseUrl` Gradle property. No live Worker URL was present in repository configuration, so the app is not yet configured for a live call.
+- Admin build verification is pending: its current GitHub Actions workflow automatically targets `main`, not the approved setup branch. Do not treat this as production-ready until the branch build and authenticated API flow pass.
+- No Firebase/Cloudflare resources, secrets, production data, deployments, or account settings were changed.
