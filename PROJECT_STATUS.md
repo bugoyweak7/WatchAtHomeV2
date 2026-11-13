@@ -192,3 +192,20 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Added unit and HTTP tests for owner isolation, idempotence, revoked-device exclusion from inventory, and attempted cross-account revocation.
 - Final Worker CI run `43402508386` passed TypeScript and 67 tests across 10 suites (0 failures), including 12 authenticated HTTP/Firebase tests and 7 account/device module tests.
 - This is source and local SQLite/mock verification only. No D1 resource, production Worker deployment, mobile device-management UI, or active auth migration was performed.
+
+
+## 2026-11-13 — D1 library snapshot and delta API staged
+
+- Added premium-worker/src/library-sync-api.ts with profile-scoped D1 library snapshot paging, delta cursor lookup, delta event paging, upsert requests, and delete-by-key tombstones.
+- Added authenticated Worker routes:
+  - GET /v1/profiles/:profileIndex/library?limit=&offset= — active library snapshot page.
+  - PUT /v1/profiles/:profileIndex/library — upsert up to 500 serialized library items.
+  - GET /v1/profiles/:profileIndex/library/cursor — current library event cursor.
+  - GET /v1/profiles/:profileIndex/library/delta?since=&limit= — ordered upsert/delete events.
+  - POST /v1/profiles/:profileIndex/library/delete — tombstone selected content keys.
+- Contract follows the actual LibrarySyncAdapter serializer: content_id, content_type, name/artwork/description metadata, release info, rating, genres, add-on base URL, and saved timestamp. Stable keys use lowercased content type plus content ID, matching libraryItemKey.
+- Upserts and deletes append sync_events rows for cursor-based reconciliation; deletes preserve tombstones and are idempotent. p_origin_client_id is preserved in event metadata.
+- Added local SQLite tests for pagination, cursor progression, upsert/delete event payloads, duplicate/malformed/oversized requests, plus Worker HTTP tests for authenticated route access and profile ownership.
+- Worker CI run 43405997252 passed TypeScript compilation and all 70 tests across 10 suites (0 failures).
+- This is Worker source and local SQLite/mock verification only. LibraryRepository still uses SupabaseLibrarySyncAdapter; no mobile adapter switch, live D1 provisioning, production deployment, or Supabase data change occurred.
+- Before production use: reconcile snapshot/delta behavior with real multi-device traffic, add/verify sync-event retention cleanup and live D1 integration, and implement the mobile adapter behind the existing LibrarySyncAdapter interface.
