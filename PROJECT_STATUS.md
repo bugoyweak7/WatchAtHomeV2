@@ -209,3 +209,20 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Worker CI run 43405997252 passed TypeScript compilation and all 70 tests across 10 suites (0 failures).
 - This is Worker source and local SQLite/mock verification only. LibraryRepository still uses SupabaseLibrarySyncAdapter; no mobile adapter switch, live D1 provisioning, production deployment, or Supabase data change occurred.
 - Before production use: reconcile snapshot/delta behavior with real multi-device traffic, add/verify sync-event retention cleanup and live D1 integration, and implement the mobile adapter behind the existing LibrarySyncAdapter interface.
+
+
+## 2026-11-13 — D1 watch-progress snapshot and delta API verified
+
+- Added premium-worker/src/watch-progress-sync-api.ts for D1-backed watch-progress snapshot reads, event cursor/delta reads, batch upserts, and delete tombstones.
+- Added authenticated profile routes:
+  - GET /v1/profiles/:profileIndex/watch-progress?sinceLastWatched=&limit=
+  - PUT /v1/profiles/:profileIndex/watch-progress
+  - GET /v1/profiles/:profileIndex/watch-progress/cursor
+  - GET /v1/profiles/:profileIndex/watch-progress/delta?since=&limit=
+  - POST /v1/profiles/:profileIndex/watch-progress/delete
+- Wire payload matches the existing SupabaseProgressSyncAdapter fields: content_id, content_type, video_id, season, episode, position, duration, last_watched, and progress_key. Stable progress_key is retained as the server identity.
+- Upserts and deletes append resource-specific sync_events. Delete operations soft-delete records and emit tombstones; origin client metadata is preserved.
+- Added local SQLite tests for snapshot filters, delta/cursor progression, upsert/delete behavior, invalid/duplicate keys, negative values, batch limits, and HTTP auth/profile ownership.
+- Worker CI runs 43411619931 and 43411656192 passed TypeScript and the full Worker suite. Final run 43411656192: 73 tests across 10 suites, 0 failures.
+- This is Worker source and local SQLite/mock verification only. SupabaseProgressSyncAdapter remains active; no mobile adapter switch, live D1 provisioning, deployment, or production data change occurred.
+- Remaining: compare behavior against the legacy Supabase RPC contract using production-safe fixtures, implement mobile Worker adapter and merge parity tests, address timestamp pagination tie cases, add sync-event retention, and complete live D1 validation before cutover.
