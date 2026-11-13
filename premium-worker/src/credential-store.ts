@@ -34,7 +34,7 @@ function rejectSecretMetadata(value: unknown, path = "metadata"): void {
     return;
   }
   for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
-    if (/(^|_)(access_?token|refresh_?token|token|password|secret|api_?key|authorization)(_|$)/i.test(key)) {
+    if (/(token|password|secret|api.?key|authorization)/i.test(key)) {
       throw new Error(`Sensitive field is not allowed in media-server metadata: ${path}.`);
     }
     rejectSecretMetadata(child, `${path}.${key}`);
