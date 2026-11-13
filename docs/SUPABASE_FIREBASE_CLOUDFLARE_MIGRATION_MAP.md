@@ -215,3 +215,8 @@ This route snapshot is based on repository source inspection, not live deploymen
 ## 2026-11-13 — Device registry revoke route staged
 - Added owner-scoped `DELETE /v1/devices/:installationId` with rate limiting and idempotent `revoked_at` update; active device listing omits revoked rows.
 - Added data-access and actual Worker HTTP test coverage. This is only an inventory state change, not session/refresh-token revocation. Final CI run `43402508386` pending.
+
+
+## 2026-11-13 — Device registry revoke route CI passed
+- Worker CI run `43402508386` passed TypeScript and all 67 tests (0 failures), including device revoke ownership/idempotence tests.
+- This validates registry status changes only; it does not revoke Firebase refresh tokens or remotely sign out an app. No live D1 or mobile migration.
