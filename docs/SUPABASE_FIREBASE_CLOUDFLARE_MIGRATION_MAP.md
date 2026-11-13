@@ -233,3 +233,12 @@ This route snapshot is based on repository source inspection, not live deploymen
 - The API preserves the existing ProgressSyncAdapter wire fields and stable progress_key identity. Authenticated HTTP and local SQLite tests pass.
 - Worker CI run 43411656192 passed TypeScript and 73 tests across 10 suites, 0 failures.
 - This closes the Worker-source route gap only. The app still uses SupabaseProgressSyncAdapter; mobile client migration, legacy ordering parity, timestamp pagination tie handling, retention cleanup, live D1 validation and deployment remain outstanding.
+
+
+## 2026-11-13 — Mobile library HTTP adapter staged
+
+- Added a separate Cloudflare implementation of `LibrarySyncAdapter` using the existing Worker snapshot, cursor, delta, upsert and tombstone routes.
+- Adapter obtains a fresh staged Firebase ID token and sends it as Bearer auth; it does not reuse the Supabase backend URL.
+- Added optional `CLOUDFLARE_WORKER_BASE_URL` runtime configuration, blank by default, and request-size-aware batching.
+- Added MockEngine coverage; Android CI run 43413914695 pending final result.
+- No change to active `LibraryRepository.syncAdapter`; Supabase remains the live path. No production Worker/D1 resources were configured.
