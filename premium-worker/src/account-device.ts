@@ -121,7 +121,7 @@ export async function revokeDevice(
 ): Promise<{ revoked: boolean }> {
   await ensureActiveAccount(db, uid);
   const normalized = installationId.trim();
-  if (!normalized || normalized.length > 128 || /[\\s/]/.test(normalized)) {
+  if (!normalized || normalized.length > 128 || /[\s/]/.test(normalized)) {
     throw new AccountApiError(400, "Invalid installation ID.");
   }
   const result = await db.prepare(`
