@@ -222,8 +222,8 @@ test("provider credentials are encrypted, owner-scoped, and require configured k
     credential: { apiKey: "private-value" },
   }), env);
   assert.equal(put.status, 200);
-  const raw = db.prepare("SELECT ciphertext FROM provider_credentials WHERE user_id = ?1").bind("credential-owner").first();
-  assert.ok(raw);
+  const raw = await db.prepare("SELECT ciphertext FROM provider_credentials WHERE user_id = ?1").bind("credential-owner").first();
+  assert.ok(raw?.ciphertext);
   const get = await worker.fetch(new Request("https://worker.test/v1/profiles/1/provider-credentials?provider=tmdb", { headers: { authorization: "Bearer " + token } }), env);
   assert.equal(get.status, 200);
   assert.deepEqual((await get.json()).credential, { apiKey: "private-value" });
@@ -248,8 +248,8 @@ test("media-server access tokens are encrypted and restored only to the owning p
     accessToken: "sensitive-token",
   }), env);
   assert.equal(put.status, 200);
-  const raw = db.prepare("SELECT token_ciphertext FROM media_servers WHERE user_id = ?1").bind("media-owner").first();
-  assert.ok(raw);
+  const raw = await db.prepare("SELECT token_ciphertext FROM media_servers WHERE user_id = ?1").bind("media-owner").first();
+  assert.ok(raw?.token_ciphertext);
   const get = await worker.fetch(request("/v1/profiles/1/media-servers", "GET", token), env);
   assert.equal(get.status, 200);
   const body = await get.json();
