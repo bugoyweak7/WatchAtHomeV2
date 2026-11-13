@@ -78,3 +78,12 @@ The CI suite currently runs 20 tests in total (9 schema, 6 mocked D1 data-access
 Encryption binds AAD to the verified UID, profile index, resource, and record key. The primitive is not yet connected to credential/media-server routes, and no key secret is configured. Do not store secrets in D1 until integration and end-to-end tests are complete.
 
 - `npm run test:crypto` — 5 AES-GCM/key-rotation tests.
+
+
+### Encrypted credential repository
+
+`src/credential-store.ts` provides D1 data-access helpers that encrypt provider credential JSON and media-server access tokens before storage. Media-server metadata is separate and rejects secret-like field names. These helpers are not yet exposed through authenticated HTTP routes and cannot run in the current deployment because D1 and the encryption key-ring secret are not configured.
+
+- `npm run test:credentials` — 4 SQLite-backed encrypted credential repository tests.
+
+Latest CI run `43377725695`: TypeScript passed; 29 tests passed across schema, account/device, HTTP/auth, crypto, and credential storage.
