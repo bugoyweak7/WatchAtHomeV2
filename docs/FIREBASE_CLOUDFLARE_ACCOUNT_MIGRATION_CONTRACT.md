@@ -343,3 +343,10 @@ No mobile client was switched, no D1 database was provisioned, no production res
 See `docs/D1_SECURITY_REVIEW.md` for the detailed findings. The draft is not ready for production application: provider/media-server AEAD encryption and key management are not implemented; the profile PIN KDF/lockout design is unresolved; device-link, account deletion, retention, rate limiting, and generic JSON secret-exclusion controls require further work. `FIREBASE_WEB_API_KEY` must also be confirmed in Worker runtime configuration before account bootstrap is enabled.
 
 No D1 resource/binding was created and no schema was applied. Explicit approval is required before provisioning D1. Keep D1-dependent routes disabled (503) until the reviewed schema and binding are ready.
+
+
+## 19. Versioned data-encryption primitive checkpoint (2026-11-13)
+
+Added `premium-worker/src/data-crypto.ts` with AES-256-GCM, random 12-byte nonces, 128-bit authentication tags, UID/profile/resource/record-bound additional authenticated data, and versioned key-ring rotation support. CI run `43377463012` passed 5 crypto tests as part of 25 total tests.
+
+This is a primitive only. Provider credentials and media-server tokens are not yet wired through it, no encryption key-ring secret is configured, and no D1 data has been written. Do not treat this as completion of credential-at-rest protection until route integration, key provisioning, rotation/re-encryption workflow, and end-to-end tests are complete.
