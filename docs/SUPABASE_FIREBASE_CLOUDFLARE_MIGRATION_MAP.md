@@ -167,3 +167,9 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Removed redundant no-context Firebase initialization from common code. Android default initialization is provided by FirebaseInitProvider under Google Services configuration; iOS is initialized by `FirebaseApp.configure()` in app startup.
 - Corrected ID-token retrieval to use `FirebaseUser.getIdToken(forceRefresh)` directly as `String?`.
 - The source-only change is committed as `6cf909beab6bcf7301614f6cfc9d6784e2116d60`; see `REPORT_LOG.md` for the exact CI findings.
+
+
+## 2026-11-13 — Firebase Auth verification pipeline
+- The Firebase Auth CI workflow now includes `:composeApp:testAndroidHostTest` to execute the staged `commonTest` Firebase Auth session-manager suite on the Android host test target.
+- The workflow run `43399716638` is pending verification. Do not treat the suite as passed until GitHub Actions reports success.
+- This is test automation only; Firebase Auth remains staged and is not connected to the active sign-in UI. Supabase remains the active auth provider.
