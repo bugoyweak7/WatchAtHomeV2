@@ -155,3 +155,8 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Added SQLite-backed tests for full JSON round-trip (including future fields), per-user/profile/platform isolation, empty snapshot replacement, malformed payloads, invalid platform, body size limit, and nested secret rejection.
 - Worker CI runs `43401753132` passed the API module addition before route wiring; route wiring run `43401792563` and final test run `43401818613` were queued/in progress at documentation time. Verify the final run before marking this endpoint passed.
 - Existing mobile `HomeCatalogSettingsSyncService` remains on Supabase. No mobile adapter switch or production D1 deployment was made.
+
+
+## 2026-11-13 — Home catalog test fixture correction
+- First full Worker run `43401818613` passed TypeScript and all preceding suites but exposed a fixture setup error in the new home-catalog round-trip test: the test attempted to seed the same account row twice while adding a second profile. The implementation itself compiled; the second malformed-payload test passed.
+- Corrected the fixture to create the second profile under the existing account. New CI run `43401962345` is queued; wait for its result before marking the home-catalog test suite verified.
