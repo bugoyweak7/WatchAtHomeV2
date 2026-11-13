@@ -539,3 +539,9 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 ## 2026-11-13 — Firebase Auth source verification
 - Verified: focused Firebase Auth session-manager tests passed in CI; Android Play Store debug app compilation passed in workflow `43400761852`.
 - Not yet configured/verified: live Firebase Console settings, production sign-in, auth UI integration, Cloudflare D1 provisioning, and mobile API adapter migration.
+
+
+## 2026-11-13 — Device registry revocation source
+- Worker source now supports owner-scoped deletion of a registered-device inventory entry.
+- No new Cloudflare setup or secrets required. Device inventory revocation does not invalidate Firebase sessions or force a client logout.
+- Final CI run `43402508386` queued after correcting initial syntax/validation issues.
