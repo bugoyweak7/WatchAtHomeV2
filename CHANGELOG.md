@@ -62,3 +62,8 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Fixed three Firebase Auth gateway compile errors using the actual GitLive Firebase SDK 2.8.0 API: removed unsupported no-context initialization calls and corrected ID-token retrieval to use the returned nullable string.
 - Source fix commit: `6cf909beab6bcf7301614f6cfc9d6784e2116d60`.
 - Android build run `43388218215` failed at Kotlin compilation; the source fix triggers the next validation run.
+
+
+## 2026-11-13
+- CI: added the Android host-test task for the staged Firebase Auth session manager tests before the existing Play Store debug build. Commit: `4629adb63172064bf29c546e178cf8f2c0f57f1b`.
+- Verification: GitHub Actions run `43399716638` was still running at documentation update time; no test/build success is claimed yet.
