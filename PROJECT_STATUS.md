@@ -346,3 +346,12 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Added a staged Cloudflare profile-settings HTTP adapter with Firebase bearer auth and unknown-field-preserving JSON payload handling.
 - Added tests and CI workflow coverage. Active profile settings sync remains Supabase-backed and the adapter is not wired into the app.
 - No live D1/Worker provisioning, deployment, secrets, or production data migration occurred.
+
+
+## 2026-11-13 — Admin premium-code Worker integration cross-repository update
+
+- Re-scanned the Admin App and Premium Worker source. Admin premium-code creation now calls the existing authenticated `POST /v1/admin/premium-codes` endpoint using a Firebase ID token; direct Admin-side creation of raw-ID Firestore documents was removed.
+- Worker-created code documents use SHA-256 IDs and preserve the `code`, `durationLabel`, `durationDays`, `durationMinutes`, `status`, and timestamp fields consumed by the Admin history screen. The existing Admin Firestore history query remains compatible with those hashed documents, subject to deployed Firestore rules.
+- Admin build configuration now accepts the non-secret `watchathome.premiumApiBaseUrl` Gradle property. No live Worker URL was present in repository configuration, so the app is not yet configured for a live call.
+- Admin build verification is pending: its current GitHub Actions workflow automatically targets `main`, not the approved setup branch. Do not treat this as production-ready until the branch build and authenticated API flow pass.
+- No Firebase/Cloudflare resources, secrets, production data, deployments, or account settings were changed.
