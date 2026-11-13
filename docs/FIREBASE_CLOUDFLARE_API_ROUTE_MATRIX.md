@@ -412,3 +412,16 @@ The following profile-scoped routes are implemented and locally/mock verified; t
 - The watched-items API now preserves distinct movie/series identities for a shared content ID. Legacy delete keys (which omit content type) resolve and tombstone each matching media-type row separately.
 - Android CI run `43420777374` is still in progress at this status update. The new mobile adapter and guarded repository selection remain unverified until that run completes.
 - No live D1, Worker deployment, Firebase Console, production data, or active Supabase cutover was performed.
+
+
+### Profile metadata mobile adapter — 2026-11-13
+
+| Operation | Worker route | Mobile implementation | Active in app |
+|---|---|---|---|
+| List profiles | `GET /v1/profiles` | `CloudflareProfileHttpAdapter.pullProfiles()` | No |
+| Save profiles | `PUT /v1/profiles` with `profiles` array | `CloudflareProfileHttpAdapter.pushProfiles()` | No |
+| Delete profile | `DELETE /v1/profiles/{profileIndex}` | `CloudflareProfileHttpAdapter.deleteProfile()` | No |
+
+- Calls use a Firebase ID-token bearer header, require HTTPS, and cap response body size. Profile saves enforce the six-profile maximum and unique indexes on the client; Worker validation remains authoritative.
+- Added focused adapter tests and Android CI workflow coverage. This verifies client contract behavior only, not live Worker/D1 deployment or production account migration.
+- `ProfileRepository` remains on Supabase until the Firebase auth cutover and all dependent profile operations are ready.
