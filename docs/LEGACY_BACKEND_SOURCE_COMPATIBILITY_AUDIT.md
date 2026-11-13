@@ -347,3 +347,41 @@ Verified client operations:
 - Do not make supporter assets public merely to simplify migration. Use authenticated short-lived delivery URLs or a Worker authorization proxy.
 - Preserve existing local caches during transition so an unavailable remote asset does not erase a previously downloaded image.
 - No upstream Supabase bucket policy, object ACL, or signed URL validation configuration was available from client source. Those legacy server-side rules remain unknown.
+
+
+## 2026-11-13 — Supabase infrastructure coupling and source inventory completion checkpoint
+
+### Shared Supabase infrastructure dependencies
+
+Verified source files:
+- core/network/SupabaseProvider.kt
+- core/network/SupabaseEndpointConfig.kt
+- core/network/ServerConfiguration.kt
+- core/network/ServerDiscovery.kt
+- core/network/NetworkStatusRepository.kt
+- core/network/RealtimeSocketFactory.kt
+
+Findings:
+- SupabaseProvider installs Supabase Auth, PostgREST, Functions, Storage, and Realtime SDK modules; it also configures retry/cooldown behavior and fallback backend routing.
+- SupabaseEndpointConfig constructs REST and WebSocket URLs and routes retryable origin failures to an optional fallback endpoint.
+- Official server configuration exposes backend URL, publishable key, email/password auth, TV login, and Watch Party capability flags.
+- Server discovery validates custom server configuration and identifies official backends by matching the Supabase URL.
+- Network status probes Supabase REST endpoints with the configured publishable key and reports a distinct server-unreachable state if those endpoints cannot be reached.
+- RealtimeSocketFactory customizes the Supabase/Phoenix heartbeat behavior. Realtime replacement must preserve heartbeat/reconnect semantics or deliberately replace and test them.
+- These are app-wide dependencies: removing the Supabase SDK requires replacing server configuration/discovery, backend health checks, retry/fallback handling, HTTP auth headers, and realtime socket lifecycle—not just changing feature repositories.
+
+### Additional profile asset API contracts
+
+- get_avatar_catalog: standard avatar metadata.
+- get_member_profile_avatar_catalog: member-only avatar metadata; objects in membership-profile-avatars; authenticated download; one-day signed share URL.
+- get_member_profile_background_catalog: supporter background metadata; landscape/optional portrait objects in membership-profile-backgrounds; authenticated download; portrait-to-landscape fallback.
+- Preserve membership gating, asset version cache keys, local caches, and short-lived protected sharing.
+
+### Scope of path-based scan
+
+A path-targeted source scan inspected 296 Kotlin files under the relevant User App commonMain and fullCommonMain auth/network/sync/profile/add-on/library/membership/party/server/plugin/settings feature areas on the approved branch. In addition to the previously documented RPC/table/Edge Function/realtime calls, the scan found the Storage and infrastructure dependencies above. This is not a claim that every source file in the entire repository or every upstream server-side definition has been exhaustively audited.
+
+### Remaining unknowns
+
+- Upstream SQL schema, RLS, RPC bodies, Storage bucket policies, Edge Function implementation, Realtime authorization, and exact remote data export behavior remain unavailable from the user's account.
+- No remote legacy service request was made as part of this source scan; reachability and user-authorized data export remain unverified.
