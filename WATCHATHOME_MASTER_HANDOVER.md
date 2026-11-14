@@ -3147,3 +3147,58 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - This user-provided runtime response confirms the Preview bootstrap request completed and the Worker returned a successfully initialized trial. Assistant did not independently inspect Cloudflare/Firebase dashboards or query D1/Firestore contents.
 - Scope and safety: Preview test account and Preview Worker only. No Production deployment, Production secrets/data, Supabase configuration/data, or app traffic cutover was changed. Supabase removal remains incomplete and unauthorized.
 - Next gate: select the next Preview integration test only after reviewing its exact route, required configuration, and write side effects. Bootstrap success does not establish that the entire Firebase/Cloudflare migration is complete.
+
+
+# 2026-11-14 — Live Preview device lifecycle verification report
+
+## Scope and authorization
+- Continued the isolated Preview integration tests after the successful Preview account bootstrap and seven-day trial initialization.
+- Tested only the disposable Firebase account in project `watchathome-preview` against the Preview Worker URL:
+  `https://setup-firebase-cloudflare-zero-cost-watchathome-premium-api.adminenzoreviewer.workers.dev/`.
+- The test created and then soft-revoked one disposable registered-device record in Preview D1. No Production endpoint or account was used.
+
+## Source contract reviewed before testing
+- Re-read the current Premium Worker setup-branch route dispatch, `src/account-device.ts`, and account/device tests before giving the user the test commands.
+- `POST /v1/devices` accepts `installationId`, `clientName`, `clientVersion`, `platform`, and `deviceName`; it associates the record with the UID derived from the verified Firebase ID token.
+- `GET /v1/devices` lists non-revoked devices for the authenticated UID.
+- `DELETE /v1/devices/{installationId}` revokes a device under the authenticated account. Revocation is a soft-revoke operation; it removes the device from the active inventory rather than physically deleting the historical row.
+- The source-level tests cover owner-scoped registration/listing/revocation behavior, but this live test used only one account and therefore is not a live cross-account isolation test.
+
+## User-provided live Preview results
+
+### 1. Registration
+- Request: authenticated `POST /v1/devices`.
+- Test installation ID: `preview-test-device-001`.
+- Submitted metadata: client `WatchAtHome`, version `1.0.0`, platform `android_tv`, device name `Preview Test Device`.
+- Response: `{"registered":true,"installationId":"preview-test-device-001"}`.
+- Result: PASS.
+
+### 2. Active device listing
+- Request: authenticated `GET /v1/devices`.
+- Response contained one device with the exact test installation ID and submitted metadata.
+- Result: PASS. The registered device was visible in the authenticated account's active device inventory.
+
+### 3. Revocation
+- Request: authenticated `DELETE /v1/devices/preview-test-device-001`.
+- Response: `{"revoked":true}`.
+- Result: PASS.
+
+### 4. Post-revocation listing
+- Request: authenticated `GET /v1/devices` after revocation.
+- Response: `{"devices":[]}`.
+- Result: PASS. The revoked device no longer appeared in the active device inventory.
+
+## Evidence boundary
+- The request/response outputs above were supplied by the user from PowerShell. They establish that the Preview Worker returned the reported results.
+- The assistant did not independently inspect the remote D1 row, Cloudflare dashboard, Firebase dashboard, or service-account secret values.
+- This test does not establish cross-account isolation, multi-device limits, device-link/TV pairing, Android app integration, Production behavior, or complete Firebase/Cloudflare migration parity.
+
+## Change and safety record
+- No application source code, tests, Wrangler configuration, Cloudflare secrets/bindings, Firebase settings, Firestore rules/data, D1 schema, Production data, Supabase configuration/data, or deployments were changed in this test.
+- Only the disposable Preview device record was created and soft-revoked through the existing API.
+- Supabase remains active for rollback. No Supabase removal or app traffic cutover is authorized by this test.
+
+## Result and next safe step
+- **Passed:** Preview account bootstrap/trial (previous report), device registration, active device listing, device revocation, and post-revocation disappearance from the active list.
+- **Still unverified:** live cross-account isolation, Android/Android TV app integration, device-link flow, complete account deletion, and remaining feature parity.
+- Next: re-read the profile API route and schema contract, then test one low-risk Preview profile read/create operation with explicit awareness of its D1 write side effects. Do not deploy or change Production.
