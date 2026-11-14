@@ -404,3 +404,11 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Confirmed the existing Worker endpoint verifies both sessions but does not persist an identity link; active User App authentication and device-link remain Supabase-backed.
 - Documentation only. No app code, dependencies, backend routes, D1 schema/data, Firebase/Supabase settings, secrets, deployments or production resources changed.
 
+
+
+## 2026-11-14 — Worker identity-link backend source implementation
+
+- Added the additive D1 identity-link schema, dual-session Worker link route, and conflict/idempotency tests in the Premium Worker setup branch.
+- The backend source requires recent Firebase password reauthentication, verified Firebase email, an active D1 account, and a valid non-anonymous legacy session. Existing links cannot be reassigned.
+- CI for the latest source/test commit was pending when recorded. No D1 application or deployment was performed.
+- User App authentication remains Supabase-backed; no runtime client cutover, Production operation, or Supabase data/settings change.
