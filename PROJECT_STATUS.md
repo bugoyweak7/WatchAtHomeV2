@@ -463,3 +463,11 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Decision: explicit dual-session proof and one-to-one persistent mapping; no email-only auto-linking; keep Supabase active during incremental feature migration.
 - No runtime source, D1 schema/data, cloud settings/secrets, deployments, or production resources changed.
 
+
+
+## 2026-11-14 — Identity-link backend implementation status
+
+- Premium Worker setup branch now includes the source-only additive D1 identity-link migration and dual-session link endpoint.
+- Mapping is one-to-one, insert-only, idempotent for the exact pair, and rejects either-side reassignment. Tests cover schema constraints, success/retry, conflicts, stale auth, and missing bootstrap.
+- Latest CI run was pending at the time of this entry; see `WATCHATHOME_MASTER_HANDOVER.md` for commit references and exact scope.
+- Preview D1 schema has not been upgraded and Worker has not been redeployed. User App login remains Supabase-backed; Production and Supabase services/data are unchanged.
