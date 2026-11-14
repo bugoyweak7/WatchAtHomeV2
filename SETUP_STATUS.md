@@ -814,3 +814,41 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Current evidence conclusion: **Supabase is NOT safe to remove.** Removing it now would break active authentication and multiple sync/account/realtime paths. Keep Supabase source, dependencies, runtime configuration, and service/data intact as rollback until each replacement is wired, tested, live-verified, and data migration/retention is settled.
 - This audit was read-only with respect to application code and cloud resources. Only this status/migration documentation and changelog are being updated. No source adapters, Gradle dependencies, Supabase service/data, Firebase settings, D1/R2 resources, secrets, or deployments were changed.
 - Next work item: create a feature-by-feature evidence matrix for the active Supabase call sites, their Firebase/Worker replacements, required D1/Firestore/R2/DO bindings, tests, and cutover/rollback gates. Then select one low-risk feature for end-to-end migration; do not perform a global Supabase removal.
+
+## 2026-11-14 — Firebase auth and account/device migration evidence matrix
+
+### Active app identity path — BLOCKED
+- Re-read current AuthRepository.kt, AuthScreen.kt, and AppGate.kt. AuthScreen and AppGate still call/observe AuthRepository; that repository imports SupabaseProvider and Supabase Auth for session observation, validation/refresh, email/password sign-in/up, sign-out, and invalid-session handling.
+- AuthRepository still exposes signInAnonymously() using a locally generated UUID. AuthScreen still calls it from the “Continue without account” actions. This conflicts with the approved registered-email/password-only policy.
+- AuthRepository still invokes the Supabase delete-account Edge Function; local account cleanup is tied to the old session-loss path. Do not replace this with Firebase Auth user deletion alone.
+- FirebaseAuthGateway and FirebaseAuthSessionManager exist and support Firebase email/password create/sign-in, sign-out, auth-state observation, and fresh ID-token retrieval. Their source comments explicitly say they are staged and must not replace AuthRepository until protected app data APIs and device-link/account deletion are migrated.
+- Android CI run 43422907365 passed the Firebase Auth integration Android Play Store variant compile. This is compile evidence only; it does not prove active app wiring, iOS compilation, live Firebase auth, or backend compatibility.
+
+### Worker account bootstrap and device registry — SOURCE + CI PASS; LIVE FLOW NOT PROVEN
+- Re-read standalone Worker bugoyweak7/WatchAtHomePremiumWorker on the approved setup branch. src/index.ts contains authenticated POST /v1/account/bootstrap, POST /v1/devices, GET /v1/devices, and DELETE /v1/devices/{installationId} routes.
+- Firebase ID-token verification derives UID from the token and currently accepts Firebase sign_in_provider=password; anonymous tokens are rejected. Account bootstrap validates Firebase account creation metadata through Identity Toolkit, creates/checks the D1 account root idempotently, and initializes the existing immutable trial flow.
+- Device register/list/revoke operations require an active D1 account and scope rows to the verified token UID. They are not TV pairing or Firebase custom-token exchange.
+- Standalone Worker wrangler.toml binds DB to watchathome-accounts (ID a39fe326-52c2-442c-ae71-5a11908059c7) and Preview DB to watchathome-accounts-preview (ID 38cb13eb-dfbd-403f-92a9-43b545d6375c). Worker status records report 19 application tables and 9 indexes applied/verified in both D1 databases. This is schema presence, not proof of route-level production integration.
+- Worker CI run 43545476435 passed its TypeScript and D1 test job after the Worker default export fix. Tests/CI do not prove real Firebase/Firestore/remote D1 behavior or production deployment.
+- The duplicate nested premium-worker/ copy in the User App repository has a different wrangler.toml that does not declare the standalone Worker's D1 binding. Treat bugoyweak7/WatchAtHomePremiumWorker as the approved standalone Worker repo for deployment configuration; do not infer its configuration from the nested copy.
+
+### TV device-link — BLOCKED
+- DeviceLinkAuthRepository.kt still calls Supabase PostgREST RPCs start_device_login_session and poll_tv_login_session, invokes tv-logins-exchange, and imports a Supabase access/refresh-token session.
+- Current Worker route dispatch has no /v1/device-link/* start, approve, poll, or one-time exchange endpoints. D1 has a device_link_sessions table, but table existence is not an implemented pairing flow.
+- Firebase custom-token minting, narrowly scoped custom-token verification, browser/app approval, nonce binding, one-time atomic exchange, expiry, replay protection, brute-force rate limiting, and cancellation/revocation remain unimplemented/unverified as an end-to-end flow.
+
+### Account lifecycle and cutover matrix
+| Capability | Current active app path | Firebase/Worker replacement evidence | Gate |
+|---|---|---|---|
+| Email/password sign-up/sign-in/session | Supabase AuthRepository | Staged Firebase gateway/session manager; Worker accepts password-provider ID tokens | BLOCKED: wire only after every protected API and account path accepts Firebase identity |
+| Anonymous/local UUID | signInAnonymously() in active AuthRepository/UI | Firebase session manager rejects anonymous Firebase sessions | BLOCKED: remove UI/path only with approved migration and local-data preservation behavior |
+| Account bootstrap/trial | Legacy auth lifecycle | Worker /v1/account/bootstrap; D1 account root + Firestore trial initialization | PARTIAL: source and CI pass; live Firebase/Worker/Preview integration and dedicated test-account verification required |
+| Device registration/list/revoke | Supabase registration path still present in app | Worker /v1/devices routes backed by D1 | PARTIAL: route/CI/schema evidence; mobile client wiring and live tests required |
+| TV device-link | Supabase RPC + Edge Function + imported Supabase session | D1 table only; no Worker pairing routes | BLOCKED: implement and test full Firebase custom-token pairing flow |
+| Account deletion | Supabase delete-account Edge Function | D1 deletion-job table is only schema; no complete Worker deletion route/state machine proven | BLOCKED: cross-store deletion, reauth, retry, Firebase Auth deletion and data retention required |
+| User data sync | Supabase adapters/RPCs still active in multiple repositories | Some Worker APIs and staged Firebase-token adapters exist | BLOCKED: per-feature parity, active adapter wiring, live end-to-end tests and rollback |
+| Membership/supporter/subscription | Supabase membership RPCs | Existing Worker premium/trial status is not equivalent to full supporter/subscription overview | BLOCKED: identify authoritative membership source and preserve semantics |
+
+### Next safe task
+- Continue the evidence matrix for the remaining user-owned resources and verify every staged adapter against the current Worker route/schema. Then define the first end-to-end test in isolated Preview using a dedicated test account, after verifying Preview-only Firebase secrets and Worker deployment. Do not switch active app auth, enable Cloudflare sync globally, delete anonymous/local data, remove Supabase, or deploy Production as part of this audit.
+- No app source, Worker runtime, Firebase project settings, Cloudflare resources, secrets, production data, or deployments were changed by this audit. Documentation only.
