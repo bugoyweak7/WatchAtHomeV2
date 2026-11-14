@@ -3674,3 +3674,41 @@ This is a Preview test access path only. The generated gate is disabled by defau
 - The Preview tools now display whether the Cloudflare account is active, whether the 7-day trial is initialized, and the returned trial start and expiry timestamps.
 - The existing bootstrap endpoint remains unchanged; its create-only trial initialization behavior is preserved. No new endpoint, polling, production deployment, cloud configuration, or Supabase cutover was performed.
 - Pending verification: run Firebase Auth unit tests and Android Play Store debug compilation on the approved setup branch, then rebuild the Preview APK before installing this UI update.
+
+ 
+## 2026-11-15 — Latest continuation handover: Preview trial verified and Firebase auth Phase 1 audited
+
+### Current verified baseline
+- Authorized repository: `bugoyweak7/WatchAtHomeV2`; branch: `setup/firebase-cloudflare-zero-cost`.
+- **WatchAtHome Preview APK** workflow run: `43617004862`; status `completed`; conclusion `success`; head commit `f37a1a625429b95861d6ec06beb9a5f96a19cfe6`.
+- Preview APK artifact: `watchathome-preview-playstore-debug-apk`; artifact ID `14122798970`; workflow run page: <https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43617004862>.
+- Firebase Auth Build run: `43615293783`; completed successfully on commit `78034fa69b39671e0c51d330d8f26f107acdc538`. Firebase session-manager unit tests and Android Play Store debug compilation passed.
+- User-provided on-device screenshot confirms the Preview UI shows Firebase email Verified, Cloudflare account Active, 7-day trial Initialized, start `2026-11-14T07:29:34.752Z`, expiry `2026-11-21T07:29:34.752Z`. Treat this as user-supplied device evidence; do not claim independent inspection of the device.
+
+### Phase 1 active-auth source audit
+Read-only GitHub source review on the approved branch reconfirmed:
+1. `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/AuthRepository.kt` remains the active Supabase-backed repository. It observes Supabase session status; handles email/password signup/sign-in; validates and refreshes sessions; signs out; handles invalid sessions; and calls the Supabase `delete-account` function for account deletion. It also retains a local anonymous UUID path.
+2. `composeApp/src/commonMain/kotlin/com/nuvio/app/features/auth/AuthScreen.kt` normal login/signup still calls `AuthRepository`. The Firebase Preview Test entry point is separate and gated by the Preview build flag.
+3. `composeApp/src/commonMain/kotlin/com/nuvio/app/AppGate.kt` initializes and observes `AuthRepository.state`; Firebase is not the active app gate provider.
+4. `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/DeviceLinkAuthRepository.kt` still uses Supabase RPCs `start_device_login_session` and `poll_tv_login_session`, calls `tv-logins-exchange`, and imports a Supabase session.
+5. `composeApp/src/commonMain/kotlin/com/nuvio/app/core/network/SupabaseProvider.kt` still constructs Supabase Auth, PostgREST, Functions, Storage and Realtime clients.
+6. `FirebaseAuthSessionManager.kt`, `FirebaseAuthGateway.kt`, and `FirebaseAuthRepository` provide a separate staged Firebase path. They are not yet a drop-in replacement for all active account lifecycle and feature dependencies.
+
+### Migration decision and next work
+- Do not replace active `AuthRepository`, wire Firebase into `AppGate`, or remove Supabase SDK modules now. Existing device-link and account/data services still depend on Supabase session/client behavior.
+- The next safe implementation gate is limited to strengthening/testing the Firebase-native repository/session lifecycle in isolation, keeping the active repository intact as rollback.
+- After isolated auth tests pass, migrate the dependent Worker-backed account lifecycle and each data/device-link service with parity and regression checks. Only then consider active login cutover; Supabase code/dependencies are removed last after a full source scan and Preview regression testing.
+- No source code was changed during this audit/report update. No Worker source/deployment, D1/Firestore data, Firebase settings/data, secrets, Supabase settings/data, Preview/Production cloud resource, or Production deployment was changed.
+
+### Mandatory report format for all future WatchAtHome status reports and Master Handover updates
+Every report must explicitly answer all four questions and distinguish code changes, test execution, APK packaging, on-device testing, and any user action required:
+1. **What is happening?**
+2. **Are we building right now?**
+3. **Do you need to do anything?**
+4. **What is the next step?**
+
+### Quick-resume status
+1. **What is happening?** Preview Firebase account bootstrap and 7-day trial display are verified on-device by user screenshot; the active-auth source audit is complete.
+2. **Are we building right now?** No. Latest work in this continuation is documentation-only.
+3. **Do you need to do anything?** No.
+4. **What is the next step?** Continue the isolated Firebase repository/session lifecycle implementation and tests on the approved branch after re-reading current source/test baselines. Do not wire Firebase into active AppGate or remove Supabase dependencies until dependent services are migrated and tested.
