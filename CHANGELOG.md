@@ -511,3 +511,13 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added `getAccount` in `premium-worker/src/account-device.ts` and mocked-D1 tests covering owner UID, active/deletion-pending state, and 404 for missing account.
 - Commits: `ef03d2e4625b470d419c6f9dab0a4aa5b3d3b3f3`, `4b89425a590c1f2141a3d54ab90c1fa2d93067d7`, `28a2770219496d60e3d7a136ab8e314d10bffb47`.
 - No deployment, D1 mutation, APK build, Supabase cutover, or production change. CI pending.
+
+## 2026-11-15 — Account route formatting correction
+
+- The first Worker CI run (`43622490326`) caught literal escaped newline characters in the newly added route in `premium-worker/src/index.ts`; TypeScript compilation failed before tests ran.
+- Corrected the route formatting in commit `2092b0ba9d3c10598af9207f234d48cfea5adb3d`. No API behavior changed. A new Worker Checks run must confirm the correction and execute the full suite.
+- No deployment, D1 change, APK build, active Supabase auth change, or production resource change.
+- What is happening? The TypeScript syntax issue found by CI has been corrected.
+- Are we building right now? A new Worker CI run should validate the fix; no APK is being built.
+- Do you need to do anything? No.
+- What is the next step? Check the new Worker CI result before proceeding.
