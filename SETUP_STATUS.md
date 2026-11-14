@@ -907,3 +907,11 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - The endpoint verifies identities only: it creates no account link, migration record, D1 row, or data transfer. HTTP tests were added, but CI and live Preview testing are not confirmed.
 - Full implementation details, security boundaries, exact commits, and next gates are appended to `WATCHATHOME_MASTER_HANDOVER.md`.
 - No User App source, Production deployment/configuration, cloud secrets, D1 data/schema, Firebase settings, Supabase services/data, or account records were changed.
+
+## 2026-11-14 — Firebase/Supabase identity migration design
+- GO was used for the identity-migration design/documentation step only; no runtime source or cloud resource changed.
+- The active User App AuthRepository and device-link client remain Supabase-backed. Firebase gateway/session manager remain staged; Firebase email-verification orchestration is not yet exposed.
+- Worker `POST /v1/migrations/legacy/verify` verifies dual sessions but creates no durable link. Current D1 schema has no Firebase-UID-to-legacy-user-ID mapping table.
+- Design decision: use explicit dual-authenticated, one-to-one identity linking; never auto-link by matching email; retain both sessions/adapters until feature-by-feature parity. Full design and test gates are appended to WATCHATHOME_MASTER_HANDOVER.md.
+- Next implementation requires separate approval: additive Preview D1 identity-link migration and idempotent/conflict-safe Worker link endpoint, followed by User App email-verification and dual-session linking flow.
+
