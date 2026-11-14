@@ -421,3 +421,14 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - During test development, CI identified two test-only fixture/assertion issues: a foreign-key case used an existing account, and SQLite row objects have null prototypes. Both tests were corrected; the final full workflow passed. No runtime workaround or assertion weakening was used.
 - This confirms source-level and mocked HTTP/D1 test coverage only. It is not a live Preview integration test.
 - Migration `0002_legacy_identity_links.sql` has not been applied to Preview D1; Worker has not been deployed; no Preview secrets/variables, Firebase/Supabase settings/data, User App runtime auth, or Production resources were changed.
+
+
+## 2026-11-14 — Preview migration/deployment approval received; execution blocked by access boundary
+
+- User explicitly approved the next gate: apply migration `0002_legacy_identity_links.sql` to Preview D1, deploy the Preview Worker, and verify it.
+- Re-verified the approved Worker branch configuration: Preview D1 name `watchathome-accounts-preview`, ID `38cb13eb-dfbd-403f-92a9-43b545d6375c`; Preview Firebase project ID `watchathome-preview`. Production D1 and Firebase project identifiers are distinct in `wrangler.toml`.
+- No Cloudflare account/D1/Workers management connector is available in this session. GitHub access is read-only for workflow/deployment resources; GitHub workflow dispatch is not available. User explicitly prohibited TinyFish, so no browser automation was attempted. The public Preview health URL could not be independently reached through the available web fetch.
+- Therefore no live D1 migration listing, Preview database existence/identity check, migration application, Worker deployment, secret/variable update, or live endpoint test was performed. This is an access/tooling blocker, not a reported Cloudflare failure. No cloud state was changed.
+- Before execution, Cloudflare access must be provided through a supported Cloudflare integration or the user must run Wrangler from the authorized Worker checkout. Use Wrangler's Preview D1 targeting only (`--preview`); do not use Production database name/ID or a plain production `wrangler deploy`. First list Preview migrations and verify the target; only then apply pending migration 0002. Preview deployment uses Wrangler's `preview` command, not Production `deploy`.
+- Official command references: Cloudflare D1 Wrangler commands (<https://developers.cloudflare.com/workers/wrangler/commands/d1/>) and Worker Preview command (<https://developers.cloudflare.com/workers/wrangler/commands/workers/>).
+- Supabase remains active. User App runtime authentication remains unchanged. No Production, Firebase/Supabase settings or data, secrets, or account records were modified.
