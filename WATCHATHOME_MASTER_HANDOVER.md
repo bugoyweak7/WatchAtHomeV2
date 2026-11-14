@@ -3666,3 +3666,11 @@ The Firebase verification/bootstrap card was located in Account Settings, but th
 The commits are on setup/firebase-cloudflare-zero-cost. The updated Preview workflow has not yet been run; therefore no claim is made that Kotlin compilation, Firebase Auth tests, APK packaging, artifact upload, or on-device display passed. Run Actions → WatchAtHome Preview APK on branch setup/firebase-cloudflare-zero-cost. Install the newly generated artifact only after the workflow succeeds. Then open the login screen, tap Firebase Preview Test, sign in with the staged Firebase account, complete email verification, and use Initialize Cloudflare account. Verify the response confirms accountReady: true.
 
 This is a Preview test access path only. The generated gate is disabled by default; a normal build that does not explicitly set WATCHATHOME_PREVIEW_FIREBASE_ACCESS=true does not display the entry point. Active Supabase login remains in place pending separately approved, feature-by-feature replacement and regression verification.
+
+
+## 2026-11-15 — Preview Firebase trial status display
+
+- Updated the Preview Firebase account flow to parse the trial details returned by the existing `/v1/account/bootstrap` response.
+- The Preview tools now display whether the Cloudflare account is active, whether the 7-day trial is initialized, and the returned trial start and expiry timestamps.
+- The existing bootstrap endpoint remains unchanged; its create-only trial initialization behavior is preserved. No new endpoint, polling, production deployment, cloud configuration, or Supabase cutover was performed.
+- Pending verification: run Firebase Auth unit tests and Android Play Store debug compilation on the approved setup branch, then rebuild the Preview APK before installing this UI update.
