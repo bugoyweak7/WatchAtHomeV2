@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   AccountApiError,
   ensureActiveAccount,
+  getAccount,
   listDevices,
   parseDeviceRegistration,
   registerDevice,
@@ -165,6 +166,31 @@ test("device revocation is owner-scoped, idempotent, and hides revoked inventory
   await assert.rejects(
     () => revokeDevice(db, "uid_a", "bad id", 5000),
     (error) => error instanceof AccountApiError && error.status === 400,
+  );
+  db.close();
+});
+
+
+test("account status returns only the verified owner's lifecycle metadata", async () => {
+  const db = createD1Mock();
+  db.seedAccount("uid_a");
+  db.seedAccount("uid_b", "deletion_pending");
+  const own = await getAccount(db, "uid_a");
+  const pending = await getAccount(db, "uid_b");
+  assert.deepEqual(own, {
+    account: {
+      uid: "uid_a",
+      status: "active",
+      createdAt: 100,
+      updatedAt: 100,
+      deletedAt: null,
+    },
+  });
+  assert.equal(pending.account.status, "deletion_pending");
+  assert.equal(pending.account.uid, "uid_b");
+  await assert.rejects(
+    () => getAccount(db, "missing"),
+    (error) => error instanceof AccountApiError && error.status === 404,
   );
   db.close();
 });
