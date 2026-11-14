@@ -3732,3 +3732,19 @@ Every report must explicitly answer all four questions and distinguish code chan
 2. Are we building right now? The Firebase Auth CI workflow is expected to trigger; check its actual run status. No Preview APK build is requested.
 3. Do you need to do anything? No, unless CI reveals a failure requiring a later decision.
 4. What is the next step? Verify the Firebase Auth unit tests and Android Play Store debug compilation, then record the actual result. Keep active Supabase authentication unchanged.
+
+## 2026-11-15 — Account lifecycle status endpoint added (latest Worker source change)
+
+- Approved repository/branch: `bugoyweak7/WatchAtHomeV2` / `setup/firebase-cloudflare-zero-cost`.
+- Added authenticated `GET /v1/account` in `premium-worker/src/index.ts`.
+- Added `getAccount` in `premium-worker/src/account-device.ts`. It queries only the UID derived from the verified Firebase token and returns the account's `uid`, `status`, `createdAt`, `updatedAt`, and `deletedAt`. Missing account returns HTTP 404; the endpoint is read-only and does not create or modify account records.
+- Added mocked-D1 tests in `premium-worker/test/account-device.test.mjs` for active and deletion-pending states, owner scoping, and missing account handling.
+- Commits: `ef03d2e4625b470d419c6f9dab0a4aa5b3d3b3f3`, `4b89425a590c1f2141a3d54ab90c1fa2d93067d7`, `28a2770219496d60e3d7a136ab8e314d10bffb47`.
+- Existing `.github/workflows/watchathome-worker-check.yml` watches `premium-worker/**` on the approved branch. Verify its actual result before claiming type-check/tests passed.
+- No deployment, D1 migration/application, cloud configuration, secrets, production data, APK build, active login cutover, or Supabase removal was performed. The endpoint is source-only until a separately approved deployment.
+
+### Mandatory status
+1. What is happening? Authenticated account lifecycle status retrieval is implemented in Worker source with focused tests.
+2. Are we building right now? The Worker Checks CI workflow should run TypeScript compilation and Worker tests; no Android APK is being built.
+3. Do you need to do anything? No, pending CI result.
+4. What is the next step? Verify Worker CI. If successful, proceed to review a read-only client adapter; keep active Supabase authentication unchanged.
