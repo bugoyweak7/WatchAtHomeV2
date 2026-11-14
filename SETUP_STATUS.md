@@ -971,3 +971,12 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Re-audited the approved User App branch source and existing migration evidence. Active AuthRepository, device-link flow, shared Supabase provider/config, library/progress/watched adapters, profile/settings/credentials/media-server/add-on/plugin/collection sync, Watch Party Realtime, membership/assets, and five Supabase SDK modules remain migration work.
 - Firebase auth preparation and Worker APIs are staged but do not yet replace active app authentication or every feature. The immediate priority is Firebase-native active auth + complete account/device lifecycle, then feature-by-feature Worker cutover and regression tests.
 - User has no Supabase account/project; do not request/configure legacy Supabase credentials or use identity-link migration 0002. No code or cloud resources changed. Full findings and phased plan are in WATCHATHOME_MASTER_HANDOVER.md.
+
+
+## 2026-11-14 — Firebase Preview bootstrap client staged
+
+- Added a verified-email-gated, user-initiated call from the staged Firebase session to `POST /v1/account/bootstrap` using the configured HTTPS Cloudflare Worker base URL.
+- Requires Worker confirmation `accountReady: true`; safe to retry against the create-only bootstrap contract.
+- Active Supabase-backed login and existing app data paths remain unchanged. No cloud deployment or production operation performed.
+- Validation pending: focused Firebase Auth tests and Android build/CI; verify the build's Worker URL targets Preview.
+- Full implementation notes: appended to `WATCHATHOME_MASTER_HANDOVER.md`.
