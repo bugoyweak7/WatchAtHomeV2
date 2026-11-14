@@ -412,3 +412,12 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - The backend source requires recent Firebase password reauthentication, verified Firebase email, an active D1 account, and a valid non-anonymous legacy session. Existing links cannot be reassigned.
 - CI for the latest source/test commit was pending when recorded. No D1 application or deployment was performed.
 - User App authentication remains Supabase-backed; no runtime client cutover, Production operation, or Supabase data/settings change.
+
+
+## 2026-11-14 — Legacy identity-link Worker CI passed
+
+- GitHub Actions run #31 (`43585951934`) for source/test commit `fd3922734c3ecd61fd77b7f9167c54141c2778aa` completed successfully.
+- Verified steps: dependency installation, TypeScript check, D1 schema tests, Worker module tests, HTTP/auth tests (including identity-link success/retry/conflict/stale-auth/bootstrap cases), crypto, credentials, PIN, PIN-store, rate-limit, profile, and profile-sync suites.
+- During test development, CI identified two test-only fixture/assertion issues: a foreign-key case used an existing account, and SQLite row objects have null prototypes. Both tests were corrected; the final full workflow passed. No runtime workaround or assertion weakening was used.
+- This confirms source-level and mocked HTTP/D1 test coverage only. It is not a live Preview integration test.
+- Migration `0002_legacy_identity_links.sql` has not been applied to Preview D1; Worker has not been deployed; no Preview secrets/variables, Firebase/Supabase settings/data, User App runtime auth, or Production resources were changed.
