@@ -1068,3 +1068,12 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Are we building right now? A new Worker CI run should validate the fix; no APK is being built.
 - Do you need to do anything? No.
 - What is the next step? Check the new Worker CI result before proceeding.
+
+## 2026-11-15 — Follow-up route formatting correction
+
+- The second Worker CI run (`43622597320`) found one remaining literal escaped newline immediately before the bootstrap route in `premium-worker/src/index.ts`.
+- Corrected the remaining source formatting in commit `d844ffde962b09561c6626cdada1f6d66f2eca1e`. This is a syntax-only correction; no endpoint behavior changed. Await the next Worker Checks run.
+- What is happening? The remaining TypeScript syntax issue is corrected.
+- Are we building right now? Worker CI should validate the source and tests; no APK build.
+- Do you need to do anything? No.
+- What is the next step? Verify the newest Worker Checks run.
