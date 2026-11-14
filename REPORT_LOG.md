@@ -597,3 +597,19 @@ No Worker deployment, D1 migration/application, Firebase/Supabase configuration,
 - Are we building right now? No APK build; the Firebase Auth CI workflow should run common tests and Android compilation.
 - Do you need to do anything? No.
 - What is the next step? Verify the workflow result before any UI integration or APK packaging.
+
+
+## 2026-11-15 — Preview UI for read-only Firebase account lifecycle status
+
+- Added a manual **Check Cloudflare account status** action to the existing Firebase Preview/account-settings card.
+- The action calls the staged `FirebaseAuthRepository.getCloudflareAccountStatus()` client, which performs the authenticated, read-only `GET /v1/account` request using the verified Firebase session. It displays the returned account status, creation timestamp, last-updated timestamp, and nullable deletion timestamp.
+- The UI does not automatically poll, bootstrap, create, update, or delete account records. The existing explicit bootstrap/trial action remains separate.
+- The normal app login, `AuthRepository`, `AppGate`, Supabase-backed data/device-link services, and Supabase dependencies remain unchanged. No Worker deployment, D1 migration, cloud configuration, secret, or Production resource was changed.
+- Source commit: `3b0eaa633f307441b8f176f791fb0236deead003`.
+- Verification is pending: the Firebase Auth workflow must compile the Android Play Store debug variant and run the configured Firebase/auth and adapter tests. This source update does not create a Preview APK artifact.
+
+### Mandatory status
+1. **What is happening?** The Preview/account-settings card now has a user-triggered read-only account lifecycle status lookup.
+2. **Are we building right now?** Source is committed; CI must run. No APK packaging or deployment has been performed.
+3. **Do you need to do anything?** No action until CI finishes. If CI passes, a new Preview APK will be needed to test this UI on-device.
+4. **What is the next step?** Verify Firebase Auth CI; if successful, build the Preview APK and have the user test the new status button against the Preview Worker.
