@@ -377,3 +377,22 @@ This route snapshot is based on repository source inspection, not live deploymen
 ## 2026-11-14 — Removal gate reaffirmed from source evidence
 
 Supabase removal is explicitly blocked until every active call site has a tested and live-verified replacement and rollback/data-retention requirements are satisfied. The current branch still has active Supabase Auth in AuthRepository, Supabase device-link and account-deletion flows, a shared Supabase client with Auth/PostgREST/Functions/Storage/Realtime, Supabase library/progress/watched adapters, generated Supabase runtime config, Gradle Supabase dependencies, and additional membership/profile/settings/media/Watch Party call sites documented above. Worker route implementation or local/mock tests alone do not establish production parity. Final removal requires a repository-wide reference audit, successful relevant platform builds/tests, end-to-end Firebase/Worker integration checks, verified data migration/export and rollback plan, and explicit confirmation that Supabase is no longer serving live app traffic. Until then, preserve the Supabase project, data, secrets/configuration and source adapters.
+
+## 2026-11-14 — Firebase auth, account lifecycle and device-link evidence matrix
+
+| Feature | Verified current state | Replacement evidence | Status / remaining gate |
+|---|---|---|---|
+| Active email/password auth | AuthRepository remains Supabase-backed and is used by AuthScreen/AppGate | FirebaseAuthGateway + FirebaseAuthSessionManager are staged; Android compile CI passed | BLOCKED until all authenticated APIs, account lifecycle and sync are Firebase-compatible |
+| Anonymous/local UUID | Active AuthRepository and AuthScreen still expose local anonymous sign-in | Staged Firebase manager rejects anonymous Firebase accounts | BLOCKED until controlled UI/path removal preserves local data and registered-account policy |
+| Account bootstrap | Existing active auth does not use the Worker bootstrap | Worker POST /v1/account/bootstrap validates Firebase account metadata and initializes D1 account + trial | PARTIAL: source/CI evidence; live Preview integration still required |
+| Device registry | App still has legacy Supabase registration dependency | Worker POST/GET /v1/devices and DELETE /v1/devices/{installationId} use D1 and verified UID | PARTIAL: mobile wiring and live integration not proven |
+| TV device-link | Supabase RPC start/poll + tv-logins-exchange; imports Supabase session | device_link_sessions schema exists, but Worker has no pairing routes | BLOCKED: implement custom-token issuance/verification and full secure one-time pairing |
+| Account deletion | Supabase delete-account Edge Function | D1 deletion-job table only; no complete Worker route/state machine verified | BLOCKED: complete cross-store deletion and recovery contract |
+| Protected data sync | Supabase remains active for multiple domains | Several Worker APIs and Firebase-token adapters are staged | BLOCKED: per-feature contract tests, active adapter cutover and live parity |
+
+### Verification evidence
+- User App Android Firebase-auth compile: GitHub Actions run 43422907365 succeeded for the Android Play Store variant compile. This does not prove iOS build, live Firebase auth, or active app wiring.
+- Standalone Premium Worker CI: run 43545476435 succeeded for TypeScript and D1 tests. This does not prove live Firebase/Firestore/D1 behavior or Production deployment.
+- The standalone Worker repository has a D1 DB binding in wrangler.toml for production and isolated Preview. The nested premium-worker/ copy in the User App repository does not have the same binding; use the standalone Worker repository as the deployment source of truth.
+- Current Worker route source includes account bootstrap and device registry operations but not device-link start/approval/poll/exchange or a complete account deletion workflow.
+- Keep Supabase active. Do not treat schema tables, local/mock tests, or compile CI as live replacement parity.
