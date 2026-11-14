@@ -560,3 +560,13 @@ No Worker deployment, D1 migration/application, Firebase/Supabase configuration,
 - Are we building right now? Worker CI should validate the source and tests; no APK build.
 - Do you need to do anything? No.
 - What is the next step? Verify the newest Worker Checks run.
+
+## 2026-11-15 — Account status endpoint Worker CI passed
+
+- Worker Checks run `43622683097` completed successfully on commit `d844ffde962b09561c6626cdada1f6d66f2eca1e`: https://github.com/bugoyweak7/WatchAtHomeV2/actions/runs/43622683097
+- Verified successful: TypeScript compilation, local SQLite schema tests, mocked D1 account/device tests (including new account lifecycle/ownership test), Worker HTTP/Firebase authentication tests, encryption/key rotation, credential storage, PIN verifier/lockout, rate limits, profile CRUD/settings, and profile add-on/plugin/collection sync tests.
+- The endpoint is source-only and not deployed. D1 draft remains unapplied. No APK build, production change, active Supabase login cutover, or Supabase removal.
+- What is happening? `GET /v1/account` and the full Worker CI suite have passed.
+- Are we building right now? No. CI is complete; no APK is being built.
+- Do you need to do anything? No.
+- What is the next step? Review and approve the read-only Firebase client adapter for displaying account status; keep active Supabase authentication unchanged.
