@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -44,6 +45,8 @@ import androidx.compose.material3.ButtonDefaults
 import com.nuvio.app.core.ui.NuvioLoadingIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -87,7 +90,9 @@ import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.auth.DeviceLinkAuthRepository
 import com.nuvio.app.core.auth.DeviceLinkAuthState
 import com.nuvio.app.core.build.AppFeaturePolicy
+import com.nuvio.app.core.build.PreviewFirebaseAccessConfig
 import com.nuvio.app.features.settings.AppBrandWordmark
+import com.nuvio.app.features.settings.FirebaseAccountVerificationCard
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.PI
@@ -202,6 +207,7 @@ fun AuthScreen(
     var passwordFieldBounds by remember { mutableStateOf<Rect?>(null) }
     var showServerSheet by rememberSaveable { mutableStateOf(false) }
     var showOfficialServerDialog by rememberSaveable { mutableStateOf(false) }
+    var showFirebasePreviewTools by rememberSaveable { mutableStateOf(false) }
 
     fun submitAuth() {
         if (email.isBlank() || password.length < 6 || isLoading) return
@@ -346,6 +352,51 @@ fun AuthScreen(
                         onEmailBoundsChange = { emailFieldBounds = it },
                         onPasswordBoundsChange = { passwordFieldBounds = it },
                     )
+                }
+            }
+        }
+
+        if (PreviewFirebaseAccessConfig.ENABLED) {
+            Button(
+                onClick = { showFirebasePreviewTools = true },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 12.dp),
+            ) {
+                Text("Firebase Preview Test")
+            }
+        }
+
+        if (showFirebasePreviewTools && PreviewFirebaseAccessConfig.ENABLED) {
+            Dialog(onDismissRequest = { showFirebasePreviewTools = false }) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 560.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 640.dp)
+                            .verticalScroll(rememberScrollState())
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Firebase Preview tools", style = MaterialTheme.typography.titleLarge)
+                            androidx.compose.material3.TextButton(
+                                onClick = { showFirebasePreviewTools = false },
+                            ) {
+                                Text("Close")
+                            }
+                        }
+                        FirebaseAccountVerificationCard(legacyEmail = null)
+                    }
                 }
             }
         }
