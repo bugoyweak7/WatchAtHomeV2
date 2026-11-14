@@ -915,3 +915,12 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Design decision: use explicit dual-authenticated, one-to-one identity linking; never auto-link by matching email; retain both sessions/adapters until feature-by-feature parity. Full design and test gates are appended to WATCHATHOME_MASTER_HANDOVER.md.
 - Next implementation requires separate approval: additive Preview D1 identity-link migration and idempotent/conflict-safe Worker link endpoint, followed by User App email-verification and dual-session linking flow.
 
+
+
+## 2026-11-14 — Worker identity-link backend source implementation
+
+- Premium Worker setup branch now contains additive migration `0002_legacy_identity_links.sql`, the conflict-safe identity mapping module, and authenticated `POST /v1/migrations/legacy/link`.
+- Endpoint requires recent verified Firebase password authentication, verified email, an active bootstrapped D1 account, and a valid registered legacy Supabase session. It supports exact retries and rejects either-side remapping.
+- HTTP/schema tests were added. CI run `43585777914` was pending at the time of this note.
+- Full implementation and commit details are in `WATCHATHOME_MASTER_HANDOVER.md`.
+- Source only: no D1 application, Worker deployment, Preview secrets/configuration change, live mapping, User App login change, Production operation, or Supabase data/settings change.
