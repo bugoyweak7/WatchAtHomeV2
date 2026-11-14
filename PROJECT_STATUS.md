@@ -519,3 +519,15 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Current decision: no active login cutover and no Supabase SDK removal. First strengthen/test Firebase repository/session lifecycle in isolation; migrate dependent account/data/device-link services before any active switch.
 - No source or cloud changes in this status update.
 - Required report status questions: What is happening? Are we building right now? Do you need to do anything? What is the next step?
+
+ 
+## 2026-11-15 — Firebase session lifecycle tests added; CI pending
+
+- Added regression coverage for Firebase auth observer lifecycle, state updates, and sign-out failure behavior in `FirebaseAuthSessionManagerTest.kt`.
+- Commit: `bc9e56b634edaf39a16eafb2d278d82a1c92e6a7`.
+- This is test-only. Active Supabase authentication, AppGate, account/data services, and cloud resources are unchanged.
+- CI result is pending; do not treat the new tests as passed until GitHub Actions completes.
+- What is happening? Lifecycle regression tests are committed.
+- Are we building right now? Await CI status; no APK build is requested.
+- Do you need to do anything? No.
+- What is the next step? Verify Firebase Auth tests and Android compilation.
