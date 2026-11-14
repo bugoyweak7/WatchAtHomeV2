@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.core.auth.AuthState
 import com.nuvio.app.core.auth.FirebaseAuthRepository
+import com.nuvio.app.core.auth.FirebaseTrialStatus
 import kotlinx.coroutines.launch
 
 /**
@@ -47,6 +48,7 @@ internal fun FirebaseAccountVerificationCard(
     var isWorking by remember { mutableStateOf(false) }
     var feedback by remember { mutableStateOf<String?>(null) }
     var feedbackIsError by remember { mutableStateOf(false) }
+    var trialStatus by remember { mutableStateOf<FirebaseTrialStatus?>(null) }
 
     LaunchedEffect(Unit) {
         FirebaseAuthRepository.initialize()
@@ -148,14 +150,21 @@ internal fun FirebaseAccountVerificationCard(
                                 val result = FirebaseAuthRepository.bootstrapCloudflareAccount()
                                 isWorking = false
                                 feedbackIsError = result.isFailure
+                                trialStatus = result.getOrNull()
                                 feedback = result.exceptionOrNull()?.message
-                                    ?: "Cloudflare account setup confirmed. You can continue to the next setup step."
+                                    ?: "Cloudflare account setup and trial status confirmed."
                             }
                         },
                         enabled = !isWorking,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text(if (isWorking) "Setting up account…" else "Initialize Cloudflare account")
+                        Text(if (isWorking) "Checking account…" else "Verify Cloudflare account and trial")
+                    }
+                    trialStatus?.let { trial ->
+                        Text("Cloudflare account: Active", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                        Text("7-day trial: ${if (trial.initialized) "Initialized" else "Not initialized"}", style = MaterialTheme.typography.bodyMedium)
+                        Text("Trial started: ${trial.trialStartedAt}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Trial expires: ${trial.trialExpiresAt}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
