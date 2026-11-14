@@ -11,6 +11,7 @@ internal data class FirebaseAccountSnapshot(
     val userId: String,
     val email: String?,
     val isAnonymous: Boolean,
+    val isEmailVerified: Boolean,
 )
 
 internal interface FirebaseAuthGateway {
@@ -18,6 +19,8 @@ internal interface FirebaseAuthGateway {
 
     suspend fun createAccount(email: String, password: String): FirebaseAccountSnapshot
     suspend fun signIn(email: String, password: String): FirebaseAccountSnapshot
+    suspend fun sendEmailVerification()
+    suspend fun reloadCurrentUser(): FirebaseAccountSnapshot?
     suspend fun signOut()
     suspend fun getIdToken(forceRefresh: Boolean): String?
 }
@@ -57,6 +60,18 @@ internal object GitLiveFirebaseAuthGateway : FirebaseAuthGateway {
             "Firebase did not return a user after sign-in."
         }.toSnapshot()
 
+    override suspend fun sendEmailVerification() {
+        requireNotNull(auth.currentUser) {
+            "Sign in to your Firebase account before requesting email verification."
+        }.sendEmailVerification()
+    }
+
+    override suspend fun reloadCurrentUser(): FirebaseAccountSnapshot? {
+        val user = auth.currentUser ?: return null
+        user.reload()
+        return auth.currentUser?.toSnapshot()
+    }
+
     override suspend fun signOut() {
         auth.signOut()
     }
@@ -68,5 +83,6 @@ internal object GitLiveFirebaseAuthGateway : FirebaseAuthGateway {
         userId = uid,
         email = email,
         isAnonymous = isAnonymous,
+        isEmailVerified = isEmailVerified,
     )
 }
