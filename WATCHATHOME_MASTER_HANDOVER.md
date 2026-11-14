@@ -3644,3 +3644,25 @@ The immediate next implementation priority is not identity linking. It is a Fire
 - Workflow source commit: `7ca6abac1d9369c65ecc9edd9aa0f971481079c4`.
 - The GitHub Actions connector available in this session is read-only for workflow dispatch; it cannot start this manual workflow. User must select the `setup/firebase-cloudflare-zero-cost` branch, open Actions → WatchAtHome Preview APK → Run workflow. After it completes, download the artifact `watchathome-preview-playstore-debug-apk`.
 - Build, test, artifact existence and APK installation are not yet verified. No APK has been built or delivered in this step. No local folders/OneDrive were accessed, and no app/Worker source, active Supabase login, Preview deployment, Production resource, Firebase data or Cloudflare secret was changed.
+
+
+## 2026-11-14 — Preview-only Firebase login entry point
+
+### Reason
+The Firebase verification/bootstrap card was located in Account Settings, but the unauthenticated app gate routes users to the active Supabase login screen. Therefore a user without an active Supabase session could not reach the Firebase test UI. A failed attempt on the main login form was not a Firebase-authentication test because that form still calls the active Supabase-backed AuthRepository.
+
+### Implementation
+- Updated composeApp/src/commonMain/kotlin/com/nuvio/app/features/auth/AuthScreen.kt with a Firebase Preview Test button and scrollable dialog. The dialog reuses FirebaseAccountVerificationCard(legacyEmail = null); no duplicate Firebase auth logic was introduced.
+- Updated composeApp/build.gradle.kts to generate com.nuvio.app.core.build.PreviewFirebaseAccessConfig. The generated ENABLED constant is driven by WATCHATHOME_PREVIEW_FIREBASE_ACCESS and defaults to false.
+- Updated .github/workflows/watchathome-preview-apk.yml to append WATCHATHOME_PREVIEW_FIREBASE_ACCESS=true to local.properties for the manual Preview APK workflow. The workflow remains restricted to setup/firebase-cloudflare-zero-cost and retains the Preview Worker URL.
+- No changes were made to AppGate, AuthRepository, Supabase login, profile/data adapters, Firebase project configuration, Worker source/deployment, D1/R2, secrets, or Production resources.
+
+### Commits
+- Auth screen: 7a12abc0cd98e72b799ae33f5577db32f3b5d50d
+- Generated build-time gate: de876999f8b233fca1d18eba79e899cff0536c26
+- Preview workflow flag: 63d50a99d43aca3a349482734bd89c2c42c2f276
+
+### Verification status and next action
+The commits are on setup/firebase-cloudflare-zero-cost. The updated Preview workflow has not yet been run; therefore no claim is made that Kotlin compilation, Firebase Auth tests, APK packaging, artifact upload, or on-device display passed. Run Actions → WatchAtHome Preview APK on branch setup/firebase-cloudflare-zero-cost. Install the newly generated artifact only after the workflow succeeds. Then open the login screen, tap Firebase Preview Test, sign in with the staged Firebase account, complete email verification, and use Initialize Cloudflare account. Verify the response confirms accountReady: true.
+
+This is a Preview test access path only. The generated gate is disabled by default; a normal build that does not explicitly set WATCHATHOME_PREVIEW_FIREBASE_ACCESS=true does not display the entry point. Active Supabase login remains in place pending separately approved, feature-by-feature replacement and regression verification.
