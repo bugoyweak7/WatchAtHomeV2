@@ -3121,3 +3121,10 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - **Verification status:** GitHub CI and Preview runtime verification are pending. This is not evidence of live Preview Firebase/Firestore integration.
 - **Safety:** No Cloudflare secrets, bindings, D1 schema/data, Firebase Console settings, production Worker deployment, production app traffic, Supabase configuration/data, or Supabase removal was performed. TinyFish was not used.
 - **Next gate:** Run the Premium Worker CI suite; then confirm Preview-only `FIREBASE_WEB_API_KEY` and `FIREBASE_SERVICE_ACCOUNT_JSON` are configured for project `watchathome-preview` (names and project association only; never disclose values) before authenticated Preview testing.
+
+
+## 2026-11-14 — Verified bootstrap test-fixture follow-up
+
+- CI run `43570512263` exposed a test-only fixture issue: the test attempted to export the existing non-extractable Firebase ID-token signing CryptoKey as a mocked service-account private key. The new unverified-email rejection test itself passed; the positive verified-bootstrap test failed before reaching the Worker flow.
+- Corrected the positive test to generate a separate extractable RSA key for the mocked service account. No runtime source logic changed in this follow-up.
+- The follow-up CI run is pending. No Cloudflare secrets/configuration, D1 data/schema, Firebase settings, Production deployment, or Supabase state changed.
