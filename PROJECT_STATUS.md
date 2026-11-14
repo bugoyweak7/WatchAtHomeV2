@@ -501,3 +501,11 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Existing Supabase login and active data repositories are untouched. The Preview Worker URL remains workflow-configured.
 - Commits: 7a12abc0cd98e72b799ae33f5577db32f3b5d50d, de876999f8b233fca1d18eba79e899cff0536c26, 63d50a99d43aca3a349482734bd89c2c42c2f276.
 - No build or test result is claimed yet. A successful updated Preview workflow run is required before APK installation and device testing.
+
+
+## 2026-11-15 — Preview Firebase trial status display
+
+- Updated the Preview Firebase account flow to parse the trial details returned by the existing `/v1/account/bootstrap` response.
+- The Preview tools now display whether the Cloudflare account is active, whether the 7-day trial is initialized, and the returned trial start and expiry timestamps.
+- The existing bootstrap endpoint remains unchanged; its create-only trial initialization behavior is preserved. No new endpoint, polling, production deployment, cloud configuration, or Supabase cutover was performed.
+- Pending verification: run Firebase Auth unit tests and Android Play Store debug compilation on the approved setup branch, then rebuild the Preview APK before installing this UI update.
