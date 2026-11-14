@@ -509,3 +509,13 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - The Preview tools now display whether the Cloudflare account is active, whether the 7-day trial is initialized, and the returned trial start and expiry timestamps.
 - The existing bootstrap endpoint remains unchanged; its create-only trial initialization behavior is preserved. No new endpoint, polling, production deployment, cloud configuration, or Supabase cutover was performed.
 - Pending verification: run Firebase Auth unit tests and Android Play Store debug compilation on the approved setup branch, then rebuild the Preview APK before installing this UI update.
+
+ 
+## 2026-11-15 — Firebase Preview verified; active authentication remains Supabase
+
+- Preview APK workflow `43617004862` completed successfully and uploaded artifact `watchathome-preview-playstore-debug-apk` (ID `14122798970`). User's on-device screenshot verifies Firebase email Verified, Cloudflare account Active, 7-day trial Initialized, and displayed start/expiry timestamps.
+- Firebase Auth Build `43615293783` passed the Firebase session-manager tests and Android Play Store debug compilation.
+- Read-only audit: normal login and app gate still use Supabase-backed `AuthRepository`; device-link flow and shared Supabase client also remain active. FirebaseAuthRepository is not wired into normal app authentication.
+- Current decision: no active login cutover and no Supabase SDK removal. First strengthen/test Firebase repository/session lifecycle in isolation; migrate dependent account/data/device-link services before any active switch.
+- No source or cloud changes in this status update.
+- Required report status questions: What is happening? Are we building right now? Do you need to do anything? What is the next step?
