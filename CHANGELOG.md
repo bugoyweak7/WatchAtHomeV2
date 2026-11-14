@@ -398,3 +398,9 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Confirmed the Worker pairing routes and restricted `tv_linked=true` custom-token verification are ready, but the active User App session, device registration, and existing feature adapters still depend on Supabase.
 - A Firebase-only client cutover would not preserve current app behavior; Firebase/Supabase account identity linkage and the intended Android TV target are not yet established.
 - No runtime source changes or tests were made. Full findings and the next approval gate are appended to `WATCHATHOME_MASTER_HANDOVER.md`.
+
+## 2026-11-14 — Firebase/Supabase identity migration design
+- Appended the identity-link design, staged client flow, security constraints, blockers and acceptance gates to `WATCHATHOME_MASTER_HANDOVER.md`.
+- Confirmed the existing Worker endpoint verifies both sessions but does not persist an identity link; active User App authentication and device-link remain Supabase-backed.
+- Documentation only. No app code, dependencies, backend routes, D1 schema/data, Firebase/Supabase settings, secrets, deployments or production resources changed.
+
