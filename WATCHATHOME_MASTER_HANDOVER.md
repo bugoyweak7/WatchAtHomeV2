@@ -3223,3 +3223,10 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - The active app login and existing TV pairing still use Supabase. Firebase user login is not complete.
 - Production Worker, Production D1/Firebase, Supabase services/data, and live user traffic were not changed.
 - Next: verify CI for the Worker commits, then implement and test the mobile approval and TV custom-token sign-in clients against the exact Worker contract. Only after source tests pass should a separately approved Preview deployment/live pairing test be performed.
+
+
+## 2026-11-14 — TV pairing test assertion correction
+- Rechecked the staged Worker integration test and found its six-digit code assertion was over-escaped. Corrected the assertion so it matches three digits, a hyphen, then three digits.
+- Correction committed to Premium Worker setup branch: ffcba10a090743fc3305892b149076e7a8526ac5. Worker CHANGELOG.md updated append-only.
+- GitHub status and workflow lookup currently return no run/check records for the staged commits, so automated tests are NOT confirmed passing. No local test execution was available in this step.
+- No deployment or live request was made. Preview and Production resources remain untouched; Supabase remains in place. Mobile approval UI and TV custom-token sign-in integration remain outstanding.
