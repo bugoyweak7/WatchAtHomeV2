@@ -1034,3 +1034,15 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - **Are we building right now?** No; this update is documentation-only.
 - **Do you need to do anything?** No.
 - **What is the next step?** Continue with isolated Firebase repository/session lifecycle work only after checking the latest source and tests; do not switch active login or remove Supabase dependencies at this stage.
+
+ 
+## 2026-11-15 — Firebase session lifecycle regression coverage added
+
+- Added focused tests to `FirebaseAuthSessionManagerTest.kt` for idempotent initialization, observer cancellation/reinitialization after `stop()`, live auth-state changes, and preserving authenticated state when Firebase sign-out fails so the user can retry.
+- Test-only change; no production authentication code, active `AuthRepository`, `AppGate`, login screen, Supabase dependency, Worker, cloud resource, secret, or account data changed.
+- Source commit: `bc9e56b634edaf39a16eafb2d278d82a1c92e6a7`.
+- CI is triggered by the existing Firebase Auth workflow path filter. Test/build result must be checked before claiming validation.
+- What is happening? Firebase session lifecycle regression tests have been added.
+- Are we building right now? CI status must be checked; no APK workflow is requested by this test-only change.
+- Do you need to do anything? No, pending CI result.
+- What is the next step? Verify focused Firebase Auth tests and Android Play Store debug compilation; address any failure before expanding the migration.
