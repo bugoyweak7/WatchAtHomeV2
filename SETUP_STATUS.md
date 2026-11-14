@@ -870,3 +870,12 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Current conclusion remains that Supabase is required by active paths and is not safe to remove. The document defines Preview, identity, security, feature-cutover, platform, data/rollback and final dependency-audit gates.
 - Documentation only. No app/Worker source, adapters, Gradle dependencies, Firebase/Cloudflare settings, secrets, D1/R2/DO resources, Supabase service/data, production data or deployments were changed.
 - Next implementation gate: verify isolated Preview runtime prerequisites, then complete and test Firebase account lifecycle (including TV device-link and full account deletion) before wiring Firebase as the active mobile identity.
+
+
+## 2026-11-14 — Master handover reporting rule and Supabase matrix
+
+- User directed that all full project reports must be contained in `WATCHATHOME_MASTER_HANDOVER.md`.
+- Appended the complete Supabase migration evidence matrix and reporting workflow to the master handover. The master handover is the authoritative location for full reports, audits, test results, blockers and handover updates.
+- Future work must not create separate report documents. `SETUP_STATUS.md` and `CHANGELOG.md` retain concise operational entries; do not duplicate full reports in `REPORT_LOG.md`.
+- The earlier standalone matrix file remains as historical evidence; no historical file was deleted or rewritten.
+- Documentation only. No application source, cloud resources, secrets, data, deployments or Supabase configuration changed.
