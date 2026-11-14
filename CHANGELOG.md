@@ -347,3 +347,10 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - The production Worker configuration currently identifies `watchathome-premium-api` and Firebase project `watchathome-admin`, but the D1 database is not yet connected.
 - The account-data SQL remains a draft and has not been applied. No Worker configuration, deployment, D1 schema, Firebase data, or Supabase service/data was changed in this step.
 - Next safe step: finish reviewing the complete D1 schema and confirm the standalone production Worker source and migration compatibility before applying SQL or adding the D1 binding. Keep Supabase active for rollback until all replacement flows pass verification.
+
+
+## 2026-11-14 — Supabase removal readiness audit
+
+- Re-scanned the complete User App setup branch and re-verified active Supabase authentication, device-link, data-sync, runtime configuration and dependency references.
+- Confirmed Supabase remains active in AuthRepository and multiple feature paths; Firebase/Cloudflare replacements are incomplete or staged. Supabase is not safe to remove.
+- Recorded evidence and the required staged migration/verification gates in SETUP_STATUS.md and the Supabase migration map. No application source or cloud resource was changed.
