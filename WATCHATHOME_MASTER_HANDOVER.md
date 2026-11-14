@@ -3345,3 +3345,15 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - This is a read-only configuration plan. No Cloudflare variable/secret, Preview deployment, source file, D1 schema/data, Firebase setting, Supabase setting/data, Production resource, or app traffic was changed.
 - CI for endpoint/test commit `b05b8e519d8b6c6ee78ddc4b8615458f8ba6fb6f` is confirmed passing in GitHub Actions run #22. This is not live Preview verification.
 - Next approval should be limited to configuring the two secrets on the one named Preview and creating its Preview deployment. Live API testing should remain a separate approval gate.
+
+
+# 2026-11-14 — Preview secret configuration execution boundary
+
+- User approved `GO — CONFIGURE PREVIEW SECRETS`.
+- The current ChatGPT-connected toolset does not expose a Cloudflare account/Workers secret-management action. TinyFish is explicitly excluded by the user and was not used.
+- Therefore no Cloudflare secret was written and no Preview deployment was created by the assistant. This is an execution limitation, not a configuration success.
+- Official Cloudflare documentation confirms the branch-specific command is `npx wrangler preview secret put <KEY>`; it creates a new Preview deployment. The Preview name defaults to the current Git branch. The separate `preview base-config secret put` command is deliberately not to be used because it shares secrets with future Previews.
+- Official Cloudflare documentation states Worker Previews require Wrangler `4.135.0` or later. The repository's declared dependency range is `^4.45.0`; the actual locally installed version remains unverified. Do not update project dependencies as part of this step without a separate approval.
+- User must run the two branch-specific Preview secret commands locally from the authorized Worker checkout after confirming the current branch is exactly `setup/firebase-cloudflare-zero-cost` and `npx wrangler --version` is at least `4.135.0`. Enter values only at the local hidden prompts; never paste them into chat.
+- No code, dependency, Cloudflare configuration, secrets, Preview deployment, D1/Firebase/Supabase data or configuration, Production resource, or app traffic was changed. Supabase remains active.
+- Next: user performs the two local Preview secret operations; assistant can then verify non-secret deployment metadata and health once the user shares the Preview URL/output. Protected live identity verification remains a separate approval gate.
