@@ -3468,3 +3468,15 @@ The user said GO for the first implementation stage only: add the Preview-ready 
 1. Confirm the complete Worker CI workflow passes on the latest commit.
 2. Obtain separate approval before applying migration `0002` to the verified Preview D1 database and deploying the Preview Worker.
 3. Only after backend Preview verification, separately implement the User App dual-session linking flow. Keep the current Supabase authentication and data adapters until migration parity and rollback are proven.
+
+
+## 2026-11-14 — Legacy identity-link Worker CI passed
+
+- GitHub Actions run #31 (`43585951934`) for source/test commit `fd3922734c3ecd61fd77b7f9167c54141c2778aa` completed successfully.
+- Verified steps: dependency installation, TypeScript check, D1 schema tests, Worker module tests, HTTP/auth tests (including identity-link success/retry/conflict/stale-auth/bootstrap cases), crypto, credentials, PIN, PIN-store, rate-limit, profile, and profile-sync suites.
+- During test development, CI identified two test-only fixture/assertion issues: a foreign-key case used an existing account, and SQLite row objects have null prototypes. Both tests were corrected; the final full workflow passed. No runtime workaround or assertion weakening was used.
+- This confirms source-level and mocked HTTP/D1 test coverage only. It is not a live Preview integration test.
+- Migration `0002_legacy_identity_links.sql` has not been applied to Preview D1; Worker has not been deployed; no Preview secrets/variables, Firebase/Supabase settings/data, User App runtime auth, or Production resources were changed.
+
+### Verified source commit
+The Worker CI result above applies to `fd3922734c3ecd61fd77b7f9167c54141c2778aa`. The current Worker documentation-only commits do not change the validated source. The next gate remains separate approval for Preview D1 migration application and Preview Worker deployment.
