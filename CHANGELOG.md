@@ -360,3 +360,9 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Recorded the current migration matrix and blockers in SETUP_STATUS.md, docs/SUPABASE_FIREBASE_CLOUDFLARE_MIGRATION_MAP.md, and docs/FIREBASE_CLOUDFLARE_ACCOUNT_MIGRATION_CONTRACT.md.
 - Confirmed Android Firebase auth compile CI run 43422907365 and Worker TypeScript/D1 test CI run 43545476435 passed; neither establishes live integration or active app cutover.
 - Documentation only. No app source, Worker runtime, Firebase/Cloudflare settings, secrets, production data, or deployment changed.
+
+
+## 2026-11-14 — Configure Preview Firebase for Android debug builds
+- Replaced only `androidApp/src/debug/google-services.json` with the supplied `watchathome-preview` configuration, including all three registered Android package IDs.
+- Kept the root `androidApp/google-services.json` Production configuration unchanged.
+- No auth implementation, Supabase integration, Worker, cloud resource, secret, or deployment changed. This does not yet switch the app's active authentication to Firebase.
