@@ -460,3 +460,21 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - Re-fetched and checked the existing debug/root configurations and Gradle debug application ID before the change.
 - No Gradle build was run. No auth flow, Supabase integration, app source, Worker, cloud resource, secret, or deployment was changed.
 - Firebase Preview configuration alone does not enable Firebase account creation; the active app auth repository still uses Supabase.
+
+
+## 2026-11-14 — Preview-only Firebase test access
+
+### Change
+- Added a Firebase Preview Test button to the unauthenticated login screen, visible only when generated PreviewFirebaseAccessConfig.ENABLED is true.
+- The button opens a scrollable dialog containing the existing FirebaseAccountVerificationCard, including Firebase email/password auth, verification status refresh/resend, and verified-email-gated Cloudflare account initialization.
+- Added WATCHATHOME_PREVIEW_FIREBASE_ACCESS as an explicit generated build setting. Its default is false; the Preview APK workflow sets it true in local.properties for that workflow run.
+- Updated the existing manual Preview APK workflow only. It remains branch-restricted and uses the configured Preview Worker endpoint.
+
+### Preserved behavior and boundaries
+- AuthRepository, AppGate, active Supabase authentication, account identity, and existing data repositories were not changed.
+- No Firebase Console settings, Firebase data, Cloudflare Worker deployment, D1/R2 resource, secret, Production endpoint, or Supabase project setting was changed.
+- No local machine or OneDrive files were accessed.
+
+### Validation
+- GitHub commits were created on setup/firebase-cloudflare-zero-cost: 7a12abc0cd98e72b799ae33f5577db32f3b5d50d, de876999f8b233fca1d18eba79e899cff0536c26, and 63d50a99d43aca3a349482734bd89c2c42c2f276.
+- The workflow has not yet been executed against these changes. Kotlin compilation, focused Firebase Auth tests, APK artifact creation, and runtime/device verification remain pending; do not report this implementation as build-verified.
