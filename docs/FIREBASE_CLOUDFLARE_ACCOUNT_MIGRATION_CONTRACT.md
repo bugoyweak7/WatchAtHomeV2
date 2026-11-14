@@ -371,3 +371,25 @@ No PIN HTTP route or atomic D1 failed-attempt/lockout workflow exists yet. Do no
 Added `premium-worker/src/pin-store.ts`: per-profile persisted failed attempts, 5-attempt threshold, 15-minute lockout, blocking during lockout, and counter reset after successful verification once lockout expires. CI run `43378244632` passed all 37 tests, including four lockout tests.
 
 No PIN HTTP route is enabled. Request-level rate limits, recent reauthentication for reset, generic response behavior, and end-to-end route tests remain required before switching the mobile PIN adapter.
+
+## 2026-11-14 — Source revalidation addendum: account/device implementation status
+
+This addendum supersedes older status statements in this draft where they said account bootstrap and D1 schema were not yet present. It does not convert the draft contract into a production-ready specification.
+
+### Verified current source
+- The active User App still routes authentication through Supabase AuthRepository; AuthScreen and AppGate still use that repository. The “Continue without account” action still calls its local anonymous sign-in method.
+- FirebaseAuthGateway and FirebaseAuthSessionManager are implemented as staged email/password auth and ID-token components, but they are deliberately not wired into the active app lifecycle.
+- Standalone WatchAtHomePremiumWorker/src/index.ts now contains Firebase-token-protected account bootstrap and device registry routes. Its token verifier accepts password-provider Firebase ID tokens and rejects anonymous identities.
+- POST /v1/account/bootstrap uses Firebase account creation metadata, creates/checks the D1 account row, and initializes the existing trial flow. Device register/list/revoke routes require an active D1 account and derive ownership from the verified token.
+- Standalone Worker Wrangler config contains production and isolated Preview D1 bindings. Repository status records report both D1 schemas applied and their expected 19 tables/9 indexes verified. This does not establish production API deployment or live integration.
+- CI: User App Android Firebase-auth compile run 43422907365 succeeded; standalone Worker TypeScript/D1 test run 43545476435 succeeded. Neither is a live integration test.
+
+### Still missing / not proven
+- Worker device-link session start, user approval, poll, and one-time exchange routes are absent from current route dispatch. The existing mobile device-link repository still uses Supabase RPCs and the tv-logins-exchange Edge Function, then imports a Supabase session.
+- No complete Worker account-deletion route/state machine has been verified. A D1 deletion-job schema table alone is not an implementation.
+- The mobile app has not switched its active AuthRepository, device registration, profile/data sync, or account deletion to Firebase/Worker.
+- No end-to-end Preview test using a dedicated Firebase test account has been established by this source audit. Preview-only secret readiness and route-level runtime results must be separately verified.
+- Existing Supabase schema/RLS/Edge Function/Realtime source is not available in the app repository; exact remote data migration/export behavior remains unverified.
+
+### Revised gate
+Do not switch active mobile auth until Firebase password auth, account bootstrap, registered-device behavior, TV pairing/custom-token flow, account deletion, and all currently active protected data APIs have a tested compatible identity/ownership path. Keep Supabase adapters and runtime configuration intact until per-feature live parity, rollback and data-retention gates are met.
