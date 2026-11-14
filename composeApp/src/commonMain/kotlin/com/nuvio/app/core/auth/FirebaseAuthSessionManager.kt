@@ -9,6 +9,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import com.nuvio.app.core.network.CloudflareWorkerConfig
+import com.nuvio.app.core.network.createApiHttpClient
+import io.ktor.client.request.post
+import io.ktor.client.request.header
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Staged Firebase email/password session manager.
@@ -109,6 +123,41 @@ internal class FirebaseAuthSessionManager(
         return gateway.getIdToken(forceRefresh = true)?.takeIf(String::isNotBlank)
     }
 
+    /**
+     * Initializes the Firebase UID on the configured Cloudflare Worker.
+     * This is intentionally separate from the active app AuthRepository.
+     */
+    suspend fun bootstrapCloudflareAccount(): Result<Unit> = runCatching {
+        require(_emailVerified.value == true) {
+            "Verify your Firebase email address before continuing."
+        }
+        val baseUrl = CloudflareWorkerConfig.BASE_URL.trim().trimEnd('/')
+        require(baseUrl.startsWith("https://", ignoreCase = true)) {
+            "The secure Cloudflare Worker URL is not configured for this build."
+        }
+        val token = getFreshIdToken()
+            ?: error("Your Firebase session expired. Sign in again.")
+
+        val response = bootstrapHttpClient.post("$baseUrl/v1/account/bootstrap") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody("{}")
+        }
+        val responseText = response.bodyAsText()
+        check(response.status.isSuccess()) {
+            when (response.status.value) {
+                401 -> "Firebase session was rejected. Sign in again."
+                403 -> "This Firebase account is not eligible for bootstrap."
+                503 -> "Cloudflare account storage is not ready. Try again later."
+                else -> "Account setup failed. Please try again."
+            }
+        }
+        val accountReady = runCatching {
+            Json.parseToJsonElement(responseText).jsonObject["accountReady"]?.jsonPrimitive?.boolean
+        }.getOrNull() == true
+        check(accountReady) { "Cloudflare did not confirm account setup." }
+    }
+
     fun stop() {
         authStateJob?.cancel()
         authStateJob = null
@@ -145,6 +194,10 @@ internal class FirebaseAuthSessionManager(
  * This repository is deliberately not wired into AuthScreen while Supabase-backed
  * account data and feature APIs remain active.
  */
+private val bootstrapHttpClient by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+    createApiHttpClient()
+}
+
 object FirebaseAuthRepository {
     private val manager = FirebaseAuthSessionManager(
         gateway = GitLiveFirebaseAuthGateway,
@@ -171,4 +224,7 @@ object FirebaseAuthRepository {
     suspend fun signOut(): Result<Unit> = manager.signOut()
 
     suspend fun getFreshIdToken(): String? = manager.getFreshIdToken()
+
+    suspend fun bootstrapCloudflareAccount(): Result<Unit> =
+        manager.bootstrapCloudflareAccount()
 }
