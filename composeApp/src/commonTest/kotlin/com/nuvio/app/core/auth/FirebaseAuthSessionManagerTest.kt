@@ -18,6 +18,7 @@ class FirebaseAuthSessionManagerTest {
         var verificationEmailSent = 0
         var token: String? = "fresh-test-token"
         var currentAccount: FirebaseAccountSnapshot? = null
+        var failSignOut = false
 
         override suspend fun createAccount(email: String, password: String): FirebaseAccountSnapshot =
             FirebaseAccountSnapshot("new-user", email, isAnonymous = false, isEmailVerified = false).also {
@@ -41,6 +42,7 @@ class FirebaseAuthSessionManagerTest {
         override suspend fun reloadCurrentUser(): FirebaseAccountSnapshot? = currentAccount
 
         override suspend fun signOut() {
+            if (failSignOut) error("Simulated Firebase sign-out failure")
             signedOut = true
             currentAccount = null
             authState.value = null
@@ -175,4 +177,76 @@ class FirebaseAuthSessionManagerTest {
         assertNull(manager.emailVerified.value)
         assertTrue(gateway.signedOut)
     }
+
+    @Test
+    fun initializeIsIdempotentAndStopCancelsTheSessionObserver() = runTest {
+        val gateway = FakeFirebaseAuthGateway()
+        val manager = FirebaseAuthSessionManager(gateway, backgroundScope)
+        val account = FirebaseAccountSnapshot("user-1", "user@example.com", false, true)
+        gateway.currentAccount = account
+        gateway.authState.value = account
+
+        manager.initialize()
+        manager.initialize()
+        runCurrent()
+
+        assertEquals("user-1", (manager.state.value as AuthState.Authenticated).userId)
+
+        manager.stop()
+        runCurrent()
+        assertEquals(AuthState.Loading, manager.state.value)
+        assertNull(manager.emailVerified.value)
+
+        gateway.authState.value = null
+        runCurrent()
+        assertEquals(AuthState.Loading, manager.state.value)
+
+        manager.initialize()
+        runCurrent()
+        assertEquals(AuthState.Unauthenticated, manager.state.value)
+    }
+
+    @Test
+    fun authStateObserverTracksAccountChangesAfterInitialization() = runTest {
+        val gateway = FakeFirebaseAuthGateway()
+        val manager = FirebaseAuthSessionManager(gateway, backgroundScope)
+        manager.initialize()
+        runCurrent()
+        assertEquals(AuthState.Unauthenticated, manager.state.value)
+
+        val account = FirebaseAccountSnapshot("user-2", "second@example.com", false, true)
+        gateway.currentAccount = account
+        gateway.authState.value = account
+        runCurrent()
+
+        val authenticated = manager.state.value as AuthState.Authenticated
+        assertEquals("user-2", authenticated.userId)
+        assertEquals(true, manager.emailVerified.value)
+
+        gateway.currentAccount = null
+        gateway.authState.value = null
+        runCurrent()
+
+        assertEquals(AuthState.Unauthenticated, manager.state.value)
+        assertNull(manager.emailVerified.value)
+    }
+
+    @Test
+    fun failedSignOutPreservesAuthenticatedStateForRetry() = runTest {
+        val gateway = FakeFirebaseAuthGateway()
+        val manager = FirebaseAuthSessionManager(gateway, backgroundScope)
+        manager.initialize()
+        runCurrent()
+        assertTrue(manager.signInWithEmail("user@example.com", "password123").isSuccess)
+        gateway.failSignOut = true
+
+        val result = manager.signOut()
+
+        assertTrue(result.isFailure)
+        val state = manager.state.value as AuthState.Authenticated
+        assertEquals("existing-user", state.userId)
+        assertEquals(false, manager.emailVerified.value)
+        assertFalse(gateway.signedOut)
+    }
+
 }
