@@ -1046,3 +1046,15 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Are we building right now? CI status must be checked; no APK workflow is requested by this test-only change.
 - Do you need to do anything? No, pending CI result.
 - What is the next step? Verify focused Firebase Auth tests and Android Play Store debug compilation; address any failure before expanding the migration.
+
+## 2026-11-15 — Authenticated account status endpoint added
+
+- Added `GET /v1/account` to the Premium Worker. It derives the account UID exclusively from the verified Firebase token and returns the matching D1 account lifecycle fields: status, createdAt, updatedAt, and deletedAt.
+- Added an owner-scoped `getAccount` query and tests for active/pending status, missing accounts, and UID isolation.
+- Source commits: `ef03d2e4625b470d419c6f9dab0a4aa5b3d3b3f3` (`account-device.ts`), `4b89425a590c1f2141a3d54ab90c1fa2d93067d7` (tests), `28a2770219496d60e3d7a136ab8e314d10bffb47` (`index.ts`).
+- The existing Worker Checks workflow is path-triggered for `premium-worker/**`; CI must complete before validation is claimed. No Worker deployment or Cloudflare D1 change was performed.
+- Active Supabase authentication, AppGate, device-link behavior, and all production data/settings remain unchanged.
+- What is happening? The authenticated account-status API and focused ownership/lifecycle tests have been added.
+- Are we building right now? CI should run the Worker type-check and test suite; no APK is being built.
+- Do you need to do anything? No, pending CI result.
+- What is the next step? Verify the Worker workflow, then decide whether to add client-side read-only account status integration.
