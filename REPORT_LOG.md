@@ -541,3 +541,13 @@ No Worker deployment, D1 migration/application, Firebase/Supabase configuration,
 2. Are we building right now? Worker CI is expected; no APK build.
 3. Do you need to do anything? No.
 4. What is the next step? Verify Worker CI before further implementation.
+
+## 2026-11-15 — Account route formatting correction
+
+- The first Worker CI run (`43622490326`) caught literal escaped newline characters in the newly added route in `premium-worker/src/index.ts`; TypeScript compilation failed before tests ran.
+- Corrected the route formatting in commit `2092b0ba9d3c10598af9207f234d48cfea5adb3d`. No API behavior changed. A new Worker Checks run must confirm the correction and execute the full suite.
+- No deployment, D1 change, APK build, active Supabase auth change, or production resource change.
+- What is happening? The TypeScript syntax issue found by CI has been corrected.
+- Are we building right now? A new Worker CI run should validate the fix; no APK is being built.
+- Do you need to do anything? No.
+- What is the next step? Check the new Worker CI result before proceeding.
