@@ -3045,3 +3045,68 @@ Supabase is still required by active app paths. The source and test foundation f
 3. Keep `SETUP_STATUS.md` and `CHANGELOG.md` aligned with concise dated entries; do not create standalone report files.
 4. Preserve the append-only rule and all prior handover history.
 5. No Supabase removal, feature cutover, cloud mutation or production deployment is authorized merely by this reporting rule. Existing GO/approval gates remain in force.
+
+
+---
+
+# APPENDED PREVIEW ENVIRONMENT VERIFICATION REPORT — 2026-11-14
+## Scope
+
+Authorized next step: verify isolated Preview configuration and account-lifecycle readiness before active Firebase authentication cutover. Read-only source/documentation verification only. No Cloudflare dashboard access, secret-value access, live Preview URL test, source modification, deployment, or cloud mutation was performed.
+
+## Repositories and source checked
+
+- User App: `bugoyweak7/WatchAtHomeV2`, branch `setup/firebase-cloudflare-zero-cost`.
+- Premium Worker: `bugoyweak7/WatchAtHomePremiumWorker`, branch `setup/firebase-cloudflare-zero-cost`.
+- Read the current `WATCHATHOME_MASTER_HANDOVER.md`, `SETUP_STATUS.md`, and `CHANGELOG.md` before this step.
+- Re-fetched current Worker `wrangler.toml`, `src/index.ts`, `package.json`, Worker `SETUP_STATUS.md`, User App debug `google-services.json`, and Android `build.gradle.kts`.
+
+## Verified source configuration
+
+### Firebase project separation
+
+- User App debug `google-services.json` identifies Firebase project `watchathome-preview`, project number `1091456844777`.
+- Its registered Android package IDs include `com.nuvio.app`, `com.nuviodebug.com`, and `com.tapframe.watchathomeadmin`.
+- Android Gradle config sets the debug application ID to `com.nuviodebug.com`.
+- Worker `wrangler.toml` sets Production `FIREBASE_PROJECT_ID = watchathome-admin` and Preview `FIREBASE_PROJECT_ID = watchathome-preview`.
+- This verifies repository configuration separation only. It does not verify Firebase Console Auth providers, Firestore rules, service-account permissions, or deployed runtime variables.
+
+### D1 binding separation
+
+- Production Wrangler binding: `DB` → `watchathome-accounts`, database ID `a39fe326-52c2-442c-ae71-5a11908059c7`.
+- Preview Wrangler binding: `DB` → `watchathome-accounts-preview`, database ID `38cb13eb-dfbd-403f-92a9-43b545d6375c`.
+- Existing project records report that the Preview Worker deployment and Preview D1 schema (19 application tables and 9 indexes) were manually verified by the user on 2026-11-14. This current source check confirms the Wrangler target IDs; it does not independently query Cloudflare's live binding or D1 migration history.
+- Production and Preview D1 targets are distinct in the checked-in configuration.
+
+### Worker runtime contract
+
+- Worker environment type requires `FIREBASE_WEB_API_KEY` and `FIREBASE_SERVICE_ACCOUNT_JSON`; optional sensitive-feature secrets include encryption key-ring and PIN pepper configuration.
+- Service-account parsing explicitly rejects a project ID that does not match `FIREBASE_PROJECT_ID`.
+- Firebase ID-token verification checks issuer/audience against the selected project and requires `sign_in_provider=password`; anonymous/other provider tokens are rejected.
+- `GET /health` is implemented before authentication and returns the service health identity. This is source evidence only; no exact Preview deployment URL was available in the checked repository files, so a live Preview HTTP health request was not performed.
+- `POST /v1/account/bootstrap` requires the D1 `DB` binding, obtains Firebase account creation time via Identity Toolkit using the Web API key, creates the D1 account root idempotently, and initializes the Firestore trial.
+- Device register/list/revoke routes also require the D1 account root.
+
+## Blockers and missing runtime evidence
+
+1. **Preview secrets — NOT VERIFIED.** GitHub source/configuration cannot establish whether Cloudflare Preview has its own `FIREBASE_WEB_API_KEY` and `FIREBASE_SERVICE_ACCOUNT_JSON`. Do not copy Production values. Verify only the secret names/presence in Preview settings; never share their values in chat.
+2. **Preview Firestore access — NOT VERIFIED.** Confirm the Preview service account belongs to `watchathome-preview` and has only the required Preview Firestore permissions. Preview Firestore rules and data access must be separately reviewed.
+3. **Preview runtime health — NOT LIVE-TESTED.** The route exists in source, but the exact branch Preview URL and its active deployed version were not established in this step.
+4. **Account lifecycle remains incomplete.** Worker source has bootstrap and device registry routes, but no complete `/v1/device-link/*` start/approve/poll/one-time Firebase exchange routes were found in the current route dispatcher. No complete account-deletion route/state machine was found.
+5. **Active mobile authentication remains Supabase.** Firebase auth gateway/session manager remains staged. Do not wire the active login or enable global Cloudflare sync until account lifecycle and Preview integration pass.
+
+## Result
+
+- **Verified:** Preview and Production project/database IDs are separated in current Wrangler source; Android debug Firebase config targets Preview; Worker auth/bootstrap source contract exists.
+- **Not verified:** Preview-only secret presence and correctness, Firebase Console settings/Firestore access, live Preview deployment URL/version/health, real authenticated bootstrap against Preview.
+- **Still blocked:** secure TV device-link flow, complete account deletion, and active Firebase auth cutover.
+- **Supabase removal:** not safe. Keep all Supabase paths and rollback configuration intact.
+
+## Safest next action
+
+Have the user inspect Cloudflare Worker Preview environment secrets and confirm the presence (names only, no values) of `FIREBASE_WEB_API_KEY` and `FIREBASE_SERVICE_ACCOUNT_JSON`, and confirm the Preview service account is from `watchathome-preview`. After that, obtain the exact Preview deployment URL from the Preview deployment page and perform only unauthenticated `GET /health`. Then implement and test missing device-link and account-deletion Worker flows before wiring active Firebase authentication.
+
+## Change and safety record
+
+- No application source, tests, Wrangler configuration, Firebase project settings, Firestore rules/data, D1 schema/data, Cloudflare secrets/bindings, Supabase configuration/data, or deployments were changed.
+- This complete report is recorded here per the user's instruction that all full project reports belong in `WATCHATHOME_MASTER_HANDOVER.md`.
