@@ -375,3 +375,11 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Recorded missing upstream Supabase server-side definitions and the fact that remote user-data migration is not yet verified.
 - Conclusion: keep Supabase active as rollback; no removal or feature cutover is safe yet.
 - Documentation-only change; no application code, dependencies, cloud settings, secrets, data or deployments changed.
+
+
+## 2026-11-14 — Full migration report consolidated into master handover
+
+- Appended the complete Supabase migration evidence matrix and the user's reporting-location rule to `WATCHATHOME_MASTER_HANDOVER.md`.
+- Future full reports/audits/test results/blockers/handovers belong in the master handover; do not create separate report documents. Keep status/changelog entries concise.
+- Preserved the prior standalone matrix file as historical evidence; no history was deleted.
+- Documentation only; no app code, cloud resources, secrets, data or deployments changed.
