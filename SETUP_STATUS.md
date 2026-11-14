@@ -987,3 +987,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Added manual GitHub Actions workflow `.github/workflows/watchathome-preview-apk.yml` for the approved setup branch. It injects the Preview Worker URL at build time, runs Firebase Auth session-manager tests, builds the Play Store debug APK and uploads a seven-day artifact.
 - Commit: `7ca6abac1d9369c65ecc9edd9aa0f971481079c4`.
 - Workflow dispatch is not available through the connected GitHub tool. User must start it in GitHub Actions on branch `setup/firebase-cloudflare-zero-cost`; artifact/build result remains pending. Full details in `WATCHATHOME_MASTER_HANDOVER.md`.
+
+
+## 2026-11-14 — Preview-only Firebase entry point added to login screen
+
+- Added a login-screen entry point that opens the existing Firebase account verification/bootstrap card, so the staged Firebase test can be reached before the Supabase-gated Settings screen.
+- The entry point is controlled by generated PreviewFirebaseAccessConfig.ENABLED; it defaults to false and is enabled only by the manual Preview APK workflow through WATCHATHOME_PREVIEW_FIREBASE_ACCESS=true.
+- Existing Supabase login, AppGate routing, active app identity, and account/data adapters were not replaced or modified.
+- Updated the Preview APK workflow to set the Preview-only flag. The workflow remains restricted to setup/firebase-cloudflare-zero-cost and continues using the Preview Worker URL.
+- Commits: 7a12abc0cd98e72b799ae33f5577db32f3b5d50d (AuthScreen), de876999f8b233fca1d18eba79e899cff0536c26 (runtime build config), 63d50a99d43aca3a349482734bd89c2c42c2f276 (Preview workflow).
+- Validation is not yet complete: the updated workflow has not yet been run, so Kotlin compilation, Firebase Auth tests, APK artifact creation, and device behavior remain pending. Do not install/use a new APK until the workflow passes.
+- No cloud resource, Firebase project setting, Worker deployment, secret, Production endpoint, or Supabase configuration was changed. Full handover details appended to WATCHATHOME_MASTER_HANDOVER.md.
