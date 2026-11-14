@@ -449,3 +449,11 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - The Gradle debug variant application ID is `com.nuviodebug.com`; this package is registered in the Preview configuration.
 - The root `androidApp/google-services.json` remains on Production project `watchathome-admin` and was not modified.
 - Active app authentication remains Supabase-backed. No Firebase auth cutover or account bootstrap was performed.
+
+
+## 2026-11-14 — TV device-link client integration gate
+- Worker Preview pairing backend is verified, and the Worker verifier accepts custom Firebase tokens carrying `tv_linked=true`.
+- User App active identity remains Supabase. Its device-link and device registration clients also remain Supabase-backed; FirebaseAuthRepository is staged and not wired into the app runtime.
+- Firebase-only TV login cannot safely activate the current app because existing profile/data/sync features still require Supabase sessions. Mobile approval additionally requires a verified Firebase-to-app-account identity design.
+- No separate Android TV target was found in the authorized User App repository. No runtime code or tests were changed in this gate.
+- Full source evidence and next gate are in `WATCHATHOME_MASTER_HANDOVER.md`. Supabase remains active; no Production or cloud changes.

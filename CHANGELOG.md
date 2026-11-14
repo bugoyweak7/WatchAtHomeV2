@@ -391,3 +391,10 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Confirmed Worker source contracts for Firebase password-provider token verification, service-account project matching, health and account bootstrap.
 - Preview secrets and live runtime health remain unverified; TV device-link and complete account deletion remain missing. Supabase stays active.
 - Full report appended to `WATCHATHOME_MASTER_HANDOVER.md`; no source or cloud resources changed.
+
+
+## 2026-11-14 — TV device-link client implementation gate
+- Re-audited User App and Premium Worker source before the approved client implementation.
+- Confirmed the Worker pairing routes and restricted `tv_linked=true` custom-token verification are ready, but the active User App session, device registration, and existing feature adapters still depend on Supabase.
+- A Firebase-only client cutover would not preserve current app behavior; Firebase/Supabase account identity linkage and the intended Android TV target are not yet established.
+- No runtime source changes or tests were made. Full findings and the next approval gate are appended to `WATCHATHOME_MASTER_HANDOVER.md`.

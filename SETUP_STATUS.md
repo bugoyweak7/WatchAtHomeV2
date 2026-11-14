@@ -890,3 +890,12 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Worker source still has no complete TV device-link exchange or account-deletion flow. Active mobile auth remains Supabase.
 - Full evidence, limitations and next action are appended to `WATCHATHOME_MASTER_HANDOVER.md`.
 - Read-only verification only; no source, cloud configuration, secrets, data, Supabase settings or deployments changed.
+
+
+## 2026-11-14 — TV device-link client implementation blocked by active-auth boundary
+- User approved the proposed client implementation scope. A fresh source check found the active User App authentication, device registration, and device-link exchange are still Supabase-backed; Firebase auth remains staged.
+- The Premium Worker already accepts its narrowly scoped `tv_linked=true` custom-token identity and exposes start/approve/poll routes. Preview backend testing passed, but this does not make the Firebase session an active User App session.
+- A Firebase-only TV sign-in would not establish the Supabase session required by the current app runtime and existing feature adapters. Mobile approval also needs a Firebase identity that is safely linked to the active app account; matching email alone is not verified as an identity link.
+- No separate Android TV target was found in the authorized User App repository. The current Android flavors are `full` and `playstore`; the main manifest has no Leanback launcher declaration.
+- No application source or tests were changed/run. No cloud resources, secrets, deployments, Production settings, or Supabase services/data were changed. Full blocker analysis and required next gate are in `WATCHATHOME_MASTER_HANDOVER.md`.
+- Next: approve a staged active-auth/data-access integration design and confirm the intended TV target before implementing client changes. Keep Supabase active for rollback.

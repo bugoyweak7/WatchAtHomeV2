@@ -3230,3 +3230,38 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - Correction committed to Premium Worker setup branch: ffcba10a090743fc3305892b149076e7a8526ac5. Worker CHANGELOG.md updated append-only.
 - GitHub status and workflow lookup currently return no run/check records for the staged commits, so automated tests are NOT confirmed passing. No local test execution was available in this step.
 - No deployment or live request was made. Preview and Production resources remain untouched; Supabase remains in place. Mobile approval UI and TV custom-token sign-in integration remain outstanding.
+
+
+## 2026-11-14 — TV device-link client implementation gate: active-auth integration blocker
+
+### Authorization and source baseline
+- User approved the proposed TV device-link implementation scope, including the User App Firebase custom-token support, device-link client, mobile approval UI, tests, and append-only documentation.
+- Re-read the latest approved User App branch `setup/firebase-cloudflare-zero-cost` at baseline commit `a53d70da3f73475a0afcb8478ed23d127dcb9772` before implementation. No files were edited before completing this compatibility check.
+- Re-read the standalone Premium Worker setup branch and the Admin App's existing Premium Worker URL configuration for cross-repository API contract verification.
+
+### Confirmed Worker readiness
+- Premium Worker `src/index.ts` dispatches `POST /v1/device-link/start`, `POST /v1/device-link/poll`, and authenticated `POST /v1/device-link/approve`.
+- Worker `verifyUser` accepts Firebase password-provider ID tokens and Firebase custom-provider ID tokens only when the signed token contains `tv_linked === true`. This is the intended restriction for custom tokens minted by the device-link flow.
+- Worker `src/device-link.ts` creates expiring sessions, requires authenticated mobile approval, binds TV polling to the nonce, issues a Firebase custom token, and consumes the session once.
+- User's successful Preview PowerShell test already verified the backend flow, including custom-token exchange, same Firebase UID, and replay protection. That test does not verify the Android app client.
+
+### Blocking User App integration findings
+- `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/AuthRepository.kt` remains the active authentication repository and signs in, restores sessions, refreshes sessions, signs out, and deletes accounts through Supabase.
+- `DeviceLinkAuthRepository.kt` still calls Supabase RPCs `start_device_login_session` and `poll_tv_login_session`, then the `tv-logins-exchange` Supabase Edge Function and imports a Supabase session.
+- `DeviceSessionRegistration.kt` still registers devices through Supabase RPC `register_current_device`.
+- `FirebaseAuthGateway.kt` currently exposes email/password create/sign-in, sign-out, and ID-token retrieval, but not custom-token sign-in. `FirebaseAuthSessionManager.kt` and `FirebaseAuthRepository` are explicitly staged and are not the active app identity.
+- The main app runtime observes `AuthRepository.state` and triggers Supabase-backed device registration and sync from that state. A Firebase-only TV session would not establish the active Supabase session or make the existing Supabase-backed profile, library, add-on, membership, sync, and account operations work.
+- The mobile approval endpoint requires a Firebase ID token. The active mobile app session currently supplies Supabase identity only. Adding an independent Firebase sign-in to the approval screen without an approved identity-linking/cutover design could create a Firebase UID that does not correspond to the existing Supabase account UID.
+- The Android project has `full` and `playstore` distribution flavors, but the inspected User App tree has no separate Android TV module/target. The main Android manifest has no Leanback launcher feature declaration. The existing large-screen authentication layout is not evidence of a separately integrated TV app.
+- The User App runtime config generator currently generates the Cloudflare sync Worker and Supabase endpoint configuration, but no dedicated Premium Worker API base URL configuration. The Admin App has separate Preview and Production Premium Worker URL configuration; that does not automatically configure the User App.
+
+### Safe implementation decision
+- Do not wire Firebase custom-token authentication into the active app session while the active app state and feature repositories remain Supabase-backed. Doing so would produce a partial login that cannot safely preserve current app functionality.
+- Do not silently dual-create/sign-in Firebase accounts or assume Supabase and Firebase UIDs are linked by matching email addresses.
+- Do not invent a TV app module or add Leanback declarations without confirming the intended TV app target and distribution.
+- No User App, Admin App, or Premium Worker source code was changed in this step. No tests were run because a client-only test would not prove the missing app-session/data-access integration. No commits containing runtime code, Firebase/Cloudflare settings, secrets, data, deployments, or Production resources were changed.
+
+### Required next gate
+- Approve a separately scoped design/implementation for the Firebase identity and active app-session transition needed by TV login, including the data-access compatibility plan for still-Supabase-backed features. Supabase must remain available until each replacement is implemented and tested.
+- Confirm whether the intended Android TV client is the `full` distribution of `bugoyweak7/WatchAtHomeV2` or another already-authorized app target. Do not access any other repository unless the user explicitly identifies and authorizes it.
+- Once those two points are resolved, prepare a precise file list and staged Preview test plan before further source changes.
