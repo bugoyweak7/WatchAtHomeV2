@@ -446,3 +446,17 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - The production Worker configuration currently identifies `watchathome-premium-api` and Firebase project `watchathome-admin`, but the D1 database is not yet connected.
 - The account-data SQL remains a draft and has not been applied. No Worker configuration, deployment, D1 schema, Firebase data, or Supabase service/data was changed in this step.
 - Next safe step: finish reviewing the complete D1 schema and confirm the standalone production Worker source and migration compatibility before applying SQL or adding the D1 binding. Keep Supabase active for rollback until all replacement flows pass verification.
+
+
+## 2026-11-14 — Isolated Preview Firebase debug configuration
+
+### Change
+- Replaced `androidApp/src/debug/google-services.json` with the user-supplied Preview Firebase configuration (`watchathome-preview`).
+- Included registered Android package IDs `com.nuvio.app`, `com.nuviodebug.com`, and `com.tapframe.watchathomeadmin`; the debug variant's application ID is `com.nuviodebug.com`.
+- Left `androidApp/google-services.json` untouched; it remains configured for Production project `watchathome-admin`.
+
+### Verification and limits
+- Parsed the supplied JSON successfully and verified its project ID, project number, and three package registrations before writing.
+- Re-fetched and checked the existing debug/root configurations and Gradle debug application ID before the change.
+- No Gradle build was run. No auth flow, Supabase integration, app source, Worker, cloud resource, secret, or deployment was changed.
+- Firebase Preview configuration alone does not enable Firebase account creation; the active app auth repository still uses Supabase.
