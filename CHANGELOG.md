@@ -464,3 +464,10 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added explicit Account Settings action and success confirmation; requires HTTPS Worker URL and `accountReady: true` response.
 - Active Supabase auth and data adapters remain unchanged. No deployment/cloud resource changes.
 - Build/CI validation pending; see `WATCHATHOME_MASTER_HANDOVER.md`.
+
+
+## 2026-11-14 — Preview APK workflow prepared
+
+- Added manual Play Store debug APK workflow with Preview Worker URL configured only for that build; focused Firebase Auth tests run before APK compilation and APK artifact retention is seven days.
+- Commit: `7ca6abac1d9369c65ecc9edd9aa0f971481079c4`.
+- Dispatch and APK artifact are pending; no build or installation claimed. See `WATCHATHOME_MASTER_HANDOVER.md`.
