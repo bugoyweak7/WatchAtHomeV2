@@ -135,10 +135,28 @@ internal fun FirebaseAccountVerificationCard(
                     }
                 } else {
                     Text(
-                        text = "Firebase email is verified. Account linking and backend bootstrap are separate steps and have not been performed.",
+                        text = "Firebase email is verified. Your current app login remains unchanged.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Button(
+                        onClick = {
+                            if (isWorking) return@Button
+                            isWorking = true
+                            feedback = null
+                            scope.launch {
+                                val result = FirebaseAuthRepository.bootstrapCloudflareAccount()
+                                isWorking = false
+                                feedbackIsError = result.isFailure
+                                feedback = result.exceptionOrNull()?.message
+                                    ?: "Cloudflare account setup confirmed. You can continue to the next setup step."
+                            }
+                        },
+                        enabled = !isWorking,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(if (isWorking) "Setting up account…" else "Initialize Cloudflare account")
+                    }
                 }
             }
             else -> {
