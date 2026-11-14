@@ -899,3 +899,11 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - No separate Android TV target was found in the authorized User App repository. The current Android flavors are `full` and `playstore`; the main manifest has no Leanback launcher declaration.
 - No application source or tests were changed/run. No cloud resources, secrets, deployments, Production settings, or Supabase services/data were changed. Full blocker analysis and required next gate are in `WATCHATHOME_MASTER_HANDOVER.md`.
 - Next: approve a staged active-auth/data-access integration design and confirm the intended TV target before implementing client changes. Keep Supabase active for rollback.
+
+
+## 2026-11-14 — Preview legacy identity verification endpoint staged
+- Premium Worker setup branch now includes authenticated `POST /v1/migrations/legacy/verify`, which independently validates a recent Firebase email/password session with verified email and a current non-anonymous Supabase session through Supabase Auth `/auth/v1/user`.
+- New optional Preview Worker configuration names are `LEGACY_SUPABASE_URL` and `LEGACY_SUPABASE_ANON_KEY`; no values were supplied or configured. No service-role key is used.
+- The endpoint verifies identities only: it creates no account link, migration record, D1 row, or data transfer. HTTP tests were added, but CI and live Preview testing are not confirmed.
+- Full implementation details, security boundaries, exact commits, and next gates are appended to `WATCHATHOME_MASTER_HANDOVER.md`.
+- No User App source, Production deployment/configuration, cloud secrets, D1 data/schema, Firebase settings, Supabase services/data, or account records were changed.
