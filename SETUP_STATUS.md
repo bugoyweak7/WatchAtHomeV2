@@ -1014,3 +1014,23 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Source commit: `78034fa69b39671e0c51d330d8f26f107acdc538`.
 - Verification is pending. The failed run stopped at test compilation; Android compilation and APK packaging did not run.
 - What is happening: source fix committed; CI result pending. Are we building now: no new build has yet been confirmed. Does the user need to do anything: no. Next: inspect CI, then run the separate Preview APK workflow if CI passes.
+
+ 
+## 2026-11-15 — Preview trial verified; Firebase active-auth migration handover
+
+- Verified Preview APK workflow run `43617004862` (workflow: **WatchAtHome Preview APK**) completed with conclusion `success` on branch `setup/firebase-cloudflare-zero-cost`, commit `f37a1a625429b95861d6ec06beb9a5f96a19cfe6`.
+- Verified uploaded artifact `watchathome-preview-playstore-debug-apk`, artifact ID `14122798970`. User supplied an on-device screenshot from the updated Preview tools showing Firebase email verified, Cloudflare account Active, 7-day trial Initialized, and trial start/expiry timestamps. Device verification is based on the user's screenshot.
+- Firebase Auth Build run `43615293783` on commit `78034fa69b39671e0c51d330d8f26f107acdc538` completed successfully: Firebase Auth session-manager unit tests and Android Play Store debug compilation passed. This was a compile/test workflow, separate from the Preview APK artifact workflow.
+- Read-only Phase 1 audit reconfirmed: `AuthRepository.kt` still uses Supabase for active session monitoring, email/password signup/sign-in, validation/refresh, sign-out, invalid-session recovery and account deletion; `AuthScreen.kt` submits normal login through this repository; `AppGate.kt` still initializes/observes it; `DeviceLinkAuthRepository.kt` still uses Supabase RPC/functions and imports Supabase sessions; `SupabaseProvider.kt` still creates Auth, PostgREST, Functions, Storage and Realtime clients. `FirebaseAuthSessionManager.kt` and `FirebaseAuthRepository` remain separate/staged.
+- Decision: do not replace active `AuthRepository` or wire Firebase into `AppGate` yet. Firebase-only login before migrating dependent account/data/device-link services could authenticate users without preserving required app services. Next implementation gate is to strengthen and test the Firebase-native repository/session lifecycle in isolation, retaining the current active repository as rollback; then migrate dependent Worker-backed services before active-login cutover.
+- No application source, Worker source/deployment, cloud resource, Firebase settings/data, D1/Firestore data, secrets, Supabase configuration/data, or Production resource was changed in this audit/report update. Documentation only.
+- **Mandatory status format for every future WatchAtHome report and Master Handover update:**
+  1. What is happening?
+  2. Are we building right now?
+  3. Do you need to do anything?
+  4. What is the next step?
+  Answers must distinguish source coding, tests, APK packaging, user/device testing, and waiting for user action.
+- **What is happening?** Preview bootstrap/trial is verified and Phase 1 authentication audit is complete.
+- **Are we building right now?** No; this update is documentation-only.
+- **Do you need to do anything?** No.
+- **What is the next step?** Continue with isolated Firebase repository/session lifecycle work only after checking the latest source and tests; do not switch active login or remove Supabase dependencies at this stage.
