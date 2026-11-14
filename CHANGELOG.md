@@ -600,3 +600,15 @@ Entries are append-only. Do not rewrite or remove earlier records.
 2. **Are we building right now?** Worker CI should run from the source commits; no APK build or Worker deployment has been started.
 3. **Do you need to do anything?** No. Wait for CI verification.
 4. **What is the next step?** Verify the dedicated Worker CI, then separately confirm Preview D1 migration/binding state and deployment target before requesting approval for Preview-only deployment.
+
+
+## 2026-11-15 — Canonical Premium Worker account-status endpoint CI passed
+
+- Dedicated Premium Worker CI run #33 (`43629404121`) completed successfully for test commit `bd3647631a385289886667716cc1b23216a85003`: https://github.com/bugoyweak7/WatchAtHomePremiumWorker/actions/runs/43629404121
+- Verified all workflow steps passed: dependency installation, TypeScript check, D1 schema tests, account/device tests (including the new account lifecycle reader), Worker HTTP/Firebase authentication tests, crypto/key rotation, credential storage, PIN verifier and lockout, rate limits, profile CRUD/settings, and profile sync.
+- This validates source compilation and automated local/mock tests only. It does not verify the live Preview Worker, Preview D1 contents/migrations, or deployed environment bindings.
+- No Worker deployment, D1 migration/application, secrets/variables change, APK build, Firebase/Firestore or Supabase change, or Production operation was performed.
+- **What is happening?** Canonical Premium Worker source now includes the account-status endpoint and its CI suite passed.
+- **Are we building right now?** No. CI is complete; no APK or deployment is running.
+- **Do you need to do anything?** No immediate device action. A separate Preview deployment approval and supported Cloudflare/Wrangler execution path are still required.
+- **Next step:** Verify the Preview D1 migration/binding target, then deploy the dedicated Worker to Preview only after explicit approval. Do not deploy to Production.
