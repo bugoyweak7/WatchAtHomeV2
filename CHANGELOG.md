@@ -556,3 +556,14 @@ Entries are append-only. Do not rewrite or remove earlier records.
 2. Are we building right now? No APK is being built. Firebase Auth CI must validate common tests and Android compilation.
 3. Do you need to do anything? No, wait for CI results.
 4. What is the next step? Verify the Firebase Auth workflow; fix any compile/test failures before considering a UI display or broader account lifecycle work.
+
+ 
+## 2026-11-15 — Account status authentication-gate test added
+
+- Added a regression test confirming the staged client refuses account-status retrieval when signed out and when the Firebase account email is not verified. This test complements the payload/UID validation tests recorded above.
+- Test source commit: `671576c010a6cafb8094c4205ba3bff629b6c5d2`.
+- The Firebase Auth workflow path filter includes the changed manager and test files. CI result remains pending; no APK build, deployment, D1 migration, active Supabase change, or Production operation.
+- What is happening? The read-only account-status client and its authentication gate now have focused regression coverage.
+- Are we building right now? No APK build; the Firebase Auth CI workflow should run common tests and Android compilation.
+- Do you need to do anything? No.
+- What is the next step? Verify the workflow result before any UI integration or APK packaging.
