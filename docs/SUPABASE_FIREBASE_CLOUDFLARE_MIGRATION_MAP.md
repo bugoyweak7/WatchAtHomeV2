@@ -372,3 +372,8 @@ This route snapshot is based on repository source inspection, not live deploymen
 - Admin build configuration now accepts the non-secret `watchathome.premiumApiBaseUrl` Gradle property. No live Worker URL was present in repository configuration, so the app is not yet configured for a live call.
 - Admin build verification is pending: its current GitHub Actions workflow automatically targets `main`, not the approved setup branch. Do not treat this as production-ready until the branch build and authenticated API flow pass.
 - No Firebase/Cloudflare resources, secrets, production data, deployments, or account settings were changed.
+
+
+## 2026-11-14 — Removal gate reaffirmed from source evidence
+
+Supabase removal is explicitly blocked until every active call site has a tested and live-verified replacement and rollback/data-retention requirements are satisfied. The current branch still has active Supabase Auth in AuthRepository, Supabase device-link and account-deletion flows, a shared Supabase client with Auth/PostgREST/Functions/Storage/Realtime, Supabase library/progress/watched adapters, generated Supabase runtime config, Gradle Supabase dependencies, and additional membership/profile/settings/media/Watch Party call sites documented above. Worker route implementation or local/mock tests alone do not establish production parity. Final removal requires a repository-wide reference audit, successful relevant platform builds/tests, end-to-end Firebase/Worker integration checks, verified data migration/export and rollback plan, and explicit confirmation that Supabase is no longer serving live app traffic. Until then, preserve the Supabase project, data, secrets/configuration and source adapters.
