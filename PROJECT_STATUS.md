@@ -491,3 +491,13 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Before execution, Cloudflare access must be provided through a supported Cloudflare integration or the user must run Wrangler from the authorized Worker checkout. Use Wrangler's Preview D1 targeting only (`--preview`); do not use Production database name/ID or a plain production `wrangler deploy`. First list Preview migrations and verify the target; only then apply pending migration 0002. Preview deployment uses Wrangler's `preview` command, not Production `deploy`.
 - Official command references: Cloudflare D1 Wrangler commands (<https://developers.cloudflare.com/workers/wrangler/commands/d1/>) and Worker Preview command (<https://developers.cloudflare.com/workers/wrangler/commands/workers/>).
 - Supabase remains active. User App runtime authentication remains unchanged. No Production, Firebase/Supabase settings or data, secrets, or account records were modified.
+
+
+## 2026-11-14 — Preview Firebase login entry point (implementation committed; validation pending)
+
+- The Firebase verification/bootstrap card was previously behind Settings, which could not be reached while AppGate required the active Supabase session. Added a Preview-only entry point directly to the login screen.
+- The dialog reuses the existing Firebase account UI for email/password sign-up or sign-in, email verification, and the user-initiated Cloudflare bootstrap.
+- Build-time gate: generated PreviewFirebaseAccessConfig.ENABLED, default false; only .github/workflows/watchathome-preview-apk.yml sets WATCHATHOME_PREVIEW_FIREBASE_ACCESS=true.
+- Existing Supabase login and active data repositories are untouched. The Preview Worker URL remains workflow-configured.
+- Commits: 7a12abc0cd98e72b799ae33f5577db32f3b5d50d, de876999f8b233fca1d18eba79e899cff0536c26, 63d50a99d43aca3a349482734bd89c2c42c2f276.
+- No build or test result is claimed yet. A successful updated Preview workflow run is required before APK installation and device testing.
