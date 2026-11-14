@@ -966,3 +966,8 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - CI result pending; do not treat the UI as build-verified until the workflow completes successfully.
 - No active Supabase auth behavior, Supabase adapters/dependencies, Worker, cloud configuration, Preview/Production resources, secrets, or account data were changed.
 - Full details and next gate are recorded in `WATCHATHOME_MASTER_HANDOVER.md`.
+
+## 2026-11-14 — User App Supabase dependency audit (Firebase-only account direction)
+- Re-audited the approved User App branch source and existing migration evidence. Active AuthRepository, device-link flow, shared Supabase provider/config, library/progress/watched adapters, profile/settings/credentials/media-server/add-on/plugin/collection sync, Watch Party Realtime, membership/assets, and five Supabase SDK modules remain migration work.
+- Firebase auth preparation and Worker APIs are staged but do not yet replace active app authentication or every feature. The immediate priority is Firebase-native active auth + complete account/device lifecycle, then feature-by-feature Worker cutover and regression tests.
+- User has no Supabase account/project; do not request/configure legacy Supabase credentials or use identity-link migration 0002. No code or cloud resources changed. Full findings and phased plan are in WATCHATHOME_MASTER_HANDOVER.md.
