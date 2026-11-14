@@ -955,3 +955,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Source commits: `7467a697f715690700c1410206f0e681aa55ceae`, `01382cf0e03dfba4260403c301adfe6ea64a56d3`, `fc3ba156be2c2c88557a38fa0e5b7165492788da`.
 - Test execution/CI result is pending; source commits are not treated as build verification. No Preview/Production deployment, Firebase Console change, secret/configuration change, D1/Firestore mutation, Supabase service/data change, or user-account operation occurred.
 - Next gate: run focused common tests and Android/iOS compilation; fix any compile/test issues before implementing the separate Worker bootstrap integration.
+
+## 2026-11-14 — Staged Firebase email-verification settings UI
+
+- Added a separate Firebase account-preparation card to Account Settings for users with a signed-in, non-anonymous legacy account.
+- Supports Firebase email/password account creation or sign-in, verification-email resend, and refreshing verification status after opening the email link.
+- The UI explicitly states that this is preparation only: it does not link Firebase to Supabase, call Worker bootstrap, or change the active Supabase login/data adapters.
+- Added the settings UI files to the Firebase Auth GitHub Actions path filters so Android compilation and focused auth tests run for these changes.
+- Source commits: `bd727edf26d5953f23aa733f6186d4c10312407c`, `ff7c0593c8f586a7ab0fb46b84b1885f7320de2c`, `a5e66fe88c5072053cc7ad501cd52ff7b2c6a368`.
+- CI result pending; do not treat the UI as build-verified until the workflow completes successfully.
+- No active Supabase auth behavior, Supabase adapters/dependencies, Worker, cloud configuration, Preview/Production resources, secrets, or account data were changed.
+- Full details and next gate are recorded in `WATCHATHOME_MASTER_HANDOVER.md`.
