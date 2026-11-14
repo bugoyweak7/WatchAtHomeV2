@@ -471,3 +471,12 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Mapping is one-to-one, insert-only, idempotent for the exact pair, and rejects either-side reassignment. Tests cover schema constraints, success/retry, conflicts, stale auth, and missing bootstrap.
 - Latest CI run was pending at the time of this entry; see `WATCHATHOME_MASTER_HANDOVER.md` for commit references and exact scope.
 - Preview D1 schema has not been upgraded and Worker has not been redeployed. User App login remains Supabase-backed; Production and Supabase services/data are unchanged.
+
+
+## 2026-11-14 — Legacy identity-link Worker CI passed
+
+- GitHub Actions run #31 (`43585951934`) for source/test commit `fd3922734c3ecd61fd77b7f9167c54141c2778aa` completed successfully.
+- Verified steps: dependency installation, TypeScript check, D1 schema tests, Worker module tests, HTTP/auth tests (including identity-link success/retry/conflict/stale-auth/bootstrap cases), crypto, credentials, PIN, PIN-store, rate-limit, profile, and profile-sync suites.
+- During test development, CI identified two test-only fixture/assertion issues: a foreign-key case used an existing account, and SQLite row objects have null prototypes. Both tests were corrected; the final full workflow passed. No runtime workaround or assertion weakening was used.
+- This confirms source-level and mocked HTTP/D1 test coverage only. It is not a live Preview integration test.
+- Migration `0002_legacy_identity_links.sql` has not been applied to Preview D1; Worker has not been deployed; no Preview secrets/variables, Firebase/Supabase settings/data, User App runtime auth, or Production resources were changed.
