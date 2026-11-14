@@ -366,3 +366,12 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Replaced only `androidApp/src/debug/google-services.json` with the supplied `watchathome-preview` configuration, including all three registered Android package IDs.
 - Kept the root `androidApp/google-services.json` Production configuration unchanged.
 - No auth implementation, Supabase integration, Worker, cloud resource, secret, or deployment changed. This does not yet switch the app's active authentication to Firebase.
+
+
+## 2026-11-14 — Supabase migration evidence matrix
+
+- Added `docs/SUPABASE_MIGRATION_EVIDENCE_MATRIX.md` documenting source-verified legacy dependencies, replacement evidence, blockers and cutover gates across all major User App features.
+- Distinguished the shared Admin Firestore add-on catalogue from per-profile installed add-ons.
+- Recorded missing upstream Supabase server-side definitions and the fact that remote user-data migration is not yet verified.
+- Conclusion: keep Supabase active as rollback; no removal or feature cutover is safe yet.
+- Documentation-only change; no application code, dependencies, cloud settings, secrets, data or deployments changed.
