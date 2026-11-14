@@ -297,4 +297,19 @@ class FirebaseAuthSessionManagerTest {
         }.isFailure)
     }
 
+
+    @Test
+    fun accountStatusRequiresSignedInVerifiedFirebaseAccount() = runTest {
+        val gateway = FakeFirebaseAuthGateway()
+        val manager = FirebaseAuthSessionManager(gateway, backgroundScope)
+        manager.initialize()
+        runCurrent()
+
+        assertTrue(manager.getCloudflareAccountStatus().isFailure)
+
+        assertTrue(manager.signInWithEmail("user@example.com", "password123").isSuccess)
+        assertEquals(false, manager.emailVerified.value)
+        assertTrue(manager.getCloudflareAccountStatus().isFailure)
+    }
+
 }
