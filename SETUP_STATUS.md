@@ -852,3 +852,10 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 ### Next safe task
 - Continue the evidence matrix for the remaining user-owned resources and verify every staged adapter against the current Worker route/schema. Then define the first end-to-end test in isolated Preview using a dedicated test account, after verifying Preview-only Firebase secrets and Worker deployment. Do not switch active app auth, enable Cloudflare sync globally, delete anonymous/local data, remove Supabase, or deploy Production as part of this audit.
 - No app source, Worker runtime, Firebase project settings, Cloudflare resources, secrets, production data, or deployments were changed by this audit. Documentation only.
+
+
+## 2026-11-14 — Isolated Preview Firebase Android configuration
+- Replaced only `androidApp/src/debug/google-services.json` with the supplied Firebase project configuration for `watchathome-preview`.
+- Verified the configuration contains the app registrations `com.nuvio.app`, `com.nuviodebug.com`, and `com.tapframe.watchathomeadmin`; the Gradle debug variant uses `com.nuviodebug.com`.
+- Left `androidApp/google-services.json` (Production project) unchanged. No authentication flow, app source, Worker, cloud resource, secret, or deployment was changed.
+- This is configuration only: the active app authentication repository still uses Supabase; Firebase account creation is not enabled by this change.
