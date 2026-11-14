@@ -3445,3 +3445,26 @@ A mismatch between the two email addresses is not, by itself, identity proof or 
 ## Result
 The next implementation gate is a Preview-only additive identity-link table and link endpoint, followed by the User App dual-session verification/linking flow. The active Supabase authentication and all Supabase-backed feature adapters remain unchanged until each replacement is verified and a separate cutover approval is received.
 
+
+
+## 2026-11-14 — Preview legacy identity-link implementation (source only)
+
+### Approved scope
+The user said GO for the first implementation stage only: add the Preview-ready D1 identity-link migration and Worker endpoint. This did not authorize applying SQL to Cloudflare D1, deploying the Worker, changing secrets/variables, changing User App runtime authentication, or modifying Production.
+
+### Implemented on Premium Worker setup branch
+- Added `migrations/0002_legacy_identity_links.sql`. The new table maps one Firebase UID to one legacy Supabase user ID, enforces uniqueness on both sides, references the existing `accounts.user_id` root, and records server-side link time. Existing migrations remain unchanged.
+- Added `src/legacy-identity.ts`. It inserts only; it never updates/reassigns a mapping. Unique constraints arbitrate concurrent claims. Exact pair retries are idempotent; mismatched existing Firebase or legacy identity returns a conflict.
+- Added `POST /v1/migrations/legacy/link` to the Worker. It requires recent Firebase email/password reauthentication, confirms the Firebase account and verified email through Identity Toolkit, requires the Firebase UID's active bootstrapped D1 account, then verifies a valid non-anonymous legacy Supabase session through `/auth/v1/user`. It stores only the IDs and timestamp; bearer tokens are neither persisted nor returned.
+- Added schema tests for uniqueness and account foreign-key constraints, plus HTTP tests for first link, retry, both conflict directions, stale authentication, and missing bootstrap.
+- Source commits: `22778f51b747869dd86f0cc33da5639a146a1135`, `8f87eb957dbeb3c51fd2a320f5d0bf11d383e36e`, `8fbb1887a035040b1db2d9020ebb4a88e5a7ab3e`, `2db62f5f554f49f5db52ebd409e25844efe19117`, `636e6421d29a96f3940ca149249a9b0679de9eea`, and test correction `635f03c879fbb11aacf64e1c1fa32549d108eff0`.
+
+### Verification status and boundaries
+- GitHub Actions run `43585777914` for the latest source/test commit was in progress when this entry was appended. A successful earlier run for migration-only commit does not validate the endpoint or tests.
+- No SQL was applied to Preview D1. No Worker deployment or Preview runtime configuration was changed. No user identity mapping was created. No Supabase data was imported or modified.
+- User App active Supabase authentication, device-link client, and legacy feature adapters remain unchanged. Production resources and settings remain untouched.
+
+### Next gates
+1. Confirm the complete Worker CI workflow passes on the latest commit.
+2. Obtain separate approval before applying migration `0002` to the verified Preview D1 database and deploying the Preview Worker.
+3. Only after backend Preview verification, separately implement the User App dual-session linking flow. Keep the current Supabase authentication and data adapters until migration parity and rollback are proven.
