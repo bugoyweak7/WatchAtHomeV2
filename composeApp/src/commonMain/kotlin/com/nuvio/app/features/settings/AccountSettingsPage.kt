@@ -112,6 +112,14 @@ private fun AccountSettingsBody(
             }
         }
 
+        (authState as? AuthState.Authenticated)
+            ?.takeUnless { it.isAnonymous }
+            ?.let { authenticated ->
+                NuvioSurfaceCard {
+                    FirebaseAccountVerificationCard(legacyEmail = authenticated.email)
+                }
+            }
+
         NuvioPrimaryButton(
             text = stringResource(Res.string.settings_account_sign_out),
             onClick = { showSignOutConfirm = true },
