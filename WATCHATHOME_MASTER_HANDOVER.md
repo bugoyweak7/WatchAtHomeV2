@@ -3110,3 +3110,14 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 
 - No application source, tests, Wrangler configuration, Firebase project settings, Firestore rules/data, D1 schema/data, Cloudflare secrets/bindings, Supabase configuration/data, or deployments were changed.
 - This complete report is recorded here per the user's instruction that all full project reports belong in `WATCHATHOME_MASTER_HANDOVER.md`.
+
+
+# 2026-11-14 — Email verification gate for account bootstrap and trial
+
+- **Finding:** Premium Worker Identity Toolkit lookup validated the Firebase UID and account creation timestamp but did not check the `emailVerified` field. This allowed an unverified password account to reach account bootstrap and trial initialization, contrary to the project requirement that email verification is mandatory.
+- **Source correction:** The approved Premium Worker setup branch now requires `emailVerified === true` in the shared Firebase account lookup used by both `POST /v1/account/bootstrap` and `POST /v1/trial/initialize`. Unverified accounts receive HTTP 403 before D1 account creation or Firestore trial initialization.
+- **Trial timing:** Verified accounts continue to receive a seven-day trial based on Firebase Identity Toolkit `createdAt`; retries preserve the existing Firestore trial timestamps.
+- **Tests added:** HTTP coverage rejects an unverified account before a D1 account row is created and exercises verified-account bootstrap with assertions for the exact seven-day trial start and expiry.
+- **Verification status:** GitHub CI and Preview runtime verification are pending. This is not evidence of live Preview Firebase/Firestore integration.
+- **Safety:** No Cloudflare secrets, bindings, D1 schema/data, Firebase Console settings, production Worker deployment, production app traffic, Supabase configuration/data, or Supabase removal was performed. TinyFish was not used.
+- **Next gate:** Run the Premium Worker CI suite; then confirm Preview-only `FIREBASE_WEB_API_KEY` and `FIREBASE_SERVICE_ACCOUNT_JSON` are configured for project `watchathome-preview` (names and project association only; never disclose values) before authenticated Preview testing.
