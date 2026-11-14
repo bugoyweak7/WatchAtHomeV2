@@ -3494,3 +3494,43 @@ The Worker CI result above applies to `fd3922734c3ecd61fd77b7f9167c54141c2778aa`
 
 ### Current blocker and safe continuation
 The requested Cloudflare operations cannot be executed through the currently connected tools. Do not infer that a prior Cloudflare dashboard sign-in provides Wrangler/API access to this session. Continue only after a supported Cloudflare integration is connected or the user provides output from the Preview-only Wrangler commands. Keep this gate Preview-only.
+
+
+## 2026-11-14 — Staged Firebase email-verification foundation implemented
+
+### Approved scope
+The user approved Step 1 only: implement the Firebase email-verification foundation in the User App. This approval does not authorize active authentication cutover, Worker bootstrap integration, UI replacement, Supabase removal, or any cloud/Production operation.
+
+### Source changes
+Repository: `bugoyweak7/WatchAtHomeV2`  
+Branch: `setup/firebase-cloudflare-zero-cost`
+
+1. `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/FirebaseAuthGateway.kt`
+   - Added `isEmailVerified` to the account snapshot.
+   - Added gateway operations to send a Firebase verification email and reload the current Firebase user.
+   - Uses GitLive Firebase Auth `FirebaseUser.sendEmailVerification()`, `reload()`, and `isEmailVerified` APIs.
+2. `composeApp/src/commonMain/kotlin/com/nuvio/app/core/auth/FirebaseAuthSessionManager.kt`
+   - Registration sends the verification email after successful Firebase account creation.
+   - Exposes a nullable `emailVerified` StateFlow.
+   - Adds a resend operation for signed-in, unverified accounts.
+   - Adds a reload operation that refreshes the server-side Firebase user state and verifies the refreshed UID matches the currently authenticated UID.
+   - Clears verification state on sign-out/anonymous rejection/stop.
+   - Documents that if email delivery fails after account creation, the account remains created and the caller can retry sending the verification email.
+   - Exposes the new operations through the staged `FirebaseAuthRepository` facade.
+3. `composeApp/src/commonTest/kotlin/com/nuvio/app/core/auth/FirebaseAuthSessionManagerTest.kt`
+   - Added tests for registration email delivery, resend, refreshed verification status, missing/mismatched sessions, and verification-state cleanup.
+
+### Commits
+- Gateway: `7467a697f715690700c1410206f0e681aa55ceae`
+- Session manager: `01382cf0e03dfba4260403c301adfe6ea64a56d3`
+- Tests: `fc3ba156be2c2c88557a38fa0e5b7165492788da`
+
+### Verification and boundaries
+- The GitLive Firebase Kotlin SDK documentation confirms the common FirebaseUser API exposes `isEmailVerified`, `sendEmailVerification()`, and `reload()`. API reference: https://gitliveapp.github.io/firebase-kotlin-sdk/firebase-auth/com.google.firebase.auth/-firebase-user/index.html
+- Focused test execution and Android/iOS compilation have not yet been confirmed at the time of this entry. Do not report the change as build-verified until CI or local task output is available.
+- The active `AuthRepository` and `AuthScreen` were not modified. The existing Supabase auth flow and all Supabase adapters/dependencies remain in place.
+- Worker bootstrap is not called by the new flow. The Worker still independently enforces verified email when bootstrap is eventually integrated.
+- No Worker source, Admin App, cloud resources, Preview/Production deployments, Firebase Console settings, Firebase secrets, D1/Firestore data, Supabase service/data, or user accounts were changed.
+
+### Next gate
+Run focused common tests and supported Android/iOS compile checks on this branch. Resolve any failures before separately implementing Preview-only account-bootstrap integration. Keep active Supabase login unchanged until that later integration and its data-preservation tests pass.
