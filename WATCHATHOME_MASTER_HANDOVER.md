@@ -3315,3 +3315,33 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 
 ## Next gate
 - Prepare the Preview-only configuration procedure for the existing Supabase project URL and public anon/publishable key. Do not configure values, deploy, or perform a live verification request until separately approved.
+
+
+# 2026-11-14 — Preview legacy-verification configuration plan prepared
+
+## Source inspection
+- Re-read Premium Worker `wrangler.toml`, `src/index.ts`, `package.json`, and the Worker GitHub Actions workflow on `setup/firebase-cloudflare-zero-cost`.
+- The Worker already has an isolated Wrangler `[previews.vars]` Firebase project setting (`watchathome-preview`) and a Preview D1 binding to `watchathome-accounts-preview`. The production top-level Firebase project and D1 binding remain separate.
+- Worker `Env` declares optional `LEGACY_SUPABASE_URL` and `LEGACY_SUPABASE_ANON_KEY`; the route fails closed if either is absent. The Supabase URL must be HTTPS and contain only the project origin (no credentials, path, query, or fragment). The Worker constructs `/auth/v1/user` itself.
+- The endpoint needs a valid current Supabase user access token in `X-Legacy-Authorization` plus a Firebase email/password ID token whose email is verified and whose authentication is recent (within five minutes). The Supabase access token is a request-time user credential, not a Cloudflare setting; never store it as a Worker secret.
+- The public Supabase anon/publishable key is used only as the Supabase `apikey` header. Do not use a Supabase service-role key.
+
+## Exact Preview-only configuration plan (not applied)
+- Configure only the Preview belonging to branch `setup/firebase-cloudflare-zero-cost`; do not use Production variables, Production secrets, or Previews Base secrets shared with every new branch.
+- Set these two Preview secret names:
+  - `LEGACY_SUPABASE_URL` — existing Supabase project root URL, e.g. `https://<project-ref>.supabase.co`.
+  - `LEGACY_SUPABASE_ANON_KEY` — existing public anon/publishable key for that same Supabase project.
+- Store both as Preview secrets for conservative handling; do not add either value to Git, `wrangler.toml`, source files, issue comments, or this handover. User should enter the values directly into Cloudflare/Wrangler and must not paste them into chat.
+- If using Wrangler CLI, first confirm the installed project Wrangler is at least `4.135.0` (the Cloudflare Worker Previews minimum). From the authorized repository root while checked out on the approved branch, the per-Preview commands are:
+  - `npx wrangler preview secret put LEGACY_SUPABASE_URL`
+  - `npx wrangler preview secret put LEGACY_SUPABASE_ANON_KEY`
+  The Preview secret command creates a new Preview deployment; use only the branch-specific Preview, never `wrangler secret put` (which targets the regular Worker) and never the Previews Base secret command (which would share secrets with future branch Previews).
+- Current `package.json` declares Wrangler as `^4.45.0`; that semver range permits newer 4.x versions but does not by itself prove the installed CLI is at least `4.135.0`. Check `npx wrangler --version` before invoking any Preview command. If it is older, stop and request approval for a minimal tooling update before proceeding.
+- After both values are set, confirm the resulting Preview deployment URL/name and verify that its runtime still uses Firebase project `watchathome-preview` and D1 `watchathome-accounts-preview`. Do not assume the previously shared health URL is the new Worker Preview URL without checking.
+- Live test only after a separate explicit approval: first `GET /health`, then test the protected verification endpoint using a disposable/test account with both valid sessions. Expected success is `verified: true`, matching current Firebase UID and Supabase user ID, `linkCreated: false`, and `migrationCreated: false`. Invalid/expired sessions and unverified Firebase email must fail closed. Do not expose tokens in PowerShell output or logs.
+- The verification endpoint creates no link, migration record, D1 row, account mutation, or data transfer. This step is identity proof only; it does not authorize auth cutover or Supabase removal.
+
+## Status and approval boundary
+- This is a read-only configuration plan. No Cloudflare variable/secret, Preview deployment, source file, D1 schema/data, Firebase setting, Supabase setting/data, Production resource, or app traffic was changed.
+- CI for endpoint/test commit `b05b8e519d8b6c6ee78ddc4b8615458f8ba6fb6f` is confirmed passing in GitHub Actions run #22. This is not live Preview verification.
+- Next approval should be limited to configuring the two secrets on the one named Preview and creating its Preview deployment. Live API testing should remain a separate approval gate.
