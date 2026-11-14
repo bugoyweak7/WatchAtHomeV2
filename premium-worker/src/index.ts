@@ -776,7 +776,8 @@ export default {
       if (mediaMatch && (request.method === "GET" || request.method === "PUT")) return await mediaServersRoute(request, env, user, Number(mediaMatch[1]));
       if (request.method === "GET" && url.pathname === "/v1/account") {
         return await getAccountRoute(env, user);
-      }\n      if (request.method === "POST" && url.pathname === "/v1/account/bootstrap") {
+      }
+      if (request.method === "POST" && url.pathname === "/v1/account/bootstrap") {
         return await bootstrapAccount(request, env, user);
       }
       if (request.method === "POST" && url.pathname === "/v1/devices") {
