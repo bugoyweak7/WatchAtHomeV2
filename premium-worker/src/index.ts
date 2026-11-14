@@ -12,6 +12,7 @@ import {
 import {
   AccountApiError,
   ensureActiveAccount,
+  getAccount,
   listDevices,
   parseDeviceRegistration,
   registerDevice,
@@ -441,6 +442,12 @@ async function bootstrapAccount(request: Request, env: Env, user: VerifiedUser):
   return response({ accountReady: true, trial: await trial.json() });
 }
 
+
+async function getAccountRoute(env: Env, user: VerifiedUser): Promise<Response> {
+  const db = requireAccountDb(env);
+  return response(await getAccount(db, user.uid));
+}
+
 async function registerDeviceRoute(request: Request, env: Env, user: VerifiedUser): Promise<Response> {
   const db = requireAccountDb(env);
   const input = await parseDeviceRegistration(request);
@@ -767,7 +774,7 @@ export default {
       if (providerMatch && (request.method === "GET" || request.method === "PUT")) return await providerCredentialRoute(request, env, user, Number(providerMatch[1]));
       const mediaMatch = /^\/v1\/profiles\/([1-9][0-9]*)\/media-servers$/.exec(url.pathname);
       if (mediaMatch && (request.method === "GET" || request.method === "PUT")) return await mediaServersRoute(request, env, user, Number(mediaMatch[1]));
-      if (request.method === "POST" && url.pathname === "/v1/account/bootstrap") {
+      if (request.method === "GET" && url.pathname === "/v1/account") {\n        return await getAccountRoute(env, user);\n      }\n      if (request.method === "POST" && url.pathname === "/v1/account/bootstrap") {
         return await bootstrapAccount(request, env, user);
       }
       if (request.method === "POST" && url.pathname === "/v1/devices") {
