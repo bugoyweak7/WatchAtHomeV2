@@ -3480,3 +3480,17 @@ The user said GO for the first implementation stage only: add the Preview-ready 
 
 ### Verified source commit
 The Worker CI result above applies to `fd3922734c3ecd61fd77b7f9167c54141c2778aa`. The current Worker documentation-only commits do not change the validated source. The next gate remains separate approval for Preview D1 migration application and Preview Worker deployment.
+
+
+## 2026-11-14 — Preview migration/deployment approval received; execution blocked by access boundary
+
+- User explicitly approved the next gate: apply migration `0002_legacy_identity_links.sql` to Preview D1, deploy the Preview Worker, and verify it.
+- Re-verified the approved Worker branch configuration: Preview D1 name `watchathome-accounts-preview`, ID `38cb13eb-dfbd-403f-92a9-43b545d6375c`; Preview Firebase project ID `watchathome-preview`. Production D1 and Firebase project identifiers are distinct in `wrangler.toml`.
+- No Cloudflare account/D1/Workers management connector is available in this session. GitHub access is read-only for workflow/deployment resources; GitHub workflow dispatch is not available. User explicitly prohibited TinyFish, so no browser automation was attempted. The public Preview health URL could not be independently reached through the available web fetch.
+- Therefore no live D1 migration listing, Preview database existence/identity check, migration application, Worker deployment, secret/variable update, or live endpoint test was performed. This is an access/tooling blocker, not a reported Cloudflare failure. No cloud state was changed.
+- Before execution, Cloudflare access must be provided through a supported Cloudflare integration or the user must run Wrangler from the authorized Worker checkout. Use Wrangler's Preview D1 targeting only (`--preview`); do not use Production database name/ID or a plain production `wrangler deploy`. First list Preview migrations and verify the target; only then apply pending migration 0002. Preview deployment uses Wrangler's `preview` command, not Production `deploy`.
+- Official command references: Cloudflare D1 Wrangler commands (<https://developers.cloudflare.com/workers/wrangler/commands/d1/>) and Worker Preview command (<https://developers.cloudflare.com/workers/wrangler/commands/workers/>).
+- Supabase remains active. User App runtime authentication remains unchanged. No Production, Firebase/Supabase settings or data, secrets, or account records were modified.
+
+### Current blocker and safe continuation
+The requested Cloudflare operations cannot be executed through the currently connected tools. Do not infer that a prior Cloudflare dashboard sign-in provides Wrangler/API access to this session. Continue only after a supported Cloudflare integration is connected or the user provides output from the Preview-only Wrangler commands. Keep this gate Preview-only.
