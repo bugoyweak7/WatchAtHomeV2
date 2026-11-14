@@ -1006,3 +1006,11 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - The Preview tools now display whether the Cloudflare account is active, whether the 7-day trial is initialized, and the returned trial start and expiry timestamps.
 - The existing bootstrap endpoint remains unchanged; its create-only trial initialization behavior is preserved. No new endpoint, polling, production deployment, cloud configuration, or Supabase cutover was performed.
 - Pending verification: run Firebase Auth unit tests and Android Play Store debug compilation on the approved setup branch, then rebuild the Preview APK before installing this UI update.
+
+
+## 2026-11-15 — Firebase trial status visibility build fix
+- Corrected `FirebaseTrialStatus` from `internal` to public visibility because the public `FirebaseAuthRepository.bootstrapCloudflareAccount()` API returns `Result<FirebaseTrialStatus>`.
+- Addresses the Kotlin compiler error from Firebase Auth Build run `43614099352`.
+- Source commit: `78034fa69b39671e0c51d330d8f26f107acdc538`.
+- Verification is pending. The failed run stopped at test compilation; Android compilation and APK packaging did not run.
+- What is happening: source fix committed; CI result pending. Are we building now: no new build has yet been confirmed. Does the user need to do anything: no. Next: inspect CI, then run the separate Preview APK workflow if CI passes.
