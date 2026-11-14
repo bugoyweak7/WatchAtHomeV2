@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "314676209682",
-    "project_id": "watchathome-admin",
-    "storage_bucket": "watchathome-admin.firebasestorage.app"
+    "project_number": "1091456844777",
+    "project_id": "watchathome-preview",
+    "storage_bucket": "watchathome-preview.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:314676209682:android:a359020c7f8b70f2ea90cb",
+        "mobilesdk_app_id": "1:1091456844777:android:e822244adfe4dee2e80178",
         "android_client_info": {
           "package_name": "com.nuvio.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBKdm1KexUZb3AJ1XEljer4zRVwe0ZF9kA"
+          "current_key": "AIzaSyADa5cpCM3gfLfPFaAjp6QhHApl8tQ7MmE"
         }
       ],
       "services": {
@@ -26,7 +26,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:314676209682:android:80956d17fdb5a3f8ea90cb",
+        "mobilesdk_app_id": "1:1091456844777:android:4a0e7eccc0689de9e80178",
         "android_client_info": {
           "package_name": "com.nuviodebug.com"
         }
@@ -34,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBKdm1KexUZb3AJ1XEljer4zRVwe0ZF9kA"
+          "current_key": "AIzaSyADa5cpCM3gfLfPFaAjp6QhHApl8tQ7MmE"
         }
       ],
       "services": {
@@ -45,7 +45,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:314676209682:android:b0394ece1b050123ea90cb",
+        "mobilesdk_app_id": "1:1091456844777:android:892f1d40074305e1e80178",
         "android_client_info": {
           "package_name": "com.tapframe.watchathomeadmin"
         }
@@ -53,7 +53,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBKdm1KexUZb3AJ1XEljer4zRVwe0ZF9kA"
+          "current_key": "AIzaSyADa5cpCM3gfLfPFaAjp6QhHApl8tQ7MmE"
         }
       ],
       "services": {
