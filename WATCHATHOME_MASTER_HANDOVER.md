@@ -3590,3 +3590,39 @@ Verify the new GitHub Actions run passes both the focused Firebase Auth tests an
 - This is a correction to the plan and documentation only. No Worker/App source, D1 schema/data, Firestore data, Firebase settings, Cloudflare secrets, Preview deployment, Production resource, or user account was changed.
 - The user reported adding a Preview secret named LEGACY_SUPABASE_URL before clarifying that no Supabase project exists. Do not use it; its presence/value was not inspected here. Any removal must be a separate explicit Preview-only cloud action after confirming the secret is not used by another route/workflow.
 - The staged legacy endpoints and migration source remain in the repository pending a separately approved code-removal step. Supabase dependencies in the User App have not yet been removed. No claim of complete Supabase removal is made.
+
+## 2026-11-14 — User App Supabase dependency audit after Firebase-only clarification
+
+### Scope and method
+- Re-read the current GitHub tree and source on `bugoyweak7/WatchAtHomeV2`, branch `setup/firebase-cloudflare-zero-cost`. This was a GitHub-only source audit; no local folders, OneDrive, TinyFish, Supabase dashboard, or live Supabase service was accessed.
+- Read the existing migration map, evidence matrix, legacy backend compatibility audit, account migration contract, active authentication/device-link repositories, Supabase provider/configuration, library/progress/watched adapters, profile/add-on/party and profile-settings/provider-credential/media-server sync sources, Gradle dependency declarations, and current Worker integration inventory.
+- The repository already contains extensive feature inventories. This continuation records the account-identity correction and prioritizes the remaining work; it does not claim the upstream legacy server schema/RLS or remote user data has been inspected.
+
+### Confirmed findings
+1. **No real legacy Supabase account is available to this user.** Per the user's clarification, Supabase references are inherited/default implementation. Treat them as code dependencies to replace, not as a real Supabase project or user identity to link.
+2. **Active login still uses Supabase code.** `core/auth/AuthRepository.kt` listens to Supabase Auth session state and implements email/password sign-up/sign-in, session validation, sign-out, and account cleanup; it also contains a local anonymous UUID path. The staged Firebase gateway/session manager is separate and is not yet the active AuthRepository replacement.
+3. **Device-link login still depends on Supabase.** `core/auth/DeviceLinkAuthRepository.kt` calls legacy RPCs for start/poll and the legacy exchange function, then imports Supabase access/refresh tokens. The Worker Firebase device-link flow must replace this before removing the client dependency.
+4. **A shared Supabase client remains central.** `core/network/SupabaseProvider.kt` creates Auth, PostgREST, Functions, Storage, and Realtime clients from the selected backend URL and publishable key; `SupabaseEndpointConfig.kt` retains endpoint/fallback configuration. Removing only Auth imports would not remove the runtime dependency.
+5. **Account-owned sync remains mixed.** Supabase adapters remain for library, watch progress, and watched history. Cloudflare adapters and Worker APIs already exist in source for these domains, but actual runtime selection, live Preview parity, cursor/tombstone semantics, and end-to-end tests must be verified before cutover.
+6. **Additional profile/account sync still calls Supabase.** Existing sources include profile CRUD/PIN/locks, profile settings, provider credentials, media-server metadata, user-installed add-ons, plugin repository selections, collections, and home catalogue settings. The shared Admin Firestore add-on catalogue is a separate data set and must remain distinct from per-profile installed add-ons.
+7. **Watch Party remains a separate major dependency.** Party lifecycle uses Supabase RPCs and private Realtime channels/presence/broadcast events. A REST-only replacement is not parity; the planned Cloudflare Durable Objects design must preserve room authorization, presence, event fan-out, reconnect, host controls, chat and clock behavior.
+8. **Membership and shared assets need separate contracts.** Existing migration evidence identifies membership/supporter/subscription reads and Supabase Storage-backed assets. Premium/trial endpoints alone do not prove full membership overview or asset-storage parity.
+9. **Build dependencies still include Supabase SDK modules.** The current commonMain dependency set includes Supabase PostgREST, Auth, Functions, Storage and Realtime; the version catalog declares all five modules. These can only be removed after every corresponding source call site and platform path has been migrated.
+10. **Security-sensitive data needs special treatment.** Provider credentials and media-server snapshots may contain API keys/tokens. Their Worker storage must use verified encryption-at-rest, key rotation, UID/profile authorization and redacted logging before mobile cutover.
+
+### Corrected migration order
+- Phase A — Make Firebase email/password the sole intended identity for new accounts; preserve the staged verified-email/session behavior. Do not add legacy Supabase identity linking or require Supabase credentials.
+- Phase B — Finish Worker-side account lifecycle: bootstrap/retry verification, premium/trial status, device registration/revocation, Firebase-compatible TV/device-link approval and one-time token exchange, and complete account deletion. Test all on Preview with disposable Firebase accounts.
+- Phase C — Wire the User App to Firebase ID tokens and Worker APIs behind controlled feature switches, starting with profile/account bootstrap and then each data domain. Preserve local caches, profile IDs, offline behavior, sync cursors, tombstones and unknown JSON fields.
+- Phase D — Migrate sensitive credentials/media-server tokens with encryption tests; migrate add-ons/plugins/collections/settings separately; keep shared Admin catalogue distinct.
+- Phase E — Design and test Watch Party Durable Objects parity and membership/assets replacement.
+- Phase F — Remove Supabase imports, provider/configuration, SDK dependencies and legacy adapters only after repository-wide source scan, Android/iOS builds, automated regression tests and Preview end-to-end tests pass. Keep a rollback gate; do not perform a Production cutover without separate approval.
+
+### Explicit non-goals / boundaries
+- Do not configure or request LEGACY_SUPABASE_URL, LEGACY_SUPABASE_ANON_KEY, legacy tokens, or a Supabase account.
+- Do not apply D1 migration 0002_legacy_identity_links.sql or invoke legacy identity verify/link routes as part of Firebase account bootstrap.
+- Do not infer that remote Supabase data exists or that it can be exported. No user-owned Supabase project was identified or inspected. If the app has local user data, preserve it and assess its actual local persistence independently.
+- Do not remove code, dependencies, Worker routes, D1 tables, secrets or deployments in this audit step. No app/Worker source, cloud resource, Firebase setting, D1/Firestore data, Preview deployment, or Production resource was changed.
+
+### Outcome
+The immediate next implementation priority is not identity linking. It is a Firebase-native active AuthRepository and Worker account lifecycle/device-link contract, followed by feature-by-feature migration of the still-Supabase-backed repositories. Existing docs `docs/SUPABASE_FIREBASE_CLOUDFLARE_MIGRATION_MAP.md`, `docs/SUPABASE_MIGRATION_EVIDENCE_MATRIX.md`, and `docs/LEGACY_BACKEND_SOURCE_COMPATIBILITY_AUDIT.md` remain the detailed feature inventories and should be updated append-only as each feature is verified.
