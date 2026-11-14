@@ -456,3 +456,11 @@ Entries are append-only. Do not rewrite or remove earlier records.
 ## 2026-11-14 — Firebase-only User App dependency audit
 - Recorded a GitHub-source audit of remaining inherited Supabase dependencies and corrected the migration sequence for a Firebase-only account identity. Active auth/device-link, data sync, realtime, membership/assets and SDK removal remain pending feature-by-feature replacement and Preview regression testing.
 - Documentation only. No application code, Worker source, D1/Firestore data, secrets, deployment or Production resource changed. Full audit is in WATCHATHOME_MASTER_HANDOVER.md.
+
+
+## 2026-11-14 — Staged Firebase account bootstrap client
+
+- Added verified-email-gated Cloudflare `/v1/account/bootstrap` client call from the staged Firebase session.
+- Added explicit Account Settings action and success confirmation; requires HTTPS Worker URL and `accountReady: true` response.
+- Active Supabase auth and data adapters remain unchanged. No deployment/cloud resource changes.
+- Build/CI validation pending; see `WATCHATHOME_MASTER_HANDOVER.md`.
