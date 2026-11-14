@@ -3202,3 +3202,24 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - **Passed:** Preview account bootstrap/trial (previous report), device registration, active device listing, device revocation, and post-revocation disappearance from the active list.
 - **Still unverified:** live cross-account isolation, Android/Android TV app integration, device-link flow, complete account deletion, and remaining feature parity.
 - Next: re-read the profile API route and schema contract, then test one low-risk Preview profile read/create operation with explicit awareness of its D1 write side effects. Do not deploy or change Production.
+
+
+## 2026-11-14 — TV device-link Worker source implementation staged
+
+### What changed
+- In the approved Premium Worker repository, connected the existing device-link module functions to the HTTP router:
+  - POST /v1/device-link/start creates a short-lived TV pairing session.
+  - POST /v1/device-link/approve requires a verified Firebase password-provider mobile ID token and an active account.
+  - POST /v1/device-link/poll checks the TV device code and nonce, and returns a Firebase custom token only after approval.
+- Corrected URL-safe base64 encoding and six-digit approval-code validation in the device-link module.
+- Added an HTTP integration test for session creation, rejection of unauthenticated approval, signed-in mobile approval, custom-token issuance, and replay/second-poll behavior.
+- Updated the Premium Worker SETUP_STATUS.md and CHANGELOG.md with concise append-only entries.
+
+### Verification and current limits
+- Source edits and the test are committed to bugoyweak7/WatchAtHomePremiumWorker, branch setup/firebase-cloudflare-zero-cost.
+- GitHub Actions workflow is configured to run on pushes affecting source/tests, but no passing result has yet been confirmed for these commits. Do not call this tested/passed yet.
+- No Preview deployment or live pairing request has been made.
+- The Android/iOS mobile approval UI and TV Firebase custom-token sign-in client are not yet connected or verified.
+- The active app login and existing TV pairing still use Supabase. Firebase user login is not complete.
+- Production Worker, Production D1/Firebase, Supabase services/data, and live user traffic were not changed.
+- Next: verify CI for the Worker commits, then implement and test the mobile approval and TV custom-token sign-in clients against the exact Worker contract. Only after source tests pass should a separately approved Preview deployment/live pairing test be performed.
