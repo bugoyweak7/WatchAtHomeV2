@@ -614,3 +614,20 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 2. **Are we building right now?** Source is committed; CI must run. No APK packaging or deployment has been performed.
 3. **Do you need to do anything?** No action until CI finishes. If CI passes, a new Preview APK will be needed to test this UI on-device.
 4. **What is the next step?** Verify Firebase Auth CI; if successful, build the Preview APK and have the user test the new status button against the Preview Worker.
+
+
+## 2026-11-15 — Add read-only Firebase account lifecycle endpoint to canonical Premium Worker source
+
+- Repository: `bugoyweak7/WatchAtHomePremiumWorker`, approved setup branch.
+- Reconciled the missing account-status API in the dedicated Premium Worker repository. The canonical Worker already contains the Firebase account bootstrap route, premium-code/entitlement operations, device-link routes, profile APIs, and a Preview D1 binding; it was missing only the read-only `GET /v1/account` handler and data-access function required by the Preview app client.
+- Added owner-scoped `getAccount(db, uid)` in `src/account-device.ts`, returning the UID, lifecycle status, created/updated timestamps, and nullable deleted timestamp. A missing account returns HTTP 404. UID is supplied by the request handler only after Firebase token verification.
+- Added authenticated `GET /v1/account` dispatch in `src/index.ts`, using the existing `requireAccountDb(env)` binding and verified `user.uid`. Existing bootstrap, premium, device-link, migration, and profile routes were preserved.
+- Added a SQLite-backed unit test for active and deletion-pending accounts, owner UID scoping, and missing-account 404 behavior in `test/account-device.test.mjs`.
+- Source commits: `63a131eb004e65272d04613d12a04e1424d640b9` (reader), `3559ca6365335f9143ae98987e2ee4d43cf48979` (route), `bd3647631a385289886667716cc1b23216a85003` (test).
+- This is source-only. Worker CI must complete before considering the change validated. No D1 migration/application, Preview or Production deployment, secret/variable change, Firebase/Firestore write, Supabase change, or app login cutover was performed.
+
+### Mandatory status
+1. **What is happening?** The dedicated Premium Worker now has source for the read-only account-status endpoint expected by the Preview app.
+2. **Are we building right now?** Worker CI should run from the source commits; no APK build or Worker deployment has been started.
+3. **Do you need to do anything?** No. Wait for CI verification.
+4. **What is the next step?** Verify the dedicated Worker CI, then separately confirm Preview D1 migration/binding state and deployment target before requesting approval for Preview-only deployment.
