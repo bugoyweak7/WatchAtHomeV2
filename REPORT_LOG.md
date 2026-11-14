@@ -524,3 +524,20 @@ Do not wire Firebase into the active app gate or replace `AuthRepository` until 
 - Are we building right now? Check the workflow; no Preview APK is being requested.
 - Do you need to do anything? No.
 - What is the next step? Confirm focused tests and Android Play Store debug compilation pass.
+
+## 2026-11-15 — Account status API implementation
+
+### Change
+Added `GET /v1/account` to the Premium Worker. It queries the `accounts` row using the UID from the already verified Firebase token and returns `uid`, `status`, `createdAt`, `updatedAt`, and `deletedAt`. Missing accounts return 404. The endpoint does not bootstrap accounts or mutate state.
+
+### Tests
+Added mocked-D1 coverage for active account response, deletion-pending state, and missing-account handling. CI is pending; no test pass is claimed yet.
+
+### Scope and safety
+No Worker deployment, D1 migration/application, Firebase/Supabase configuration, account data, secrets, active Supabase login, or APK build was changed.
+
+### Mandatory status
+1. What is happening? The read-only authenticated account-status route and tests are committed.
+2. Are we building right now? Worker CI is expected; no APK build.
+3. Do you need to do anything? No.
+4. What is the next step? Verify Worker CI before further implementation.
