@@ -3748,3 +3748,13 @@ Every report must explicitly answer all four questions and distinguish code chan
 2. Are we building right now? The Worker Checks CI workflow should run TypeScript compilation and Worker tests; no Android APK is being built.
 3. Do you need to do anything? No, pending CI result.
 4. What is the next step? Verify Worker CI. If successful, proceed to review a read-only client adapter; keep active Supabase authentication unchanged.
+
+## 2026-11-15 — Account route formatting correction
+
+- The first Worker CI run (`43622490326`) caught literal escaped newline characters in the newly added route in `premium-worker/src/index.ts`; TypeScript compilation failed before tests ran.
+- Corrected the route formatting in commit `2092b0ba9d3c10598af9207f234d48cfea5adb3d`. No API behavior changed. A new Worker Checks run must confirm the correction and execute the full suite.
+- No deployment, D1 change, APK build, active Supabase auth change, or production resource change.
+- What is happening? The TypeScript syntax issue found by CI has been corrected.
+- Are we building right now? A new Worker CI run should validate the fix; no APK is being built.
+- Do you need to do anything? No.
+- What is the next step? Check the new Worker CI result before proceeding.
