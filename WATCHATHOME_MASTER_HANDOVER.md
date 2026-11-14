@@ -3298,3 +3298,20 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - No Preview deployment or live legacy-token verification request was performed.
 - Next: inspect the GitHub Actions result for the exact source/test commits; resolve any failures before deployment. After passing checks, configure only the Preview Worker with the existing Supabase project URL and public anon/publishable key through Cloudflare environment settings, then request separate approval for Preview deployment/live testing.
 - Production, Supabase services/data, Firebase settings, D1 schema/data, secrets, and app traffic remain unchanged. Supabase must remain active as the rollback path.
+
+
+# 2026-11-14 — Premium Worker legacy verification CI result
+
+## Automated verification result
+- Read the GitHub Actions workflow run for Premium Worker commit `b05b8e519d8b6c6ee78ddc4b8615458f8ba6fb6f`.
+- Workflow: **WatchAtHome Premium Worker Checks**, run **#22**, run ID `43582970728`.
+- Overall result: **completed / success**.
+- The single job, **TypeScript and D1 tests**, completed successfully.
+- Successful steps included `npm run check`, `npm run test:schema`, `npm run test:worker`, `npm run test:http`, `npm run test:crypto`, `npm run test:credentials`, `npm run test:pin`, `npm run test:pin-store`, `npm run test:rate-limit`, `npm run test:profiles`, and `npm run test:profile-sync`.
+- The immediately preceding bearer-header parsing correction commit `1d2476bb4ea352f989beecb79909570dfbc00f5d` also has a successful GitHub Actions run (#21).
+- This resolves the earlier pending-CI statements above: CI is now confirmed passing for the endpoint/test commit. These are automated repository checks, not a live Supabase/Firebase Preview integration test.
+- No code was changed during this verification step. This addendum is documentation-only and append-only.
+- Preview variables remain unconfigured by this step; no Preview deployment/live endpoint request, Production change, D1 change, Firebase setting change, Supabase configuration/data change, migration, or app cutover occurred. Supabase remains active for rollback.
+
+## Next gate
+- Prepare the Preview-only configuration procedure for the existing Supabase project URL and public anon/publishable key. Do not configure values, deploy, or perform a live verification request until separately approved.
