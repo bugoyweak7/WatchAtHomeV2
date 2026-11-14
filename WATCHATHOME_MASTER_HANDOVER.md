@@ -3265,3 +3265,36 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - Approve a separately scoped design/implementation for the Firebase identity and active app-session transition needed by TV login, including the data-access compatibility plan for still-Supabase-backed features. Supabase must remain available until each replacement is implemented and tested.
 - Confirm whether the intended Android TV client is the `full` distribution of `bugoyweak7/WatchAtHomeV2` or another already-authorized app target. Do not access any other repository unless the user explicitly identifies and authorizes it.
 - Once those two points are resolved, prepare a precise file list and staged Preview test plan before further source changes.
+
+
+# 2026-11-14 — Premium Worker Preview legacy-session verification implementation
+
+## Authorization and scope
+- User approved `GO — PREVIEW LEGACY VERIFICATION IMPLEMENTATION` after the read-only legacy-auth and Worker configuration audits.
+- Implementation was limited to the approved Premium Worker repository `bugoyweak7/WatchAtHomePremiumWorker`, branch `setup/firebase-cloudflare-zero-cost`, plus append-only project handover/status documentation.
+- No User App or Admin App runtime source was changed. No Production deployment, cloud secret/variable update, D1 schema/data change, Firebase setting, Supabase service/data change, account migration, or app traffic cutover was authorized or performed.
+
+## Implemented Worker contract
+- Added authenticated `POST /v1/migrations/legacy/verify` in Premium Worker `src/index.ts`.
+- Firebase identity is independently verified by the existing Worker Secure Token JWT verifier. This endpoint further requires the Firebase sign-in provider to be `password`, recent authentication (`auth_time` no older than five minutes), and a matching Firebase Identity Toolkit account whose `emailVerified` field is true.
+- Legacy identity is independently verified by sending the transient `X-Legacy-Authorization: Bearer <legacy-access-token>` to the configured Supabase Auth `GET /auth/v1/user` endpoint. The Worker uses the configured public anon/publishable key in the `apikey` header. Supabase must return a non-anonymous user with a valid ID.
+- New optional Worker environment fields: `LEGACY_SUPABASE_URL` and `LEGACY_SUPABASE_ANON_KEY`. The endpoint fails closed when missing. The URL must be an HTTPS root origin without embedded credentials, path, query or fragment; redirects are rejected. CORS now permits the additional legacy authorization header for explicitly allowed browser origins.
+- No Supabase service-role key is required or used. Neither Firebase nor legacy access tokens are stored, logged, or returned. The implementation does not trust a client-supplied legacy UID and does not use matching email addresses as proof of ownership.
+
+## Important boundary: verification is not linking or migration
+- A successful response reports the verified Firebase UID and Supabase user ID to the authenticated caller and explicitly returns `linkCreated: false` and `migrationCreated: false`.
+- The endpoint deliberately creates no D1 identity link, migration record, data import, account mutation, or sign-out. Durable identity-link tables, migration state, resource transfer, integrity checks, and completion remain future separately reviewed work.
+- The endpoint is only a proof-of-current-session step. It does not authorize Firebase auth cutover or Supabase removal.
+
+## Tests added
+- Extended `test/http-auth.test.mjs` with coverage for successful dual-session verification, unverified Firebase email rejection before contacting Supabase, invalid/expired legacy token rejection, anonymous legacy account rejection, and missing Preview Supabase configuration fail-closed behavior.
+- The test uses mocked Firebase Identity Toolkit and Supabase Auth responses; it is not a live Preview test.
+- Source commits: endpoint `76b558d63a0a890be6ad63043dc1c400e40becad`; Bearer header parsing correction `1d2476bb4ea352f989beecb79909570dfbc00f5d`; HTTP tests `b05b8e519d8b6c6ee78ddc4b8615458f8ba6fb6f`.
+- Premium Worker `SETUP_STATUS.md` and `CHANGELOG.md` were updated append-only in commits `29edc8d7e9fc73abadba662cc94e4d81d674e3dd` and `169061b8bc3dd6b0b104d882271cf5e6b6c6eec4`.
+
+## Verification status and outstanding gates
+- Automated CI/test results are not confirmed yet. No local test execution was available during this step. Do not mark this implementation tested/passed until the relevant Worker workflow completes successfully.
+- The Preview Worker does not yet have `LEGACY_SUPABASE_URL` or `LEGACY_SUPABASE_ANON_KEY` configured by this implementation. Their values were not requested, accessed, or recorded.
+- No Preview deployment or live legacy-token verification request was performed.
+- Next: inspect the GitHub Actions result for the exact source/test commits; resolve any failures before deployment. After passing checks, configure only the Preview Worker with the existing Supabase project URL and public anon/publishable key through Cloudflare environment settings, then request separate approval for Preview deployment/live testing.
+- Production, Supabase services/data, Firebase settings, D1 schema/data, secrets, and app traffic remain unchanged. Supabase must remain active as the rollback path.
