@@ -35,6 +35,9 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
     abstract val cloudflareSyncEnabled: Property<Boolean>
 
     @get:Input
+    abstract val previewFirebaseAccessEnabled: Property<Boolean>
+
+    @get:Input
     abstract val supabaseUrl: Property<String>
 
     @get:Input
@@ -195,6 +198,15 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
 
         outDir.resolve("com/nuvio/app/core/build").apply {
             mkdirs()
+            resolve("PreviewFirebaseAccessConfig.kt").writeText(
+                """
+                |package com.nuvio.app.core.build
+                |
+                |object PreviewFirebaseAccessConfig {
+                |    const val ENABLED = ${previewFirebaseAccessEnabled.get()}
+                |}
+                """.trimMargin()
+            )
             resolve("AppVersionConfig.kt").writeText(
                 """
                 |package com.nuvio.app.core.build
@@ -338,6 +350,7 @@ val generateRuntimeConfigs = tasks.register<GenerateRuntimeConfigsTask>("generat
     appVersionCode.set(releaseAppVersionCode)
     cloudflareWorkerBaseUrl.set(runtimeConfigValue("CLOUDFLARE_WORKER_BASE_URL"))
     cloudflareSyncEnabled.set(runtimeConfigBoolean("CLOUDFLARE_SYNC_ENABLED", false))
+    previewFirebaseAccessEnabled.set(runtimeConfigBoolean("WATCHATHOME_PREVIEW_FIREBASE_ACCESS", false))
     supabaseUrl.set(runtimeConfigValue("NUVIO_SUPABASE_URL"))
     supabaseAnonKey.set(runtimeConfigValue("NUVIO_SUPABASE_ANON_KEY"))
     supabaseFallbackUrl.set(runtimeConfigValue("NUVIO_SUPABASE_FALLBACK_URL"))
