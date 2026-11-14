@@ -37,6 +37,7 @@ jobs:
         run: |
           touch local.properties
           printf '\nCLOUDFLARE_WORKER_BASE_URL=%s\n' "$CLOUDFLARE_WORKER_BASE_URL" >> local.properties
+          printf 'WATCHATHOME_PREVIEW_FIREBASE_ACCESS=true\n' >> local.properties
 
       - name: Run Firebase Auth session manager tests
         run: ./gradlew :composeApp:testAndroidHostTest --tests 'com.nuvio.app.core.auth.FirebaseAuthSessionManagerTest' -Pnuvio.android.distribution=playstore -Pnuvio.ios.distribution=appstore --stacktrace
