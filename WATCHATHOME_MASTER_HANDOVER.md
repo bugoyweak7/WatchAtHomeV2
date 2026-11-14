@@ -3137,3 +3137,13 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - Wrangler source continues to keep Preview isolated on Firebase project `watchathome-preview` and D1 database `watchathome-accounts-preview`.
 - Next verification gate: obtain the exact Preview deployment URL from Cloudflare and perform only unauthenticated `GET /health`. Do not call authenticated endpoints until the Preview health URL and deployment are identified.
 - No secrets, bindings, D1 data/schema, Firebase settings, deployments, Production configuration, or Supabase configuration/data were changed.
+
+
+## 2026-11-14 — Live Preview account bootstrap verification passed
+
+- The disposable test account in Firebase project `watchathome-preview` signed in successfully. A direct Identity Toolkit account lookup returned `emailVerified: true` before bootstrap was attempted.
+- The first Preview bootstrap request returned `Trial registration verification is not configured.`; investigation identified the missing Preview runtime `FIREBASE_WEB_API_KEY` secret. The user added that secret to Preview only and reported the new Preview deployment Ready. No secret value was shared or recorded.
+- The subsequent live `POST /v1/account/bootstrap` response returned `accountReady: true`, `trial.initialized: true`, `trialStartedAt: 2026-11-14T07:29:34.752Z`, and `trialExpiresAt: 2026-11-21T07:29:34.752Z`. The timestamps are exactly seven days apart.
+- This user-provided runtime response confirms the Preview bootstrap request completed and the Worker returned a successfully initialized trial. Assistant did not independently inspect Cloudflare/Firebase dashboards or query D1/Firestore contents.
+- Scope and safety: Preview test account and Preview Worker only. No Production deployment, Production secrets/data, Supabase configuration/data, or app traffic cutover was changed. Supabase removal remains incomplete and unauthorized.
+- Next gate: select the next Preview integration test only after reviewing its exact route, required configuration, and write side effects. Bootstrap success does not establish that the entire Firebase/Cloudflare migration is complete.
