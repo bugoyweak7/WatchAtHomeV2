@@ -998,3 +998,11 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Commits: 7a12abc0cd98e72b799ae33f5577db32f3b5d50d (AuthScreen), de876999f8b233fca1d18eba79e899cff0536c26 (runtime build config), 63d50a99d43aca3a349482734bd89c2c42c2f276 (Preview workflow).
 - Validation is not yet complete: the updated workflow has not yet been run, so Kotlin compilation, Firebase Auth tests, APK artifact creation, and device behavior remain pending. Do not install/use a new APK until the workflow passes.
 - No cloud resource, Firebase project setting, Worker deployment, secret, Production endpoint, or Supabase configuration was changed. Full handover details appended to WATCHATHOME_MASTER_HANDOVER.md.
+
+
+## 2026-11-15 — Preview Firebase trial status display
+
+- Updated the Preview Firebase account flow to parse the trial details returned by the existing `/v1/account/bootstrap` response.
+- The Preview tools now display whether the Cloudflare account is active, whether the 7-day trial is initialized, and the returned trial start and expiry timestamps.
+- The existing bootstrap endpoint remains unchanged; its create-only trial initialization behavior is preserved. No new endpoint, polling, production deployment, cloud configuration, or Supabase cutover was performed.
+- Pending verification: run Firebase Auth unit tests and Android Play Store debug compilation on the approved setup branch, then rebuild the Preview APK before installing this UI update.
