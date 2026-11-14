@@ -3712,3 +3712,23 @@ Every report must explicitly answer all four questions and distinguish code chan
 2. **Are we building right now?** No. Latest work in this continuation is documentation-only.
 3. **Do you need to do anything?** No.
 4. **What is the next step?** Continue the isolated Firebase repository/session lifecycle implementation and tests on the approved branch after re-reading current source/test baselines. Do not wire Firebase into active AppGate or remove Supabase dependencies until dependent services are migrated and tested.
+
+ 
+## 2026-11-15 — Firebase auth session lifecycle test coverage (latest source change)
+
+- Approved repository/branch: `bugoyweak7/WatchAtHomeV2` / `setup/firebase-cloudflare-zero-cost`.
+- Test file changed: `composeApp/src/commonTest/kotlin/com/nuvio/app/core/auth/FirebaseAuthSessionManagerTest.kt`.
+- Commit: `bc9e56b634edaf39a16eafb2d278d82a1c92e6a7`.
+- Added focused regression tests for:
+  1. Repeated `initialize()` is idempotent; `stop()` cancels the auth-state observer and clears the exposed state; subsequent initialization observes the current Firebase auth state again.
+  2. The observer reflects Firebase account sign-in and sign-out changes after initialization.
+  3. A Firebase sign-out failure returns failure and retains the authenticated state so the caller can retry rather than falsely reporting a completed sign-out.
+- This commit changes tests only. It does not change the production Firebase session manager, active Supabase `AuthRepository`, normal login, `AppGate`, device-link flow, data adapters, Supabase SDKs, Worker, cloud resources, secrets, or account data.
+- Existing workflow `.github/workflows/watchathome-firebase-auth-check.yml` includes this test file in its push path filter and runs the focused auth test suite plus Android Play Store debug compilation. Confirm the resulting workflow before claiming success. This is not a Preview APK packaging request.
+- Continue the staged approach: keep Firebase separate from active login; use verified test results to decide whether further isolated lifecycle work is needed before migrating dependent account/device/data services.
+
+### Mandatory status for this update
+1. What is happening? Three additional Firebase session lifecycle regression tests have been committed.
+2. Are we building right now? The Firebase Auth CI workflow is expected to trigger; check its actual run status. No Preview APK build is requested.
+3. Do you need to do anything? No, unless CI reveals a failure requiring a later decision.
+4. What is the next step? Verify the Firebase Auth unit tests and Android Play Store debug compilation, then record the actual result. Keep active Supabase authentication unchanged.
