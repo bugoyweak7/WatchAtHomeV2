@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.core.auth.AuthState
 import com.nuvio.app.core.auth.FirebaseAuthRepository
+import com.nuvio.app.core.auth.FirebaseCloudflareAccountStatus
 import com.nuvio.app.core.auth.FirebaseTrialStatus
 import kotlinx.coroutines.launch
 
@@ -49,6 +50,7 @@ internal fun FirebaseAccountVerificationCard(
     var feedback by remember { mutableStateOf<String?>(null) }
     var feedbackIsError by remember { mutableStateOf(false) }
     var trialStatus by remember { mutableStateOf<FirebaseTrialStatus?>(null) }
+    var accountStatus by remember { mutableStateOf<FirebaseCloudflareAccountStatus?>(null) }
 
     LaunchedEffect(Unit) {
         FirebaseAuthRepository.initialize()
@@ -165,6 +167,37 @@ internal fun FirebaseAccountVerificationCard(
                         Text("7-day trial: ${if (trial.initialized) "Initialized" else "Not initialized"}", style = MaterialTheme.typography.bodyMedium)
                         Text("Trial started: ${trial.trialStartedAt}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text("Trial expires: ${trial.trialExpiresAt}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            if (isWorking) return@OutlinedButton
+                            isWorking = true
+                            feedback = null
+                            scope.launch {
+                                val result = FirebaseAuthRepository.getCloudflareAccountStatus()
+                                isWorking = false
+                                feedbackIsError = result.isFailure
+                                accountStatus = result.getOrNull()
+                                feedback = result.exceptionOrNull()?.message
+                                    ?: "Cloudflare account lifecycle status loaded."
+                            }
+                        },
+                        enabled = !isWorking,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(if (isWorking) "Loading account status…" else "Check Cloudflare account status")
+                    }
+                    accountStatus?.let { account ->
+                        Text(
+                            text = "Account status: ${account.status.replace('_', ' ')}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (account.status == "active") MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.error,
+                        )
+                        Text("Account created: ${account.createdAt}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Last updated: ${account.updatedAt}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Deleted at: ${account.deletedAt?.toString() ?: "Not deleted"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
