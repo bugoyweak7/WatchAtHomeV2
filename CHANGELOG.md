@@ -540,3 +540,19 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Are we building right now? No. CI is complete; no APK is being built.
 - Do you need to do anything? No.
 - What is the next step? Review and approve the read-only Firebase client adapter for displaying account status; keep active Supabase authentication unchanged.
+
+ 
+## 2026-11-15 — Read-only Firebase account status client added
+
+- Added `FirebaseCloudflareAccountStatus` and a parser for the Worker `GET /v1/account` response. The parser validates required lifecycle fields, supported account states, non-negative timestamps, and that the returned UID matches the signed-in Firebase UID.
+- Added `FirebaseAuthSessionManager.getCloudflareAccountStatus()` and exposed it through the staged `FirebaseAuthRepository`. It requires a verified, registered Firebase session, obtains a fresh Firebase ID token, and performs an authenticated GET only. It does not create or update account records.
+- Added common tests for active and deletion-pending account parsing, nullable/deletion timestamps, UID mismatch rejection, and malformed/unsupported payload rejection.
+- Source commits: `ea151dda13b97795f6549cd9938bd8cfebc46f02` (client adapter), `594772c74101081302cd559b91d9f0952e35561e` (parser tests).
+- The adapter remains separate from normal `AuthRepository`, `AuthScreen`, `AppGate`, and all active Supabase-backed services. No active login cutover or Supabase removal.
+- Validation is pending: Firebase Auth CI must run common tests and Android compilation. No APK build is requested by this change. Worker remains undeployed; D1 schema remains unapplied; no cloud resources, secrets, or Production data were changed.
+
+### Mandatory status
+1. What is happening? The read-only Firebase account-status client and parser regression tests are committed.
+2. Are we building right now? No APK is being built. Firebase Auth CI must validate common tests and Android compilation.
+3. Do you need to do anything? No, wait for CI results.
+4. What is the next step? Verify the Firebase Auth workflow; fix any compile/test failures before considering a UI display or broader account lifecycle work.
