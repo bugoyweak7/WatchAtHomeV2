@@ -3566,3 +3566,27 @@ Branch: `setup/firebase-cloudflare-zero-cost`
 ### Next gate
 Verify the new GitHub Actions run passes both the focused Firebase Auth tests and Android Play Store debug compilation. Only after that, plan a separate Preview-only identity-link/bootstrap client step with explicit user approval and confirmed Preview backend readiness. Keep Supabase active as the rollback/session provider until all feature and account-lifecycle migrations pass.
 
+## 2026-11-14 — Corrected account migration plan: no legacy Supabase identity exists
+
+### User-confirmed architecture correction
+- User clarified that they do not have a Supabase account/project; Supabase references in the existing implementation were defaults/legacy scaffolding, not a real user-owned Supabase service or identity store.
+- Therefore the dual-session legacy-Supabase verification and identity-linking design is not applicable to this user's environment. Do not ask the user for a Supabase URL, anon/publishable key, access token, or account, and do not configure or test LEGACY_SUPABASE_URL / LEGACY_SUPABASE_ANON_KEY for this migration.
+- The prior migration plan's prerequisite to prove ownership of a legacy Supabase identity, create Firebase↔Supabase identity mappings, and transfer Supabase-owned accounts/data is withdrawn for this environment. Do not apply D1 migration 0002_legacy_identity_links.sql or call /v1/migrations/legacy/verify or /v1/migrations/legacy/link as part of the Firebase account-bootstrap path.
+
+### Verified current Worker source behavior
+- POST /v1/account/bootstrap is an independent Firebase path: it verifies the Firebase ID token at the Worker boundary, confirms the Firebase account through Identity Toolkit and requires emailVerified === true, creates the Firebase UID's active D1 account row if absent, verifies that account is active, and initializes the seven-day trial using Firebase createdAt with create-only/retry-safe Firestore writes.
+- The bootstrap function does not read LEGACY_SUPABASE_URL, LEGACY_SUPABASE_ANON_KEY, a Supabase token, or the legacy identity-link table. The existing Worker source also keeps legacy verification/linking as separate routes, not prerequisites for bootstrap.
+- Worker wrangler.toml binds Preview to Firebase project watchathome-preview and D1 watchathome-accounts-preview; Production uses different project/database identifiers. This source configuration does not itself prove current live resource state.
+- User-reported live Preview evidence previously confirmed bootstrap returned accountReady: true and initialized the seven-day trial. The current Preview health check also returned ok: true from the deployment URL supplied by the user. These are user-provided runtime results, not independent dashboard inspection.
+
+### Correct next migration path
+1. Treat Firebase email/password plus verified email as the sole intended account identity for new accounts.
+2. Continue feature-by-feature migration from the old/default Supabase-backed app implementation to Firebase/Worker/D1/Firestore, preserving user-visible functionality and local data. Do not invent or require a Supabase account as a migration source.
+3. Determine what existing user data actually exists in the user's app installations/local storage and any real backend resources before designing data migration. If no real Supabase service/data exists, there is no Supabase identity-link or Supabase data-import stage.
+4. Keep staged Firebase bootstrap independent. Test account creation, verified-email enforcement, retry/idempotency, trial initialization, profiles, devices, premium entitlements, and account deletion before any active-login cutover.
+5. Review the already-staged legacy Supabase Worker source and additive D1 migration separately for safe deprecation/removal. Do not delete source or alter D1 schema/deployments in this documentation-only step.
+
+### Scope and safety
+- This is a correction to the plan and documentation only. No Worker/App source, D1 schema/data, Firestore data, Firebase settings, Cloudflare secrets, Preview deployment, Production resource, or user account was changed.
+- The user reported adding a Preview secret named LEGACY_SUPABASE_URL before clarifying that no Supabase project exists. Do not use it; its presence/value was not inspected here. Any removal must be a separate explicit Preview-only cloud action after confirming the secret is not used by another route/workflow.
+- The staged legacy endpoints and migration source remain in the repository pending a separately approved code-removal step. Supabase dependencies in the User App have not yet been removed. No claim of complete Supabase removal is made.
