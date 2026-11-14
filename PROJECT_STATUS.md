@@ -531,3 +531,14 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Are we building right now? Await CI status; no APK build is requested.
 - Do you need to do anything? No.
 - What is the next step? Verify Firebase Auth tests and Android compilation.
+
+## 2026-11-15 — Account lifecycle status endpoint added
+
+- Premium Worker now exposes authenticated `GET /v1/account`. UID is taken from the verified Firebase token; response is restricted to that account's D1 lifecycle status and timestamps.
+- Added focused tests for owner scoping, active/deletion-pending lifecycle state, and missing account handling.
+- Source commits: `ef03d2e4625b470d419c6f9dab0a4aa5b3d3b3f3`, `4b89425a590c1f2141a3d54ab90c1fa2d93067d7`, `28a2770219496d60e3d7a136ab8e314d10bffb47`.
+- CI verification pending. Worker is not deployed; D1 draft schema remains unapplied. Active Supabase app auth remains untouched.
+- What is happening? Authenticated account lifecycle status route is implemented in source.
+- Are we building right now? Worker CI type-check/tests should run; no APK build.
+- Do you need to do anything? No.
+- What is the next step? Confirm CI results, then consider a read-only client adapter only after approval.
