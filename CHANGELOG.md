@@ -504,3 +504,10 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added tests for repeated initialize, stop/reinitialize observer lifecycle, auth-state observer updates, and sign-out failure preserving the authenticated state for retry.
 - Commit: `bc9e56b634edaf39a16eafb2d278d82a1c92e6a7`.
 - Test-only change; active Supabase login and all app/cloud behavior remain unchanged. CI verification pending.
+
+## 2026-11-15 — Add authenticated account status API
+
+- Added `GET /v1/account`, returning only the verified caller's D1 account status and lifecycle timestamps.
+- Added `getAccount` in `premium-worker/src/account-device.ts` and mocked-D1 tests covering owner UID, active/deletion-pending state, and 404 for missing account.
+- Commits: `ef03d2e4625b470d419c6f9dab0a4aa5b3d3b3f3`, `4b89425a590c1f2141a3d54ab90c1fa2d93067d7`, `28a2770219496d60e3d7a136ab8e314d10bffb47`.
+- No deployment, D1 mutation, APK build, Supabase cutover, or production change. CI pending.
