@@ -32,7 +32,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * sync, device-link and account-deletion operations still depend on Supabase and
  * must be migrated before the app can switch its active authentication provider.
  */
-internal data class FirebaseTrialStatus(
+data class FirebaseTrialStatus(
     val initialized: Boolean,
     val trialStartedAt: String,
     val trialExpiresAt: String,
