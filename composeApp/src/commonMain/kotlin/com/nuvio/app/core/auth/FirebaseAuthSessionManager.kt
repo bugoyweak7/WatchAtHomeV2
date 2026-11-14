@@ -24,6 +24,9 @@ internal class FirebaseAuthSessionManager(
     private val _state = MutableStateFlow<AuthState>(AuthState.Loading)
     val state: StateFlow<AuthState> = _state.asStateFlow()
 
+    private val _emailVerified = MutableStateFlow<Boolean?>(null)
+    val emailVerified: StateFlow<Boolean?> = _emailVerified.asStateFlow()
+
     private var initialized = false
     private var authStateJob: Job? = null
 
@@ -33,30 +36,70 @@ internal class FirebaseAuthSessionManager(
         authStateJob = scope.launch {
             gateway.authState.collect { account ->
                 if (account == null) {
+                    _emailVerified.value = null
                     _state.value = AuthState.Unauthenticated
                 } else if (account.isAnonymous) {
                     // Anonymous Firebase sessions are not accepted by this app.
                     runCatching { gateway.signOut() }
+                    _emailVerified.value = null
                     _state.value = AuthState.Unauthenticated
                 } else {
+                    _emailVerified.value = account.isEmailVerified
                     _state.value = account.toAuthState()
                 }
             }
         }
     }
 
+    /**
+     * Creates a Firebase email/password account and sends its verification email.
+     * If email delivery fails, the Firebase account remains created and the caller
+     * can retry with [sendEmailVerification].
+     */
     suspend fun signUpWithEmail(email: String, password: String): Result<Unit> =
         authenticate(email, password) { normalizedEmail, suppliedPassword ->
-            gateway.createAccount(normalizedEmail, suppliedPassword)
+            val account = gateway.createAccount(normalizedEmail, suppliedPassword)
+            _emailVerified.value = account.isEmailVerified
+            gateway.sendEmailVerification()
+            account
         }
 
     suspend fun signInWithEmail(email: String, password: String): Result<Unit> =
         authenticate(email, password) { normalizedEmail, suppliedPassword ->
-            gateway.signIn(normalizedEmail, suppliedPassword)
+            gateway.signIn(normalizedEmail, suppliedPassword).also {
+                _emailVerified.value = it.isEmailVerified
+            }
         }
+
+    suspend fun sendEmailVerification(): Result<Unit> = runCatching {
+        val account = _state.value as? AuthState.Authenticated
+            ?: error("Sign in to your Firebase account first.")
+        require(!account.isAnonymous) { "Anonymous accounts cannot verify an email address." }
+        require(_emailVerified.value != true) { "This email address is already verified." }
+        gateway.sendEmailVerification()
+    }
+
+    /**
+     * Reloads the Firebase user from the server so a completed email-verification
+     * link is reflected locally. Returns the refreshed verification status.
+     */
+    suspend fun reloadEmailVerificationStatus(): Result<Boolean> = runCatching {
+        val account = _state.value as? AuthState.Authenticated
+            ?: error("Sign in to your Firebase account first.")
+        require(!account.isAnonymous) { "Anonymous accounts are not supported." }
+        val refreshed = gateway.reloadCurrentUser()
+            ?: error("The Firebase session is no longer available. Sign in again.")
+        require(refreshed.userId == account.userId) {
+            "The refreshed Firebase account does not match the signed-in account."
+        }
+        _emailVerified.value = refreshed.isEmailVerified
+        _state.value = refreshed.toAuthState()
+        refreshed.isEmailVerified
+    }
 
     suspend fun signOut(): Result<Unit> = runCatching {
         gateway.signOut()
+        _emailVerified.value = null
         _state.value = AuthState.Unauthenticated
     }
 
@@ -70,6 +113,7 @@ internal class FirebaseAuthSessionManager(
         authStateJob?.cancel()
         authStateJob = null
         initialized = false
+        _emailVerified.value = null
         _state.value = AuthState.Loading
     }
 
@@ -84,6 +128,7 @@ internal class FirebaseAuthSessionManager(
 
         val account = operation(normalizedEmail, password)
         require(!account.isAnonymous) { "Anonymous accounts are not supported." }
+        _emailVerified.value = account.isEmailVerified
         _state.value = account.toAuthState()
     }
 
@@ -107,6 +152,7 @@ object FirebaseAuthRepository {
     )
 
     val state: StateFlow<AuthState> get() = manager.state
+    val emailVerified: StateFlow<Boolean?> get() = manager.emailVerified
 
     fun initialize() = manager.initialize()
 
@@ -115,6 +161,12 @@ object FirebaseAuthRepository {
 
     suspend fun signInWithEmail(email: String, password: String): Result<Unit> =
         manager.signInWithEmail(email, password)
+
+    suspend fun sendEmailVerification(): Result<Unit> =
+        manager.sendEmailVerification()
+
+    suspend fun reloadEmailVerificationStatus(): Result<Boolean> =
+        manager.reloadEmailVerificationStatus()
 
     suspend fun signOut(): Result<Unit> = manager.signOut()
 
