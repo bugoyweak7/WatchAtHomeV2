@@ -944,3 +944,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Before execution, Cloudflare access must be provided through a supported Cloudflare integration or the user must run Wrangler from the authorized Worker checkout. Use Wrangler's Preview D1 targeting only (`--preview`); do not use Production database name/ID or a plain production `wrangler deploy`. First list Preview migrations and verify the target; only then apply pending migration 0002. Preview deployment uses Wrangler's `preview` command, not Production `deploy`.
 - Official command references: Cloudflare D1 Wrangler commands (<https://developers.cloudflare.com/workers/wrangler/commands/d1/>) and Worker Preview command (<https://developers.cloudflare.com/workers/wrangler/commands/workers/>).
 - Supabase remains active. User App runtime authentication remains unchanged. No Production, Firebase/Supabase settings or data, secrets, or account records were modified.
+
+
+## 2026-11-14 — Staged Firebase email-verification foundation
+
+- Extended the existing GitLive Firebase Auth gateway with send-verification and reload-current-user operations, and added the Firebase `isEmailVerified` snapshot field.
+- Staged Firebase registration now sends a verification email after account creation. The session manager exposes verification status, supports resend while unverified, and reloads the Firebase user to detect a completed verification link.
+- Added focused tests for verification-email delivery, resend, refreshed verified status, mismatched/missing sessions, anonymous rejection and sign-out state cleanup.
+- Kept the active `AuthRepository`, `AuthScreen`, Supabase adapters/dependencies, Worker routes, account bootstrap and Production configuration unchanged. This is a foundation only; it does not block the current Supabase login or yet connect verification to Worker bootstrap.
+- Source commits: `7467a697f715690700c1410206f0e681aa55ceae`, `01382cf0e03dfba4260403c301adfe6ea64a56d3`, `fc3ba156be2c2c88557a38fa0e5b7165492788da`.
+- Test execution/CI result is pending; source commits are not treated as build verification. No Preview/Production deployment, Firebase Console change, secret/configuration change, D1/Firestore mutation, Supabase service/data change, or user-account operation occurred.
+- Next gate: run focused common tests and Android/iOS compilation; fix any compile/test issues before implementing the separate Worker bootstrap integration.
