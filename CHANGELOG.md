@@ -452,3 +452,7 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Updated Firebase Auth workflow path filters to validate the new settings UI with focused tests and Android Play Store debug compilation.
 - Commits: `bd727edf26d5953f23aa733f6186d4c10312407c`, `ff7c0593c8f586a7ab0fb46b84b1885f7320de2c`, `a5e66fe88c5072053cc7ad501cd52ff7b2c6a368`. CI pending.
 - No cloud, Preview/Production, secret, Supabase service/data, or user-account changes.
+
+## 2026-11-14 — Firebase-only User App dependency audit
+- Recorded a GitHub-source audit of remaining inherited Supabase dependencies and corrected the migration sequence for a Firebase-only account identity. Active auth/device-link, data sync, realtime, membership/assets and SDK removal remain pending feature-by-feature replacement and Preview regression testing.
+- Documentation only. No application code, Worker source, D1/Firestore data, secrets, deployment or Production resource changed. Full audit is in WATCHATHOME_MASTER_HANDOVER.md.
