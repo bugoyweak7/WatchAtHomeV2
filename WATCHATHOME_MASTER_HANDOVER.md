@@ -3626,3 +3626,12 @@ Verify the new GitHub Actions run passes both the focused Firebase Auth tests an
 
 ### Outcome
 The immediate next implementation priority is not identity linking. It is a Firebase-native active AuthRepository and Worker account lifecycle/device-link contract, followed by feature-by-feature migration of the still-Supabase-backed repositories. Existing docs `docs/SUPABASE_FIREBASE_CLOUDFLARE_MIGRATION_MAP.md`, `docs/SUPABASE_MIGRATION_EVIDENCE_MATRIX.md`, and `docs/LEGACY_BACKEND_SOURCE_COMPATIBILITY_AUDIT.md` remain the detailed feature inventories and should be updated append-only as each feature is verified.
+
+
+## 2026-11-14 — Preview Firebase account bootstrap client
+
+- Connected the staged Firebase email/password session manager to `POST /v1/account/bootstrap` using the configured `CloudflareWorkerConfig.BASE_URL` and a freshly refreshed Firebase ID token.
+- The client requires a verified Firebase email, HTTPS Worker URL, successful HTTP response, and explicit `{ accountReady: true }` confirmation. It does not send user-supplied UID data, expose tokens in UI/logs, or change the active app `AuthRepository`.
+- Added an explicit Initialize Cloudflare account action to the existing Firebase Account Settings card, shown only after Firebase email verification. Retries call the existing idempotent bootstrap endpoint.
+- No account bootstrap is automatic on screen load; no Supabase session, local data, D1 schema, Firebase settings, Cloudflare resource, secret, deployment, or production data was changed by this source update.
+- Build/CI validation is required before treating this integration as verified. The configured Worker URL must point to the intended Preview deployment and that deployment must have its D1 binding and required Firebase secrets configured.
