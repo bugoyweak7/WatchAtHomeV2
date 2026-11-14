@@ -457,3 +457,9 @@ The existing `CHANGELOG.md` records GitHub Actions run `43382547116` passing Typ
 - Firebase-only TV login cannot safely activate the current app because existing profile/data/sync features still require Supabase sessions. Mobile approval additionally requires a verified Firebase-to-app-account identity design.
 - No separate Android TV target was found in the authorized User App repository. No runtime code or tests were changed in this gate.
 - Full source evidence and next gate are in `WATCHATHOME_MASTER_HANDOVER.md`. Supabase remains active; no Production or cloud changes.
+
+## 2026-11-14 — Firebase/Supabase identity migration design
+- Identity migration design completed and appended to `WATCHATHOME_MASTER_HANDOVER.md`.
+- Decision: explicit dual-session proof and one-to-one persistent mapping; no email-only auto-linking; keep Supabase active during incremental feature migration.
+- No runtime source, D1 schema/data, cloud settings/secrets, deployments, or production resources changed.
+
