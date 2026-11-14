@@ -471,3 +471,11 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added manual Play Store debug APK workflow with Preview Worker URL configured only for that build; focused Firebase Auth tests run before APK compilation and APK artifact retention is seven days.
 - Commit: `7ca6abac1d9369c65ecc9edd9aa0f971481079c4`.
 - Dispatch and APK artifact are pending; no build or installation claimed. See `WATCHATHOME_MASTER_HANDOVER.md`.
+
+
+## 2026-11-14 — Preview-only Firebase access from login screen
+
+- Added a Firebase Preview Test entry point to AuthScreen, reusing the existing Firebase account verification and Cloudflare bootstrap UI.
+- Added generated PreviewFirebaseAccessConfig; the flag defaults to disabled and is enabled only in the Preview APK workflow.
+- Updated .github/workflows/watchathome-preview-apk.yml to set WATCHATHOME_PREVIEW_FIREBASE_ACCESS=true for that Preview build only.
+- Existing Supabase login and active account/data paths remain unchanged. Build, tests, APK artifact, and device verification are pending.
