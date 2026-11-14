@@ -980,3 +980,10 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Active Supabase-backed login and existing app data paths remain unchanged. No cloud deployment or production operation performed.
 - Validation pending: focused Firebase Auth tests and Android build/CI; verify the build's Worker URL targets Preview.
 - Full implementation notes: appended to `WATCHATHOME_MASTER_HANDOVER.md`.
+
+
+## 2026-11-14 — Preview APK workflow prepared
+
+- Added manual GitHub Actions workflow `.github/workflows/watchathome-preview-apk.yml` for the approved setup branch. It injects the Preview Worker URL at build time, runs Firebase Auth session-manager tests, builds the Play Store debug APK and uploads a seven-day artifact.
+- Commit: `7ca6abac1d9369c65ecc9edd9aa0f971481079c4`.
+- Workflow dispatch is not available through the connected GitHub tool. User must start it in GitHub Actions on branch `setup/firebase-cloudflare-zero-cost`; artifact/build result remains pending. Full details in `WATCHATHOME_MASTER_HANDOVER.md`.
