@@ -497,3 +497,10 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Firebase auth/session manager and Firebase repository remain staged and separate. Active auth cutover is deferred until dependent services and lifecycle behavior are migrated and tested.
 - Documentation-only entry; no runtime source, cloud resource, deployment, secret, Firebase/Supabase data, or Production setting changed.
 - Future report/handover updates must explicitly answer: What is happening? Are we building right now? Do you need to do anything? What is the next step?
+
+ 
+## 2026-11-15 — Firebase auth session lifecycle tests
+
+- Added tests for repeated initialize, stop/reinitialize observer lifecycle, auth-state observer updates, and sign-out failure preserving the authenticated state for retry.
+- Commit: `bc9e56b634edaf39a16eafb2d278d82a1c92e6a7`.
+- Test-only change; active Supabase login and all app/cloud behavior remain unchanged. CI verification pending.
