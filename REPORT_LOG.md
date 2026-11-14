@@ -486,3 +486,29 @@ Implement the mobile HTTP client for the already-staged D1 watch-progress routes
 - The Preview tools now display whether the Cloudflare account is active, whether the 7-day trial is initialized, and the returned trial start and expiry timestamps.
 - The existing bootstrap endpoint remains unchanged; its create-only trial initialization behavior is preserved. No new endpoint, polling, production deployment, cloud configuration, or Supabase cutover was performed.
 - Pending verification: run Firebase Auth unit tests and Android Play Store debug compilation on the approved setup branch, then rebuild the Preview APK before installing this UI update.
+
+ 
+## 2026-11-15 — Preview trial on-device verification and Phase 1 auth audit
+
+### Verified results
+- GitHub Actions workflow **WatchAtHome Preview APK**, run `43617004862`, branch `setup/firebase-cloudflare-zero-cost`, commit `f37a1a625429b95861d6ec06beb9a5f96a19cfe6`: completed successfully.
+- Uploaded artifact: `watchathome-preview-playstore-debug-apk`, ID `14122798970`.
+- Firebase Auth Build run `43615293783`, commit `78034fa69b39671e0c51d330d8f26f107acdc538`: Firebase session-manager tests and Android Play Store debug compilation passed.
+- User supplied screenshot from the Preview app shows Firebase email Verified, Cloudflare account Active, 7-day trial Initialized, trial start `2026-11-14T07:29:34.752Z`, and expiry `2026-11-21T07:29:34.752Z`. This is user-provided device evidence.
+
+### Read-only active-auth audit
+- `AuthRepository.kt`: Supabase session status, signup/sign-in, session validation/refresh, sign-out, invalid-session recovery, and account deletion.
+- `AuthScreen.kt`: normal sign-in/sign-up continues to call the active `AuthRepository`.
+- `AppGate.kt`: initializes and observes `AuthRepository` to determine the authentication gate.
+- `DeviceLinkAuthRepository.kt`: uses Supabase RPCs, the `tv-logins-exchange` function and imports Supabase sessions.
+- `SupabaseProvider.kt`: configures Supabase Auth, PostgREST, Functions, Storage and Realtime.
+- Firebase session manager/repository are staged and are not yet the active app authentication provider.
+
+### Decision / next gate
+Do not wire Firebase into the active app gate or replace `AuthRepository` until dependent account/data/device-link services have a tested Firebase/Worker path. Next limited work: strengthen and test Firebase repository/session lifecycle in isolation, retaining the current implementation as rollback. No source, Worker, cloud resource, deployment, secret, Firebase/Supabase data, or Production change occurred in this audit/report update.
+
+### Mandatory handover status
+1. What is happening? Preview Firebase bootstrap/trial is verified; active-auth audit is complete.
+2. Are we building right now? No. This entry is documentation-only.
+3. Do you need to do anything? No.
+4. What is the next step? Continue isolated Firebase repository/session lifecycle work after reviewing latest source and tests; no active cutover yet.
