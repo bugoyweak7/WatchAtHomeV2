@@ -354,3 +354,9 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Re-scanned the complete User App setup branch and re-verified active Supabase authentication, device-link, data-sync, runtime configuration and dependency references.
 - Confirmed Supabase remains active in AuthRepository and multiple feature paths; Firebase/Cloudflare replacements are incomplete or staged. Supabase is not safe to remove.
 - Recorded evidence and the required staged migration/verification gates in SETUP_STATUS.md and the Supabase migration map. No application source or cloud resource was changed.
+
+## 2026-11-14 — Firebase auth/account/device evidence matrix
+- Re-audited active User App auth/UI/AppGate, staged Firebase auth, device-link repository, and standalone Premium Worker account/device routes.
+- Recorded the current migration matrix and blockers in SETUP_STATUS.md, docs/SUPABASE_FIREBASE_CLOUDFLARE_MIGRATION_MAP.md, and docs/FIREBASE_CLOUDFLARE_ACCOUNT_MIGRATION_CONTRACT.md.
+- Confirmed Android Firebase auth compile CI run 43422907365 and Worker TypeScript/D1 test CI run 43545476435 passed; neither establishes live integration or active app cutover.
+- Documentation only. No app source, Worker runtime, Firebase/Cloudflare settings, secrets, production data, or deployment changed.
