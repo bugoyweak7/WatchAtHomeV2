@@ -249,4 +249,52 @@ class FirebaseAuthSessionManagerTest {
         assertFalse(gateway.signedOut)
     }
 
+
+    @Test
+    fun parsesCloudflareAccountStatusForExpectedFirebaseUid() {
+        val result = parseFirebaseCloudflareAccountStatus(
+            """{"account":{"uid":"user-1","status":"active","createdAt":1000,"updatedAt":2000,"deletedAt":null}}""",
+            "user-1",
+        )
+        assertEquals("user-1", result.uid)
+        assertEquals("active", result.status)
+        assertEquals(1000L, result.createdAt)
+        assertEquals(2000L, result.updatedAt)
+        assertNull(result.deletedAt)
+    }
+
+    @Test
+    fun parsesDeletionPendingAccountAndDeletionTimestamp() {
+        val result = parseFirebaseCloudflareAccountStatus(
+            """{"account":{"uid":"user-2","status":"deletion_pending","createdAt":1000,"updatedAt":3000,"deletedAt":2500}}""",
+            "user-2",
+        )
+        assertEquals("deletion_pending", result.status)
+        assertEquals(2500L, result.deletedAt)
+    }
+
+    @Test
+    fun rejectsCloudflareAccountStatusForAnotherUid() {
+        val result = runCatching {
+            parseFirebaseCloudflareAccountStatus(
+                """{"account":{"uid":"other-user","status":"active","createdAt":1000,"updatedAt":2000,"deletedAt":null}}""",
+                "user-1",
+            )
+        }
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun rejectsMalformedOrUnsupportedCloudflareAccountStatus() {
+        assertTrue(runCatching {
+            parseFirebaseCloudflareAccountStatus("{}", "user-1")
+        }.isFailure)
+        assertTrue(runCatching {
+            parseFirebaseCloudflareAccountStatus(
+                """{"account":{"uid":"user-1","status":"unknown","createdAt":1000,"updatedAt":2000,"deletedAt":null}}""",
+                "user-1",
+            )
+        }.isFailure)
+    }
+
 }
