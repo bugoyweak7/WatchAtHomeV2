@@ -21,6 +21,7 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -31,6 +32,12 @@ import kotlinx.serialization.json.jsonPrimitive
  * sync, device-link and account-deletion operations still depend on Supabase and
  * must be migrated before the app can switch its active authentication provider.
  */
+internal data class FirebaseTrialStatus(
+    val initialized: Boolean,
+    val trialStartedAt: String,
+    val trialExpiresAt: String,
+)
+
 internal class FirebaseAuthSessionManager(
     private val gateway: FirebaseAuthGateway,
     private val scope: CoroutineScope,
@@ -127,7 +134,7 @@ internal class FirebaseAuthSessionManager(
      * Initializes the Firebase UID on the configured Cloudflare Worker.
      * This is intentionally separate from the active app AuthRepository.
      */
-    suspend fun bootstrapCloudflareAccount(): Result<Unit> = runCatching {
+    suspend fun bootstrapCloudflareAccount(): Result<FirebaseTrialStatus> = runCatching {
         require(_emailVerified.value == true) {
             "Verify your Firebase email address before continuing."
         }
@@ -152,10 +159,18 @@ internal class FirebaseAuthSessionManager(
                 else -> "Account setup failed. Please try again."
             }
         }
-        val accountReady = runCatching {
-            Json.parseToJsonElement(responseText).jsonObject["accountReady"]?.jsonPrimitive?.boolean
-        }.getOrNull() == true
+        val payload = Json.parseToJsonElement(responseText).jsonObject
+        val accountReady = payload["accountReady"]?.jsonPrimitive?.boolean == true
         check(accountReady) { "Cloudflare did not confirm account setup." }
+        val trial = payload["trial"]?.jsonObject
+            ?: error("Cloudflare confirmed the account but did not return trial details.")
+        val initialized = trial["initialized"]?.jsonPrimitive?.boolean == true
+        val startedAt = trial["trialStartedAt"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val expiresAt = trial["trialExpiresAt"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        check(initialized && startedAt.isNotBlank() && expiresAt.isNotBlank()) {
+            "Cloudflare confirmed the account but trial dates could not be verified."
+        }
+        FirebaseTrialStatus(initialized, startedAt, expiresAt)
     }
 
     fun stop() {
@@ -225,6 +240,6 @@ object FirebaseAuthRepository {
 
     suspend fun getFreshIdToken(): String? = manager.getFreshIdToken()
 
-    suspend fun bootstrapCloudflareAccount(): Result<Unit> =
+    suspend fun bootstrapCloudflareAccount(): Result<FirebaseTrialStatus> =
         manager.bootstrapCloudflareAccount()
 }
