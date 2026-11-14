@@ -70,6 +70,39 @@ export async function parseDeviceRegistration(request: Request): Promise<DeviceR
   };
 }
 
+
+export async function getAccount(
+  db: AccountD1Database,
+  uid: string,
+): Promise<{
+  account: {
+    uid: string;
+    status: string;
+    createdAt: number;
+    updatedAt: number;
+    deletedAt: number | null;
+  };
+}> {
+  const account = await db.prepare(
+    "SELECT status, created_at, updated_at, deleted_at FROM accounts WHERE user_id = ?1"
+  ).bind(uid).first<{
+    status: string;
+    created_at: number;
+    updated_at: number;
+    deleted_at: number | null;
+  }>();
+  if (!account) throw new AccountApiError(404, "Account was not found.");
+  return {
+    account: {
+      uid,
+      status: account.status,
+      createdAt: account.created_at,
+      updatedAt: account.updated_at,
+      deletedAt: account.deleted_at,
+    },
+  };
+}
+
 export async function ensureActiveAccount(db: AccountD1Database, uid: string): Promise<void> {
   const account = await db.prepare(
     "SELECT status FROM accounts WHERE user_id = ?1"
