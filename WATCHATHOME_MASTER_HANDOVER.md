@@ -3635,3 +3635,12 @@ The immediate next implementation priority is not identity linking. It is a Fire
 - Added an explicit Initialize Cloudflare account action to the existing Firebase Account Settings card, shown only after Firebase email verification. Retries call the existing idempotent bootstrap endpoint.
 - No account bootstrap is automatic on screen load; no Supabase session, local data, D1 schema, Firebase settings, Cloudflare resource, secret, deployment, or production data was changed by this source update.
 - Build/CI validation is required before treating this integration as verified. The configured Worker URL must point to the intended Preview deployment and that deployment must have its D1 binding and required Firebase secrets configured.
+
+
+## 2026-11-14 — Preview-configured Android APK build workflow
+
+- Added `.github/workflows/watchathome-preview-apk.yml` on `setup/firebase-cloudflare-zero-cost`. It is manually triggered from GitHub Actions, restricted to the approved setup branch, runs the focused Firebase Auth session-manager tests, builds the Play Store debug APK, and uploads the APK as a seven-day artifact.
+- The workflow injects only the known Preview Worker base URL through the build's `CLOUDFLARE_WORKER_BASE_URL` runtime property. It does not configure Production endpoints, signing keys, release credentials, Supabase credentials, or cloud resources.
+- Workflow source commit: `7ca6abac1d9369c65ecc9edd9aa0f971481079c4`.
+- The GitHub Actions connector available in this session is read-only for workflow dispatch; it cannot start this manual workflow. User must select the `setup/firebase-cloudflare-zero-cost` branch, open Actions → WatchAtHome Preview APK → Run workflow. After it completes, download the artifact `watchathome-preview-playstore-debug-apk`.
+- Build, test, artifact existence and APK installation are not yet verified. No APK has been built or delivered in this step. No local folders/OneDrive were accessed, and no app/Worker source, active Supabase login, Preview deployment, Production resource, Firebase data or Cloudflare secret was changed.
