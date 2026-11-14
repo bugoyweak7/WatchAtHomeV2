@@ -3128,3 +3128,12 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - CI run `43570512263` exposed a test-only fixture issue: the test attempted to export the existing non-extractable Firebase ID-token signing CryptoKey as a mocked service-account private key. The new unverified-email rejection test itself passed; the positive verified-bootstrap test failed before reaching the Worker flow.
 - Corrected the positive test to generate a separate extractable RSA key for the mocked service account. No runtime source logic changed in this follow-up.
 - The follow-up CI run is pending. No Cloudflare secrets/configuration, D1 data/schema, Firebase settings, Production deployment, or Supabase state changed.
+
+
+## 2026-11-14 — Preview Firebase secret checkpoint (user-confirmed)
+
+- User confirmed that the Preview Worker has both `FIREBASE_WEB_API_KEY` and `FIREBASE_SERVICE_ACCOUNT_JSON` configured and working for the Preview environment.
+- This is recorded as user-confirmed configuration, not an independent dashboard/secret-value inspection. Secret values were not requested, viewed, or recorded.
+- Wrangler source continues to keep Preview isolated on Firebase project `watchathome-preview` and D1 database `watchathome-accounts-preview`.
+- Next verification gate: obtain the exact Preview deployment URL from Cloudflare and perform only unauthenticated `GET /health`. Do not call authenticated endpoints until the Preview health URL and deployment are identified.
+- No secrets, bindings, D1 data/schema, Firebase settings, deployments, Production configuration, or Supabase configuration/data were changed.
