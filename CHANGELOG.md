@@ -383,3 +383,11 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Future full reports/audits/test results/blockers/handovers belong in the master handover; do not create separate report documents. Keep status/changelog entries concise.
 - Preserved the prior standalone matrix file as historical evidence; no history was deleted.
 - Documentation only; no app code, cloud resources, secrets, data or deployments changed.
+
+
+## 2026-11-14 — Preview environment verification
+
+- Verified Preview/Production Firebase and D1 identifiers in current Wrangler source and Preview Firebase project/package identifiers in Android debug config.
+- Confirmed Worker source contracts for Firebase password-provider token verification, service-account project matching, health and account bootstrap.
+- Preview secrets and live runtime health remain unverified; TV device-link and complete account deletion remain missing. Supabase stays active.
+- Full report appended to `WATCHATHOME_MASTER_HANDOVER.md`; no source or cloud resources changed.
