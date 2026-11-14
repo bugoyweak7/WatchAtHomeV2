@@ -879,3 +879,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Future work must not create separate report documents. `SETUP_STATUS.md` and `CHANGELOG.md` retain concise operational entries; do not duplicate full reports in `REPORT_LOG.md`.
 - The earlier standalone matrix file remains as historical evidence; no historical file was deleted or rewritten.
 - Documentation only. No application source, cloud resources, secrets, data, deployments or Supabase configuration changed.
+
+
+## 2026-11-14 — Preview environment verification report
+
+- Re-verified current Preview/Production Firebase project IDs and D1 database IDs in the approved standalone Worker Wrangler config.
+- Confirmed User App debug Firebase config targets `watchathome-preview` and includes the debug and Admin package registrations.
+- Confirmed Worker source requires Firebase Web API key and service-account secrets, checks service-account project match, and exposes password-provider-only Firebase token verification and account bootstrap.
+- Preview secret presence/correctness, Firebase Console permissions, exact Preview deployment URL/version and live health/bootstrap remain unverified. No secret values were accessed.
+- Worker source still has no complete TV device-link exchange or account-deletion flow. Active mobile auth remains Supabase.
+- Full evidence, limitations and next action are appended to `WATCHATHOME_MASTER_HANDOVER.md`.
+- Read-only verification only; no source, cloud configuration, secrets, data, Supabase settings or deployments changed.
