@@ -3357,3 +3357,91 @@ Have the user inspect Cloudflare Worker Preview environment secrets and confirm 
 - User must run the two branch-specific Preview secret commands locally from the authorized Worker checkout after confirming the current branch is exactly `setup/firebase-cloudflare-zero-cost` and `npx wrangler --version` is at least `4.135.0`. Enter values only at the local hidden prompts; never paste them into chat.
 - No code, dependency, Cloudflare configuration, secrets, Preview deployment, D1/Firebase/Supabase data or configuration, Production resource, or app traffic was changed. Supabase remains active.
 - Next: user performs the two local Preview secret operations; assistant can then verify non-secret deployment metadata and health once the user shares the Preview URL/output. Protected live identity verification remains a separate approval gate.
+
+# 2026-11-14 — Firebase/Supabase identity migration design decision
+
+## Authorization and scope
+- User issued GO after the read-only project audit's recommendation to complete the identity migration design before changing the User App's active authentication.
+- This step is limited to source review and append-only documentation. No application source, dependency, API route, D1 schema/data, Firestore data/rules, Firebase setting, Cloudflare setting/secret, deployment, Supabase service/data, or production resource was changed.
+- Scope remains only `WatchAtHomeV2`, `WatchAtHomeAdmin`, and `WatchAtHomePremiumWorker`, on `setup/firebase-cloudflare-zero-cost`. No TinyFish or unrelated repository access.
+
+## Current source evidence revalidated
+- User App active `AuthRepository` still uses Supabase Auth for session state, email/password registration/sign-in, refresh, sign-out, and `delete-account`. It also supports a locally generated anonymous UUID.
+- User App `AuthScreen` still calls `AuthRepository.signInAnonymously()` for its continue-without-account action.
+- User App `DeviceLinkAuthRepository` still calls Supabase RPCs `start_device_login_session` and `poll_tv_login_session`, then calls the `tv-logins-exchange` Edge Function and imports a Supabase access/refresh-token session.
+- `FirebaseAuthGateway` and `FirebaseAuthSessionManager` exist but remain staged. The gateway currently exposes account create/sign-in, sign-out, auth-state observation and ID-token retrieval. It does not expose email-verification sending/reload/status operations or an app-level bootstrap/link orchestration.
+- The Firebase session manager rejects anonymous Firebase sessions, but is not the active app auth lifecycle.
+- The User App debug Firebase config identifies Preview project `watchathome-preview`, project number `1091456844777`, package `com.nuvio.app`. This is source configuration evidence, not proof of current deployed Firebase Console state.
+- Premium Worker verifies Firebase ID tokens for its configured project, accepts password-provider identities (and narrowly scoped `custom` identities carrying `tv_linked=true`), checks Firebase email verification through Identity Toolkit for account bootstrap/legacy identity verification, and requires recent Firebase authentication for legacy identity verification.
+- `POST /v1/migrations/legacy/verify` independently checks a non-anonymous current Supabase session through `GET /auth/v1/user`, using the Preview/Worker-configured Supabase URL and public anon/publishable key. It deliberately returns `linkCreated:false` and `migrationCreated:false`; it persists no identity association and transfers no data.
+- The legacy verification route fails closed when `LEGACY_SUPABASE_URL` or `LEGACY_SUPABASE_ANON_KEY` is unavailable. Their actual Preview secret configuration and live endpoint operation remain unverified; no secret values were accessed.
+- Current D1 schema has the Firebase-owned `accounts.user_id` root and application tables, but no durable Firebase-UID-to-legacy-Supabase-user-ID mapping table. Existing schema history must remain immutable; any future mapping table must be an additive migration (for example, `0002_identity_links.sql`) after schema review and explicit approval.
+- Existing account bootstrap creates a Firebase-UID-keyed D1 account and initializes the immutable seven-day trial. It does not import, merge, or identify a legacy Supabase account.
+
+## Core design decision
+Use an explicit, dual-authenticated identity-link bridge for existing registered users. Do not infer identity from matching email addresses, do not trust a client-supplied legacy UID, and do not replace Supabase Auth in isolation.
+
+An existing user must prove control of BOTH:
+1. The existing, non-anonymous Supabase account by presenting its current Supabase access token; the Worker independently validates it with the legacy Supabase Auth `/auth/v1/user` endpoint.
+2. The Firebase email/password account by presenting a valid Firebase ID token; the Worker verifies project, signature, issuer, audience, expiry, password provider, verified email and recent authentication.
+
+A mismatch between the two email addresses is not, by itself, identity proof or a reason to silently merge. The proof is the user's successful authentication to both accounts and an explicit confirmation of the link action. Never auto-link solely because email strings match.
+
+## Proposed durable link contract — design only, not implemented
+- Keep `POST /v1/migrations/legacy/verify` as a read-only preflight/proof endpoint, or preserve its existing response contract until a separately approved versioned change.
+- Add a separate authenticated `POST /v1/migrations/legacy/link` route only after approval. It must re-verify both tokens at link time; require a recently authenticated Firebase password session (maximum five minutes); require Firebase email verification; reject anonymous/invalid legacy identities; require an existing active D1 account root; and derive Firebase UID and legacy user ID exclusively from verified server-side claims/responses.
+- Never accept `firebaseUid` or `legacyUserId` from the request body as authority. Never persist either bearer token, the Supabase anon key, or any credential in D1, Firestore, logs, analytics, or the response.
+- Add a new D1 identity-link table through an additive migration only. Proposed logical constraints: Firebase UID is the primary key and references the Firebase-owned account; legacy Supabase user ID has a UNIQUE constraint; store only link status and server timestamps/metadata needed for audit and retry. The unique constraints enforce one-to-one mapping and prevent two Firebase accounts claiming one legacy account or one Firebase account claiming multiple legacy accounts.
+- Link creation must be atomic and idempotent. Repeating the exact same Firebase UID + legacy user ID pair returns the already-linked state. If either identifier is already linked to a different counterpart, return a generic conflict (409) without overwriting either mapping. Never auto-merge, reassign, or unlink on conflict. Use a D1 transaction/batch and test concurrent attempts.
+- Require an active Firebase account bootstrap before link creation. If bootstrap has not completed, fail with a stable prerequisite error; do not create partial mapping state.
+- Return only a minimal result such as `{ linked: true, status: "linked" }` and a non-sensitive server timestamp. Do not expose legacy access tokens or privileged details.
+- Record a minimal link audit event with Firebase UID, legacy user ID, timestamp and outcome only if the retention/security design is approved. Do not log email addresses or bearer tokens.
+
+## Client migration flow — staged
+1. Existing user signs in to the currently active Supabase account using the existing app flow. Preserve that session; do not clear it.
+2. User explicitly starts migration/linking. The app creates or signs in to a Firebase email/password account in Preview. The Firebase account must be verified by email before bootstrap/linking. Do not assume the legacy and Firebase passwords are interchangeable; the user must explicitly authenticate to the Firebase account.
+3. Add Firebase email-verification send/reload/status support to the staged gateway in a separately approved implementation. Refresh the Firebase ID token after email verification.
+4. Call Firebase `POST /v1/account/bootstrap` with the Firebase ID token. Confirm accountReady and immutable trial response. Do not reset an existing trial on retry.
+5. Present an explicit confirmation that the currently signed-in legacy account will be associated with the currently signed-in Firebase account. Then call the proposed link endpoint with the Firebase ID token and the legacy access token in the dedicated `X-Legacy-Authorization` header. Keep tokens in memory/request headers only; never print them.
+6. Persist only a non-secret local migration state marker after the server confirms the link. The server-side D1 link record is authoritative. If the request times out, query link status or retry idempotently; never assume success from a client timeout.
+7. Continue using the existing Supabase session for every feature that still depends on Supabase. Use Firebase ID tokens only for Worker routes. This dual-session bridge is required until each feature has a verified replacement and is switched independently.
+8. Do not transfer remote Supabase data in this identity-link step. The user does not own/administer the inherited upstream Supabase project; server schema, RLS, Edge Functions, backups and full exports are unavailable. Identity linking is not data migration.
+9. Later feature migrations must use per-user access through the user's own still-valid legacy session where permitted, or a user-controlled export/import path. Do not bypass RLS, use a service-role key, scrape shared data, or promise automatic remote data transfer.
+10. For local anonymous-UUID users, do not fabricate a legacy identity link. Provide a separate explicit account-conversion path after preserving local data; never wipe local data merely because the old anonymous identity has no server-side account.
+
+## New Firebase registration and existing-account cases
+- Existing Firebase account: require the user to sign in to it; do not create a second identity.
+- No Firebase account yet: allow explicit Firebase email/password registration, send verification email, require verified email, then bootstrap and link to the already-authenticated legacy account.
+- Firebase email already in use or account recovery needed: stop and require normal Firebase sign-in/recovery. Never auto-merge or reset an account.
+- A Firebase account with a different email may be linked only after both accounts are independently authenticated and the user explicitly confirms; email matching is never the linking mechanism.
+- New users with no legacy Supabase account use Firebase registration/bootstrap only after the Firebase migration rollout is separately approved. They must not be sent through the legacy-link route.
+- The existing seven-day trial remains based on verified Firebase account creation time and remains immutable. Do not grant a second trial or overwrite premium entitlements during linking.
+
+## Cutover and rollback gates
+- Do not switch `AuthRepository`, `AppGate`, `AuthScreen`, device registration, device-link sign-in, or account deletion to Firebase in this design phase.
+- Do not remove the local anonymous UUID path or its UI until a separately approved product/data-preservation conversion path exists and is tested.
+- Do not call `LocalAccountDataCleaner.wipe()` during linking, Firebase sign-in, verification, bootstrap, token refresh, or a recoverable network failure. It wipes broad profile, library, watch-progress, add-on, player, settings and other local state. Cleanup is permitted only after a confirmed, authorized sign-out/account-deletion transition with recoverable failure handling.
+- Keep Supabase session and adapters active as rollback while any feature still requires Supabase Auth/RLS/RPC/Realtime/Edge Functions.
+- Do not dual-write legacy and replacement stores without idempotency, conflict resolution and reconciliation tests.
+- Before any auth cutover: identity-link tests, verified email flow tests, session persistence/refresh/sign-out tests, wrong-project/expired/anonymous token rejection, link replay and conflict tests, concurrent-link tests, Preview integration tests, data-preservation tests, Android and iOS builds, and regression tests for all still-Supabase-backed features must pass.
+- Before any production cutover: separate explicit approval, verified backups/export and rollback, live Production deployment parity, Firestore rules and Worker secrets review, and staged rollout plan are required.
+
+## Current blockers and safest next implementation order
+1. Confirm the Preview-only legacy verification configuration and live preflight availability without exposing secret values. This requires user-controlled local Cloudflare Preview configuration if the two Preview secrets have not yet been set; do not use TinyFish or Production secrets.
+2. Implement and test the additive D1 identity-link migration and separate link endpoint in the Preview Worker only, with one-to-one uniqueness, idempotency, conflict handling, concurrency protection and no token persistence. This is not authorized by this design record; obtain explicit approval before code/schema/deployment changes.
+3. Add Firebase email verification support and a dual-session migration coordinator in the User App without changing the active `AuthRepository` or deleting Supabase dependencies.
+4. Build an explicit linking UI and Preview end-to-end test using a disposable account that controls both identities.
+5. After successful link verification, migrate one feature at a time; retain Supabase for every feature not yet replaced.
+6. Implement device-link client integration and complete account deletion only after their separate API/security contracts and tests pass.
+7. Reassess active Firebase authentication cutover only after the protected data-access, membership/premium, device-link and account lifecycle paths are compatible.
+
+## Evidence classification and unresolved questions
+- Source verified: current Supabase-backed AuthRepository/device-link; staged Firebase gateway/session manager; Worker dual-token verification; no persistent identity link table; Firebase-UID D1 account root; Preview Firebase project identifier.
+- CI verified in repository history: Worker HTTP/auth suite includes mocked legacy-session verification and Firebase verified-email/recent-auth checks. CI is not a live Supabase/Firebase Preview identity-link test.
+- User-reported Preview verification: account bootstrap/trial and device registration/list/revocation were successful in prior handover. These results do not test legacy identity linking.
+- Not independently verified in this step: current Preview secret presence, live `/v1/migrations/legacy/verify` response, actual remote Supabase schema/data export, cross-account D1 link isolation, Production resources/deployment/secrets, and end-to-end dual-session app behavior.
+- No source implementation, D1 migration, data transfer, app cutover, or production operation was performed.
+
+## Result
+The next implementation gate is a Preview-only additive identity-link table and link endpoint, followed by the User App dual-session verification/linking flow. The active Supabase authentication and all Supabase-backed feature adapters remain unchanged until each replacement is verified and a separate cutover approval is received.
+
