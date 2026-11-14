@@ -479,3 +479,11 @@ Entries are append-only. Do not rewrite or remove earlier records.
 - Added generated PreviewFirebaseAccessConfig; the flag defaults to disabled and is enabled only in the Preview APK workflow.
 - Updated .github/workflows/watchathome-preview-apk.yml to set WATCHATHOME_PREVIEW_FIREBASE_ACCESS=true for that Preview build only.
 - Existing Supabase login and active account/data paths remain unchanged. Build, tests, APK artifact, and device verification are pending.
+
+
+## 2026-11-15 — Preview Firebase trial status display
+
+- Updated the Preview Firebase account flow to parse the trial details returned by the existing `/v1/account/bootstrap` response.
+- The Preview tools now display whether the Cloudflare account is active, whether the 7-day trial is initialized, and the returned trial start and expiry timestamps.
+- The existing bootstrap endpoint remains unchanged; its create-only trial initialization behavior is preserved. No new endpoint, polling, production deployment, cloud configuration, or Supabase cutover was performed.
+- Pending verification: run Firebase Auth unit tests and Android Play Store debug compilation on the approved setup branch, then rebuild the Preview APK before installing this UI update.
