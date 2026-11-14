@@ -3534,3 +3534,35 @@ Branch: `setup/firebase-cloudflare-zero-cost`
 
 ### Next gate
 Run focused common tests and supported Android/iOS compile checks on this branch. Resolve any failures before separately implementing Preview-only account-bootstrap integration. Keep active Supabase login unchanged until that later integration and its data-preservation tests pass.
+
+## 2026-11-14 — Staged Firebase email-verification settings UI implemented
+
+### Approved scope
+The user approved the next step after successful Firebase Auth foundation CI: add a Firebase verification UI while preserving the active Supabase login. Scope is limited to the User App UI and CI path-filter update. It does not authorize identity linking, Worker bootstrap, account migration, Supabase cutover/removal, or cloud operations.
+
+### Source changes
+Repository: `bugoyweak7/WatchAtHomeV2`  
+Branch: `setup/firebase-cloudflare-zero-cost`
+
+- Added `composeApp/src/commonMain/kotlin/com/nuvio/app/features/settings/FirebaseAccountVerificationCard.kt`.
+  - Provides separate Firebase email/password account creation or sign-in.
+  - Shows the currently signed-in Firebase account and verification state.
+  - Provides verification-email resend and server reload/status-check actions.
+  - Explains that this is preparation only and does not link identities or switch login.
+- Updated `composeApp/src/commonMain/kotlin/com/nuvio/app/features/settings/AccountSettingsPage.kt` to show the card only for a signed-in, non-anonymous Supabase account.
+- Updated `.github/workflows/watchathome-firebase-auth-check.yml` push and pull-request path filters so the new UI files trigger focused Firebase Auth tests and Android Play Store debug compilation.
+
+### Commits
+- UI component: `bd727edf26d5953f23aa733f6186d4c10312407c`
+- Account Settings integration: `ff7c0593c8f586a7ab0fb46b84b1885f7320de2c`
+- CI path filters: `a5e66fe88c5072053cc7ad501cd52ff7b2c6a368`
+
+### Verification and boundaries
+- GitHub Actions was triggered by the CI path-filter update; its result is pending. Do not claim UI build success until the latest run completes successfully.
+- The active `AuthRepository`, `AuthScreen`, Supabase login, device-link flow, and Supabase-backed data adapters remain unchanged.
+- The Firebase account created/signed into by this UI is a separate staged identity. No identity-link endpoint is called, no Worker bootstrap is called, and no trial/premium entitlement is initialized by this UI.
+- No Worker source, D1/Firestore data, Firebase Console settings, Cloudflare resources, Preview/Production deployment, secrets, Supabase service/data, or user accounts were changed.
+
+### Next gate
+Verify the new GitHub Actions run passes both the focused Firebase Auth tests and Android Play Store debug compilation. Only after that, plan a separate Preview-only identity-link/bootstrap client step with explicit user approval and confirmed Preview backend readiness. Keep Supabase active as the rollback/session provider until all feature and account-lifecycle migrations pass.
+
