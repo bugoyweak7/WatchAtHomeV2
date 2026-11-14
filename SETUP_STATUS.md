@@ -859,3 +859,14 @@ Build the Firebase-authenticated Cloudflare account/device-link lifecycle endpoi
 - Verified the configuration contains the app registrations `com.nuvio.app`, `com.nuviodebug.com`, and `com.tapframe.watchathomeadmin`; the Gradle debug variant uses `com.nuviodebug.com`.
 - Left `androidApp/google-services.json` (Production project) unchanged. No authentication flow, app source, Worker, cloud resource, secret, or deployment was changed.
 - This is configuration only: the active app authentication repository still uses Supabase; Firebase account creation is not enabled by this change.
+
+
+## 2026-11-14 — Supabase migration evidence matrix created
+
+- Added `docs/SUPABASE_MIGRATION_EVIDENCE_MATRIX.md` from the current approved-branch source audit and existing migration contract.
+- The matrix records legacy client contracts, Firebase/Cloudflare replacement evidence, status and remaining gates for authentication, anonymous access, account/device lifecycle, TV pairing, account deletion, profiles/PIN, profile settings, add-ons, plugins, collections, library, watch progress, watched history, home catalogue settings, provider credentials, media servers, membership, Watch Party, Storage and build/runtime dependencies.
+- Explicitly separated the shared Admin Firestore add-on catalogue from each user's installed add-ons.
+- Recorded that upstream Supabase SQL/RLS/trigger/Edge Function/Realtime server definitions are unavailable because the user does not own the inherited project; no remote user-data migration is claimed.
+- Current conclusion remains that Supabase is required by active paths and is not safe to remove. The document defines Preview, identity, security, feature-cutover, platform, data/rollback and final dependency-audit gates.
+- Documentation only. No app/Worker source, adapters, Gradle dependencies, Firebase/Cloudflare settings, secrets, D1/R2/DO resources, Supabase service/data, production data or deployments were changed.
+- Next implementation gate: verify isolated Preview runtime prerequisites, then complete and test Firebase account lifecycle (including TV device-link and full account deletion) before wiring Firebase as the active mobile identity.
