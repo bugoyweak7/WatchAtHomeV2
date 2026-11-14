@@ -512,3 +512,15 @@ Do not wire Firebase into the active app gate or replace `AuthRepository` until 
 2. Are we building right now? No. This entry is documentation-only.
 3. Do you need to do anything? No.
 4. What is the next step? Continue isolated Firebase repository/session lifecycle work after reviewing latest source and tests; no active cutover yet.
+
+ 
+## 2026-11-15 — Firebase auth lifecycle regression tests added
+
+- Source commit: `bc9e56b634edaf39a16eafb2d278d82a1c92e6a7`.
+- Added tests covering idempotent initialization, `stop()` cancellation and reinitialization, state observer transitions between authenticated/unauthenticated, and sign-out failure retaining the authenticated state for retry.
+- No production source, active Supabase login, AppGate, device-link flow, Worker, cloud configuration, secrets, or account data changed.
+- CI validation is pending. This test-only change is expected to trigger `WatchAtHome Firebase Auth Build` through its existing path filter.
+- What is happening? Firebase session lifecycle test coverage is expanded.
+- Are we building right now? Check the workflow; no Preview APK is being requested.
+- Do you need to do anything? No.
+- What is the next step? Confirm focused tests and Android Play Store debug compilation pass.
